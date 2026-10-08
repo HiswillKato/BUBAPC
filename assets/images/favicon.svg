@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="BUBAPC">
+    <!--
+        PLACEHOLDER FAVICON. This is not the church's real logo.
+
+        It is here so that the browser tab shows something and the request
+        does not 404 on every page. Replace this file with the artwork the
+        church has approved, keeping the file name favicon.svg, and no
+        page needs changing.
+
+        It is plain SVG with no build step, on purpose: the whole project is
+        committed as it is served.
+    -->
+    <rect width="64" height="64" rx="14" fill="#1b2559"/>
+    <path d="M28 14h8v14h14v8H36v14h-8V36H14v-8h14z" fill="#f5a524"/>
+</svg>

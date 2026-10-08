@@ -1,0 +1,227 @@
+<?php
+/**
+ * BUBAPC - Church member registration
+ *
+ * Lets somebody who attends the church sign themselves up. They get an account
+ * they can sign in with, and a page of their own at /dashboard where they can
+ * keep their name, email and phone number up to date.
+ *
+ * A member is NOT a website manager. The account is written with
+ * role = 'member', and that is the whole of the separation: require_staff() in
+ * app/includes/admin/parts.php turns members away from every page in /dashboard/admin/, so there
+ * is no list of member accounts to keep in step with the admin modules - the
+ * database role is the permission.
+ *
+ * The account works straight away. There is no waiting for an admin to approve
+ * it, because a member can do nothing except read and edit their own details.
+ *
+ * The newsletter box is unticked and stays that way. Mail is only sent to
+ * somebody who asked for it, so the box is a separate and deliberate tick and
+ * never a default.
+ */
+
+require_once __DIR__ . '/../app/init.php';
+
+$errors = [];
+$full_name = '';
+$email = '';
+$phone = '';
+$wants_newsletter = false;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+
+    $full_name = post_text('full_name');
+    $email = post_text('email');
+    $phone = post_text('phone');
+    $password = (string) ($_POST['password'] ?? '');
+    $password_confirm = (string) ($_POST['password_confirm'] ?? '');
+    $wants_newsletter = post_checkbox('newsletter');
+
+    if (is_empty_value($full_name)) {
+        $errors[] = 'Please tell us your name.';
+    } elseif (mb_strlen($full_name) > 160) {
+        $errors[] = 'That name is too long. Please use 160 characters or fewer.';
+    }
+
+    if (!is_valid_email($email)) {
+        $errors[] = 'Please type a real email address, for example name@example.com.';
+    }
+
+    /* The password is checked before the address is looked up, so somebody
+       probing for which addresses are registered is not told either. */
+    $password_error = password_problem($password);
+    if ($password_error !== '') {
+        $errors[] = $password_error;
+    } elseif ($password !== $password_confirm) {
+        $errors[] = 'The two passwords do not match.';
+    }
+
+    /* An address that is already spoken for, whether as a member or as staff,
+       is turned away. The message is the same for both, because telling a
+       stranger which one is which would confirm whether an address is here. */
+    if (!$errors) {
+        $statement = $conn->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $statement->bind_param('s', $email);
+        $statement->execute();
+        $already_there = (bool) $statement->get_result()->fetch_assoc();
+        $statement->close();
+
+        if ($already_there) {
+            $errors[] = 'There is already an account with that email address. Try signing in, or use a different address.';
+        }
+    }
+
+    if (!$errors) {
+        $full_name = mb_substr($full_name, 0, 160);
+        $email = mb_substr($email, 0, 190);
+        $phone = mb_substr($phone, 0, 40);
+
+        /* The username is copied from the address, so a member signs in with
+           the email they typed rather than having to invent a second name.
+           It is still a unique column, and the address has just been checked,
+           so the two cannot collide. Staff accounts keep the username they
+           chose in the admin panel and never come through here. */
+        /* The hash is put in a variable of its own rather than written straight
+           into bind_param(). bind_param() takes what it is given by reference,
+           and handing it the result of a function call instead of a variable
+           makes PHP print "Only variables should be passed by reference". */
+        $hash = password_hash($password, PASSWORD_DEFAULT);
+
+        $statement = $conn->prepare(
+            "INSERT INTO users (username, full_name, email, phone, password, role, status)
+             VALUES (?, ?, ?, ?, ?, 'member', 1)"
+        );
+        $statement->bind_param('sssss', $email, $full_name, $email, $phone, $hash);
+        $inserted = $statement->execute();
+        $new_id = $statement->insert_id;
+        $insert_error = $statement->error;
+        $statement->close();
+
+        if (!$inserted) {
+            /* Almost always the unique email key losing a race with somebody
+               else registering the same address at the same moment. */
+            $errors[] = 'That account could not be saved' . ($insert_error ? ' (' . $insert_error . ')' : '') . '. Please try again.';
+        } else {
+            /* The newsletter tick, from the same place as the footer form, so a
+               member who is also a subscriber is on the list once and not
+               twice. An address that is already there is left exactly as it
+               is: ticking the box must never switch somebody off. */
+            if ($wants_newsletter) {
+                $statement = $conn->prepare("INSERT IGNORE INTO subscribers (email, status) VALUES (?, 1)");
+                $statement->bind_param('s', $email);
+                $statement->execute();
+                $statement->close();
+            }
+
+            /* Read the row back rather than using the values that were just
+               inserted, so the session holds the database's own copy - the
+               password hash, the id, everything sign_user_in() expects. */
+            $statement = $conn->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+            $member_id = (int) $new_id;
+            $statement->bind_param('i', $member_id);
+            $statement->execute();
+            $member = $statement->get_result()->fetch_assoc();
+            $statement->close();
+
+            /* Signing somebody in straight after they register saves typing the
+               password twice. It goes through sign_user_in() rather than
+               setting the session here, because that is where the fresh
+               session id is. */
+            sign_user_in($member);
+
+            flash('success', 'Welcome to the church, ' . $full_name . '. Your account is ready.');
+            redirect(member_url());
+        }
+    }
+}
+
+$page_title = 'Become a member';
+require_once __DIR__ . '/../app/includes/public/header.php';
+?>
+
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+                    <div class="card border-0 shadow rounded-4">
+                        <div class="card-body p-4 p-md-5">
+                            <h1 class="h4 mb-3">Church membership</h1>
+                            <p class="text-body-secondary mb-4">Register here and keep your details up to date.</p>
+                            <form method="post" action="<?php echo url('register'); ?>" novalidate>
+                                <?php echo csrf_field(); ?>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="full_name">Your name</label>
+                                    <input type="text" class="form-control" id="full_name" name="full_name"
+                                           value="<?php echo e($full_name); ?>"
+                                           required maxlength="160" autocomplete="name" autofocus>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="email">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email"
+                                           value="<?php echo e($email); ?>"
+                                           required maxlength="190" autocomplete="email"
+                                           autocapitalize="none" spellcheck="false">
+                                    <div class="form-text">You sign in with this address.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="phone">Phone</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone"
+                                           value="<?php echo e($phone); ?>"
+                                           maxlength="40" autocomplete="tel">
+                                    <div class="form-text">Optional.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="password">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control border-end-0" id="password"
+                                               name="password" required autocomplete="new-password">
+                                        <button type="button" class="btn btn-outline-secondary px-3"
+                                                data-toggle-password="#password" aria-label="Show the password">
+                                            <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">
+                                        At least <?php echo (int) MIN_PASSWORD_LENGTH; ?> characters, with a letter
+                                        and a number in it.
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label" for="password_confirm">Password again</label>
+                                    <input type="password" class="form-control" id="password_confirm"
+                                           name="password_confirm" required autocomplete="new-password">
+                                </div>
+
+                                <div class="form-check mb-4">
+                                    <input class="form-check-input" type="checkbox" value="1" id="newsletter"
+                                           name="newsletter" <?php echo $wants_newsletter ? 'checked' : ''; ?>>
+                                    <label class="form-check-label" for="newsletter">
+                                        Send me the newsletter
+                                    </label>
+                                    <div class="form-text">
+                                        Leave this unticked if you would rather not. You can be a member without it.
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa-solid fa-user-plus me-1" aria-hidden="true"></i>
+                                    Register
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <p class="small text-body-secondary mt-4 mb-0">
+                        Already registered? <a href="<?php echo url('login'); ?>">Sign in</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+<?php require_once __DIR__ . '/../app/includes/public/footer.php'; ?>

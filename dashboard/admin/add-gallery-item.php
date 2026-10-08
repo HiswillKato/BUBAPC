@@ -1,0 +1,197 @@
+<?php
+/**
+ * BUBAPC - Admin: add or change one photograph
+ *
+ * A gallery row without a picture is nothing, so on a new photograph the file
+ * box is not optional. On an existing one the picture is already there and the
+ * file box only replaces it.
+ */
+
+require_once __DIR__ . '/../../app/init.php';
+/* The shared buttons, fields and checks are needed before the saving below. */
+require_once __DIR__ . '/../../app/includes/admin/parts.php';
+
+$active_module = 'gallery';
+
+$photo_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$photo = $photo_id ? admin_row($conn, 'gallery', $photo_id) : [];
+
+if ($photo_id && !$photo) {
+    flash('error', 'That photograph is no longer here.');
+    redirect(admin_url('gallery'));
+}
+
+$is_new = $photo_id === 0;
+
+$values = array_merge([
+    'title' => '',
+    'caption' => '',
+    'image' => '',
+    'sort_order' => 0,
+    'status' => 1,
+], $photo);
+
+$errors = [];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
+
+    $values['title'] = post_text('title');
+    $values['caption'] = post_text('caption');
+    $values['sort_order'] = (int) ($_POST['sort_order'] ?? 0);
+    $values['status'] = post_checkbox('status') ? 1 : 0;
+
+    if ($is_new && (!isset($_FILES['image']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE)) {
+        $errors[] = 'Please choose a photograph to upload.';
+    }
+
+    if (!$errors) {
+        $image = admin_save_image(
+            $_FILES['image'] ?? null,
+            post_checkbox('remove_image'),
+            'gallery',
+            $photo['image'] ?? ''
+        );
+        $values['image'] = $image['path'];
+        if ($image['error'] !== '') {
+            $errors[] = $image['error'];
+        }
+    }
+
+    if (!$errors) {
+        if ($is_new) {
+            $statement = $conn->prepare(
+                "INSERT INTO gallery (title, caption, image, sort_order, status) VALUES (?, ?, ?, ?, ?)"
+            );
+            $statement->bind_param(
+                'sssii',
+                $values['title'],
+                $values['caption'],
+                $values['image'],
+                $values['sort_order'],
+                $values['status']
+            );
+            $statement->execute();
+            $photo_id = (int) db_last_id($conn);
+            $statement->close();
+
+            log_action($conn, 'photo_created', 'A photograph was added');
+            flash('success', 'The photograph has been added to the gallery.');
+        } else {
+            $statement = $conn->prepare(
+                "UPDATE gallery SET title = ?, caption = ?, image = ?, sort_order = ?, status = ? WHERE id = ?"
+            );
+            $statement->bind_param(
+                'sssiii',
+                $values['title'],
+                $values['caption'],
+                $values['image'],
+                $values['sort_order'],
+                $values['status'],
+                $photo_id
+            );
+            $statement->execute();
+            $statement->close();
+
+            log_action($conn, 'photo_updated', 'A photograph was changed');
+            flash('success', 'The photograph has been saved.');
+        }
+
+        redirect(admin_url('gallery'));
+    }
+}
+
+$page_title = $is_new ? 'Add photograph' : 'Edit photograph';
+$page_heading = $is_new ? 'Add a photograph' : 'Edit photograph';
+$page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('gallery') . '">'
+    . '<i class="fa-solid fa-images me-1" aria-hidden="true"></i>Back to the gallery</a>';
+
+require_once __DIR__ . '/../../app/includes/admin/header.php';
+?>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+
+            <?php admin_errors($errors); ?>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                <?php echo csrf_field(); ?>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <?php
+                        admin_text_field('title', 'Title', $values['title'],
+                            'Not always needed, but it is what somebody reads first.', 'Sunday main service');
+                        admin_text_field('caption', 'Caption', $values['caption'],
+                            'One line about who is in the picture or what was happening.', 'The room at ten o&rsquo;clock');
+                        ?>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h2 class="h6 text-uppercase text-body-secondary mb-3">The photograph</h2>
+                        <?php
+                        if ($is_new) {
+                            admin_image_field('image', 'Photograph', '',
+                                'Needed. A wide picture looks best, because the gallery is a grid of small boxes.');
+                        } else {
+                            admin_image_field('image', 'Replace this photograph', $values['image'],
+                                'A wide picture looks best, because the gallery is a grid of small boxes.');
+                        }
+                        ?>
+                        <?php
+                        admin_text_field('sort_order', 'Order on the page', (string) $values['sort_order'],
+                            'Lower numbers come first. You can also change this from the gallery.', '0');
+                        admin_checkbox('status', 'Show this photograph on the website', (int) $values['status'] === 1,
+                            'Switch it off to keep a picture without taking it away.');
+                        ?>
+                    </div>
+                </div>
+
+                <?php admin_form_buttons(admin_url('gallery'), $is_new ? 'Add to the gallery' : 'Save changes'); ?>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <?php if (!$is_new): ?>
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4">
+                        <h2 class="h6 mb-3">How it will look</h2>
+                        <div class="ratio ratio-4x3 mb-3">
+                            <img src="<?php echo upload_url($values['image']); ?>" alt=""
+                                 class="rounded-3 object-fit-cover">
+                        </div>
+                        <p class="small text-body-secondary mb-0">
+                            Visitors click a picture to see it larger. Nothing is shown on the website while
+                            the switch above is off.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card border-danger rounded-4">
+                    <div class="card-body p-4">
+                        <h2 class="h6 mb-2">Delete this photograph</h2>
+                        <p class="small text-body-secondary">
+                            The picture is deleted from the website as well as from the gallery. This cannot
+                            be undone, so keep your own copy.
+                        </p>
+                        <?php echo admin_delete_button('gallery', $photo_id, 'this photograph'); ?>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body p-4">
+                        <h2 class="h6 mb-2">Photographs worth having</h2>
+                        <ul class="small text-body-secondary mb-0 ps-3">
+                            <li>People, not empty chairs.</li>
+                            <li>Wide pictures, so faces are not lost when the gallery is shrunk.</li>
+                            <li>Somebody taking the picture is in it nine times out of ten. That is not a fault.</li>
+                        </ul>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+    </div>
+
+<?php require_once __DIR__ . '/../../app/includes/admin/footer.php'; ?>

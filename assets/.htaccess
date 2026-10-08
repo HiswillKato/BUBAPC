@@ -1,0 +1,32 @@
+# BUBAPC - assets folder protection
+#
+# This folder only ever holds CSS, JavaScript, fonts and images.
+# Nothing inside it should be able to run as a script, even if a file with
+# a dangerous extension somehow ends up here.
+
+Options -Indexes
+
+# Never run PHP or any other script from this folder.
+<FilesMatch "\.(?i:ph(?:p[0-9]?|tml|ar|ps[0-9]?|inc))$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    SetHandler None
+    RemoveHandler .php .phtml .phar
+    RemoveType .php .phtml .phar
+</FilesMatch>
+
+# Do not list or read the .htaccess files themselves.
+<FilesMatch "^\.ht">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

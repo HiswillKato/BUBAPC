@@ -1,0 +1,125 @@
+# ==========================================================================
+# BUBAPC - root .htaccess
+#
+# Three jobs:
+#   1. Keep the working parts of the site off the internet. Nothing in here is
+#      meant to be requested directly - a browser always asks for a page.
+#   2. Point the short addresses at the folders they now live in: public pages
+#      in pages/, the member area in dashboard/, the admin panel in
+#      dashboard/admin/.
+#   3. Give the few "detail" pages a short address, so /events/christmas-
+#      retreat works instead of /events.php?slug=christmas-retreat.
+#
+# Rules run top to bottom and the first match wins, so the deny list has to
+# come before the "this file really exists, let it through" rule further down.
+# ==========================================================================
+
+DirectoryIndex index.php
+Options -Indexes
+
+RewriteEngine On
+RewriteBase /
+
+# --------------------------------------------------------------------------
+# 1. NEVER ALLOWED OVER HTTP
+# --------------------------------------------------------------------------
+# app/ holds config.php, which contains the database password, and the shared
+# page parts. Every page `require`s them, and a require never goes through
+# mod_rewrite, so denying the folder costs the site nothing.
+#
+# pages/ and dashboard/ are deliberately NOT in this list. The rules below
+# rewrite to pages/<name>.php and dashboard/<name>.php, and mod_rewrite does an
+# internal redirect for a path substitution - which re-runs this ruleset
+# against the rewritten path. A deny rule for either folder would therefore
+# block the router's own target and 403 every page on the site. Asking for
+# /pages/about.php directly renders the same page as /about, so the only cost
+# of leaving them open is a second address for each page.
+# installer.php at the root is deliberately NOT denied. It is the setup wizard's
+# entry point, it is one file rather than a folder, and it refuses to run the
+# wizard again once an administrator exists in the database - so it is safe to
+# leave reachable, and denying it would leave no way to reinstall the site.
+RewriteRule ^(?:app|database|vendor|\.git|\.vscode)(?:/|$) - [F,L]
+
+# The shared page parts under app/includes/ are already covered by the app/ rule
+# above, but the same guard is kept for any other includes/ folder so a partial
+# can never be run on its own.
+RewriteRule .*/includes/ - [F,L]
+
+# Documentation and data files. A couple are named explicitly because they are
+# the files most likely to be typed into a browser by mistake.
+RewriteRule ^AGENTS\.md$ - [F,L]
+RewriteRule ^README\.html$ - [F,L]
+RewriteRule \.(?:md|sql|log|ini|sh|bak|lock|swp)$ - [F,L]
+RewriteRule ^composer\.(?:json|lock)$ - [F,L]
+RewriteRule ^\.htaccess$ - [F,L]
+RewriteRule ^\.env$ - [F,L]
+
+# --------------------------------------------------------------------------
+# 2. THE DASHBOARD
+# --------------------------------------------------------------------------
+# Everything behind a sign-in lives under dashboard/, and the admin panel is one
+# step further in. All of it is served as real files, so these rules only exist
+# to shorten the addresses - and they have to come BEFORE the "real files and
+# folders win" rule at the bottom, or Apache would look for a folder called
+# "events", fail to find one, and give up.
+#
+#   /dashboard                  -> dashboard/index.php
+#   /dashboard/profile          -> dashboard/profile.php
+#   /dashboard/admin            -> dashboard/admin/index.php
+#   /dashboard/admin/events     -> dashboard/admin/events.php
+#
+# The add/change screens keep the .php name in the address
+# (/dashboard/admin/add-event.php?id=4). A dot is not in the pattern below, so
+# those requests fall through to the real-file rule and Apache serves them
+# directly - which is what you want for a screen that takes an id, because no
+# rewrite stands between the address and the file.
+#
+# Every page inside dashboard/ calls require_login() or require_staff() itself:
+# being sent here is not a secret, and the folder is served as real files.
+RewriteRule ^dashboard/admin/([a-z][a-z0-9-]*)/?$ dashboard/admin/$1.php [L,QSA]
+RewriteRule ^dashboard/admin/?$              dashboard/admin/index.php [L,QSA]
+RewriteRule ^dashboard/?$                    dashboard/index.php [L,QSA]
+RewriteRule ^dashboard/([a-z][a-z0-9-]*)/?$  dashboard/$1.php [L,QSA]
+
+# --------------------------------------------------------------------------
+# 3. PUBLIC PAGES
+# --------------------------------------------------------------------------
+# The homepage has no name to rewrite from, so it is written out.
+RewriteRule ^$ pages/index.php [L,QSA]
+
+# These five have both a list page and a single-item page, so the item is passed
+# as a slug in the query string. The slug is checked against [A-Za-z0-9-] here so
+# a path can never smuggle in a slash or a dot.
+#
+#   /devotionals/a-praise-and-worship-mindset -> pages/devotionals.php?slug=...
+#   /events/christmas-retreat                  -> pages/events.php?slug=...
+#   /departments/youth-ministry                -> pages/departments.php?slug=...
+#   /families/the-okafor-family                -> pages/families.php?slug=...
+#   /people/sis-grace-auma                     -> pages/people.php?slug=...
+RewriteRule ^(devotionals|events|departments|families|people)/([A-Za-z0-9][A-Za-z0-9-]*)/?$ pages/$1.php?slug=$2 [L,QSA]
+
+# Every other public page is a file in pages/ named after its own address, so one
+# rule covers the lot and there is no list to keep in step when a page is added:
+# dropping a file in pages/ is all it takes for /its-name to work.
+RewriteRule ^([a-z][a-z0-9-]*)/?$ pages/$1.php [L,QSA]
+
+# --------------------------------------------------------------------------
+# 4. REAL FILES AND FOLDERS WIN
+# --------------------------------------------------------------------------
+# assets/ and installer.php are all served exactly as they are. Without this rule
+# Apache would look for a folder called "about" and give up, because the rewrite
+# engine cannot tell a page from a missing file.
+#
+# Uploaded images live in assets/uploads/ and are served by this same rule;
+# their own .htaccess stops anything executable from running in there.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# --------------------------------------------------------------------------
+# 5. REAL 404s
+# --------------------------------------------------------------------------
+# Anything left is a page that does not exist. This is an ErrorDocument rather
+# than a rewrite so the visitor still gets a genuine 404 status instead of a
+# 200 with "not found" written on it, which is what search engines check.
+ErrorDocument 404 /pages/404.php

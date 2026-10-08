@@ -1,0 +1,58 @@
+# Files that must never be committed
+.env
+.env.*
+*.before-install
+
+# Editor and OS leftovers
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Logs and temporary files.
+# The leading slash matters on both folder names. A bare `logs/` matches a folder
+# of that name at ANY depth, which was quietly hiding the admin Activity Log
+# screen (dashboard/admin/logs.php) from the repository - it rendered on the live
+# site but a fresh clone had no such page. Only a logs/ or tmp/ folder at the
+# root of the project is scratch.
+/logs/
+/tmp/
+*.log
+
+# Uploads and anything a person drops in by hand. The folders and their
+# .htaccess files are kept, so a fresh clone still has somewhere to write and
+# still has the script protection. The `**` matters: `/uploads/*` would only
+# match one level down, which lets a picture in uploads/events/ slip through.
+/uploads/**
+!/uploads/
+!/uploads/.htaccess
+!/uploads/*/
+!/uploads/*/.htaccess
+
+# The same thing again for where the uploads actually live. UPLOAD_FOLDER in
+# app/config.php points at assets/uploads, not at the root of the site, so the
+# block above was ignoring a folder that does not exist and every photograph
+# somebody uploaded was about to be committed.
+/assets/uploads/**
+!/assets/uploads/
+!/assets/uploads/.htaccess
+!/assets/uploads/*/
+!/assets/uploads/*/.htaccess
+
+# Scratch files somebody was using to compare rendered pages. They are saved
+# page dumps and one-off test scripts, kept out of the repository so the
+# webroot stays clean. Delete them whenever you like - the site does not use
+# them.
+/test.php
+/*.html
+/*.jar
+/*.orig-backup
+
+# vendor/ is deliberately NOT ignored. There is no build step on this site:
+# the server runs the PHP exactly as it is committed, so the libraries have to
+# be in the repository for a fresh clone to work. Run `composer install` to put
+# them back if you ever delete this folder.
+AGENTS.md
