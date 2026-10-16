@@ -31,7 +31,7 @@ require_once __DIR__ . '/../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
 require_once __DIR__ . '/../../app/includes/admin/parts.php';
 
-$active_module = '';
+$active_module = 'dashboard';
 $page_title = 'Dashboard';
 $page_heading = 'Dashboard';
 $page_actions = '<a class="btn btn-primary" href="' . admin_url('devotionals/form.php') . '">'
@@ -106,8 +106,8 @@ $cards = [
         $counts['people']['hidden'], 'people', 'success'],
     ['fa-envelope-open-text', 'Messages', $unread_messages,
         0, 'messages', $unread_messages > 0 ? 'danger' : 'secondary'],
-    ['fa-paper-plane', 'Email list', $subscribers,
-        0, 'newsletter', 'secondary'],
+    ['fa-paper-plane', 'Devotional subscribers', $subscribers,
+        0, 'subscribers', 'secondary'],
 ];
 ?>
 

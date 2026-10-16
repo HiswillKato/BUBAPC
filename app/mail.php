@@ -163,7 +163,7 @@ function mail_paragraphs($text)
  * Send a password reset link.
  *
  * $user is a users row and $token_hash is the SHA-256 hash in the tokens
- * table. The link carries the hash (checked by reset.php), never the
+ * table. The link carries the hash (checked by reset), never the
  * password and never a token a stranger could read back into text.
  */
 function mail_password_reset($user, $token_hash)
@@ -173,7 +173,7 @@ function mail_password_reset($user, $token_hash)
         $name = $user['username'] ?? 'there';
     }
 
-    $reset_url = url_raw('reset.php?token=' . rawurlencode($token_hash));
+    $reset_url = url_raw('reset?token=' . rawurlencode($token_hash));
 
     $plain = 'Hello ' . $name . ",\n\n"
         . 'Someone asked to reset the password for your ' . SITE_NAME . ' account. '
@@ -205,9 +205,10 @@ function mail_password_reset($user, $token_hash)
  * The message is already saved in the messages table when this runs; email
  * is only so the pastor sees it without opening the admin panel. $sender is
  * the address the visitor typed, kept in the body so the reply address is
- * not lost if the mail server mangles the headers.
+ * not lost if the mail server mangles the headers. $phone is optional and is
+ * only printed when the visitor gave one.
  */
-function mail_contact_notice($name, $sender, $subject, $message)
+function mail_contact_notice($name, $sender, $phone, $subject, $message)
 {
     $subject = trim((string) $subject);
     if ($subject === '') {
@@ -217,6 +218,7 @@ function mail_contact_notice($name, $sender, $subject, $message)
     $plain = 'New message from the contact form:' . "\n\n"
         . 'From:     ' . $name . "\n"
         . 'Reply to: ' . $sender . "\n"
+        . ($phone !== '' ? 'Phone:    ' . $phone . "\n" : '')
         . 'Subject:  ' . $subject . "\n\n"
         . str_repeat('-', 48) . "\n\n"
         . $message . "\n";
@@ -232,6 +234,10 @@ function mail_contact_notice($name, $sender, $subject, $message)
         . '<tr><td style="padding:2px 12px 2px 0;color:#626a8a">From</td><td>' . e($name) . '</td></tr>'
         . '<tr><td style="padding:2px 12px 2px 0;color:#626a8a">Reply to</td><td>'
         . e($sender) . '</td></tr>'
+        . ($phone !== ''
+            ? '<tr><td style="padding:2px 12px 2px 0;color:#626a8a">Phone</td><td>'
+                . e($phone) . '</td></tr>'
+            : '')
         . '<tr><td style="padding:2px 12px 2px 0;color:#626a8a">Subject</td><td>'
         . e($subject) . '</td></tr></table>'
         . '<hr style="border:none;border-top:1px solid #e6e8f0;margin:16px 0">'
@@ -242,24 +248,90 @@ function mail_contact_notice($name, $sender, $subject, $message)
 }
 
 /**
- * Send a newsletter issue to one subscriber. The address is the only thing
- * the visitor supplied, so $subject and $content are always written by this
- * website, never by a form field.
+ * Send one day's devotional to one person on the list.
+ *
+ * $devotional is a row from the devotionals table, so every word is written by
+ * the church and never by a visitor; the address is the only thing a person
+ * supplied. The mail repeats the message and points back to the same devotional
+ * on the website, where the reading bar, the sharing buttons and the whole
+ * archive live.
  */
-function mail_newsletter($to, $subject, $content)
+function mail_devotional($to, $devotional)
 {
-    $plain = "Hello,\n\n" . $content . "\n\n"
-        . 'You are receiving this because your address is on the ' . SITE_NAME
-        . ' newsletter list. If you no longer want it, the admin panel can '
-        . 'switch your address off.';
+    $title = (string) ($devotional['title'] ?? '');
+    $date = date('l, j F Y', strtotime((string) $devotional['devotional_date']));
+    $link = url_raw('devotionals/' . $devotional['slug']);
+    $verse = trim((string) ($devotional['scripture_text'] ?? ''));
+    $reference = trim((string) ($devotional['scripture_reference'] ?? ''));
+    $message = trim((string) ($devotional['message'] ?? ''));
+
+    /* The plain-text copy is written out by hand rather than stripped from the
+       HTML, so a member reading on a phone still gets the verse set apart from
+       the message and the link on a line of its own that can be tapped. */
+    $plain = SITE_NAME . ' devotional for ' . $date . "\n\n" . $title . "\n\n";
+
+    if ($verse !== '') {
+        $plain .= '"' . $verse . '"' . ($reference !== '' ? ' - ' . $reference : '') . "\n\n";
+    } elseif ($reference !== '') {
+        $plain .= $reference . "\n\n";
+    }
+
+    $plain .= $message . "\n\n";
+
+    $study = trim((string) ($devotional['further_study'] ?? ''));
+    if ($study !== '') {
+        $plain .= "Further study:\n" . $study . "\n\n";
+    }
+
+    $plain .= 'Read it on the website: ' . $link . "\n\n"
+        . 'You are on the ' . SITE_NAME . ' daily devotional list. If you would '
+        . 'rather not receive it, reply to this email and we will take your address off the list.';
+
+    /* The verse is set in the same gold panel the website uses. Mail programs
+       throw away stylesheets, so the panel is a small table with the colours
+       written on it. */
+    $scripture = '';
+    if ($verse !== '' || $reference !== '') {
+        $scripture = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+            . 'style="margin:0 0 18px;background:#fdf7e3;border-left:4px solid #e0a800;border-radius:12px">'
+            . '<tr><td style="padding:14px 16px">';
+        if ($verse !== '') {
+            $scripture .= '<p style="margin:0 0 8px;font-style:italic">&ldquo;' . e($verse) . '&rdquo;</p>';
+        }
+        if ($reference !== '') {
+            $scripture .= '<p style="margin:0;font-weight:bold;color:#8a6d00;font-size:13px">' . e($reference) . '</p>';
+        }
+        $scripture .= '</td></tr></table>';
+    }
+
+    $study_html = '';
+    if ($study !== '') {
+        $items = '';
+        foreach (preg_split('/\r\n|\r|\n/', $study) as $line) {
+            if (trim($line) !== '') {
+                $items .= '<li style="margin:0 0 4px">' . e(trim($line)) . '</li>';
+            }
+        }
+        if ($items !== '') {
+            $study_html = '<h3 style="margin:22px 0 8px;font-size:16px">Further study</h3>'
+                . '<ul style="margin:0;padding:0 0 0 18px;color:#626a8a;font-size:14px">' . $items . '</ul>';
+        }
+    }
 
     $html = mail_layout(
-        '<p style="margin:0 0 14px">Hello,</p>'
-        . mail_paragraphs($content)
-        . '<p style="margin:16px 0 0;color:#626a8a;font-size:13px">You are receiving this '
-        . 'because your address is on the ' . e(SITE_NAME) . ' newsletter list. If you no '
-        . 'longer want it, the admin panel can switch your address off.</p>'
+        '<p style="margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;font-size:12px;'
+            . 'color:#8a6d00;font-weight:bold">' . e(SITE_NAME) . ' devotional for ' . e($date) . '</p>'
+        . '<h1 style="margin:0 0 16px;font-size:22px">' . e($title) . '</h1>'
+        . $scripture
+        . mail_paragraphs($message)
+        . $study_html
+        . '<p style="margin:22px 0 0"><a href="' . e($link) . '" '
+            . 'style="display:inline-block;background:#1b1f3b;color:#ffffff;text-decoration:none;'
+            . 'padding:11px 18px;border-radius:10px;font-weight:bold">Read on the website</a></p>'
+        . '<p style="margin:18px 0 0;color:#626a8a;font-size:13px">You are receiving this because '
+            . 'you are on the ' . e(SITE_NAME) . ' daily devotional list. If you would rather not '
+            . 'receive it, reply to this email and we will take your address off the list.</p>'
     );
 
-    return send_mail($to, $subject, $html, $plain);
+    return send_mail($to, 'Today\'s devotional: ' . $title, $html, $plain);
 }

@@ -36,6 +36,60 @@
 require_staff();
 
 /* -------------------------------------------------------------------------
+   0b. THE MENU IN THE SIDEBAR
+   ---------------------------------------------------------------------- */
+
+/**
+ * The links in the admin sidebar, in the order they are shown.
+ *
+ * The header draws a small heading whenever the group changes, so the rows
+ * are kept in group order. Anything past the header's own Account row goes
+ * here too, because a new screen that is not in this list can only be reached
+ * by remembering its address.
+ *
+ * The key is the module name the page sets as $active_module, so the row for
+ * the page you are on is highlighted. admin_only rows are hidden from an
+ * editor who is staff but not an administrator.
+ */
+function admin_menu()
+{
+    $dashboard = ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fa-gauge-high', 'url' => admin_url()];
+    $content = [
+        ['key' => 'sermons', 'label' => 'Sermons', 'icon' => 'fa-church'],
+        ['key' => 'devotionals', 'label' => 'Devotionals', 'icon' => 'fa-scroll'],
+        ['key' => 'events', 'label' => 'Events', 'icon' => 'fa-calendar-days'],
+        ['key' => 'programs', 'label' => 'Programs', 'icon' => 'fa-list-check'],
+        ['key' => 'announcements', 'label' => 'Announcements', 'icon' => 'fa-bullhorn'],
+        ['key' => 'gallery', 'label' => 'Gallery', 'icon' => 'fa-images'],
+    ];
+    $church = [
+        ['key' => 'people', 'label' => 'People', 'icon' => 'fa-users'],
+        ['key' => 'departments', 'label' => 'Departments', 'icon' => 'fa-sitemap'],
+        ['key' => 'families', 'label' => 'Families', 'icon' => 'fa-people-roof'],
+    ];
+    $inbox = [
+        ['key' => 'messages', 'label' => 'Messages', 'icon' => 'fa-envelope'],
+        ['key' => 'subscribers', 'label' => 'Devotional list', 'icon' => 'fa-paper-plane'],
+        ['key' => 'visitors', 'label' => 'Visitors', 'icon' => 'fa-binoculars'],
+    ];
+    $system = [
+        ['key' => 'settings', 'label' => 'Settings', 'icon' => 'fa-gears', 'admin_only' => true],
+        ['key' => 'logs', 'label' => 'Activity log', 'icon' => 'fa-clock-rotate-left'],
+    ];
+
+    $menu = [$dashboard];
+    foreach (['Content' => $content, 'Church' => $church, 'Inbox' => $inbox, 'System' => $system] as $group => $rows) {
+        foreach ($rows as $row) {
+            $row['group'] = $group;
+            $row['url'] = admin_url($row['key']);
+            $menu[] = $row;
+        }
+    }
+
+    return $menu;
+}
+
+/* -------------------------------------------------------------------------
    1. THE BUTTONS IN A TABLE ROW
    ---------------------------------------------------------------------- */
 
@@ -59,7 +113,7 @@ function admin_delete_button($module, $id, $record_label = 'this record')
         $message = 'Delete this record? This cannot be undone.';
     }
 
-    return '<form method="post" action="' . admin_url($module . '/index.php') . '" class="d-inline">'
+    return '<form method="post" action="' . admin_url($module) . '" class="d-inline">'
         . csrf_field()
         . '<input type="hidden" name="action" value="delete">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
@@ -89,7 +143,7 @@ function admin_toggle_button($module, $id, $current, $turn_on_label = 'Show', $t
     $icon = $turn_on ? 'fa-eye-slash' : ($is_status ? 'fa-paper-plane' : 'fa-eye');
     $class = $turn_on ? 'btn-outline-secondary' : 'btn-soft';
 
-    return '<form method="post" action="' . admin_url($module . '/index.php') . '" class="d-inline">'
+    return '<form method="post" action="' . admin_url($module) . '" class="d-inline">'
         . csrf_field()
         . '<input type="hidden" name="action" value="' . ($is_status ? 'toggle_status' : 'toggle') . '">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
@@ -291,22 +345,7 @@ function admin_image_field($field_name, $label, $current = '', $hint = 'JPG, PNG
  */
 function admin_errors($errors)
 {
-    if (!$errors) {
-        return;
-    }
-    ?>
-    <div class="alert alert-danger" role="alert">
-        <p class="fw-semibold mb-2">
-            <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
-            Please fix the following before saving:
-        </p>
-        <ul class="mb-0 ps-3">
-            <?php foreach ($errors as $error): ?>
-                <li><?php echo e($error); ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <?php
+    form_errors($errors);
 }
 
 /**
@@ -549,7 +588,7 @@ function admin_table_allowed($table)
 {
     return in_array($table, [
         'events', 'devotionals', 'sermons', 'announcements', 'programs', 'people',
-        'departments', 'families', 'gallery', 'messages', 'users',
+        'departments', 'families', 'gallery', 'messages',
         'subscribers',
     ], true);
 }
@@ -564,7 +603,7 @@ function admin_table_allowed($table)
  */
 function admin_order_field($module, $id, $value)
 {
-    return '<form method="post" action="' . admin_url($module . '/index.php') . '" class="d-inline-block">'
+    return '<form method="post" action="' . admin_url($module) . '" class="d-inline-block">'
         . csrf_field()
         . '<input type="hidden" name="action" value="set_order">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
@@ -719,44 +758,4 @@ function admin_check_year($value, $label, &$errors)
     }
 
     return $year;
-}
-
-/**
- * Handle the picture on a form: a new file, the "remove" tick, and the old
- * file on disk. The path that goes into the database is the one this returns,
- * so the form field name is never trusted.
- *
- * Returns ['path' => ..., 'error' => ...]. The error is worth showing but does
- * not stop the saving of the words, so a picture problem never loses a sermon.
- */
-function admin_save_image($file_item, $remove_ticked, $folder, $old_path = '')
-{
-    $result = ['path' => $old_path, 'error' => ''];
-
-    $upload = upload_image($file_item, $folder);
-    if ($upload['error'] !== '') {
-        $result['error'] = $upload['error'];
-        return $result;
-    }
-
-    /* Both boxes ticked at once: the new picture wins, and the old one goes
-       with it. There is no point keeping a file nobody can see. */
-    if ($remove_ticked) {
-        if ($old_path !== '') {
-            delete_uploaded_image($old_path);
-        }
-        $result['path'] = $upload['path'];
-        return $result;
-    }
-
-    if ($upload['path'] !== '') {
-        /* The old file is only deleted once the new one is safely on disk, so
-           a failed upload never leaves the record with no picture at all. */
-        if ($old_path !== '' && $old_path !== $upload['path']) {
-            delete_uploaded_image($old_path);
-        }
-        $result['path'] = $upload['path'];
-    }
-
-    return $result;
 }

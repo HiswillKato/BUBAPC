@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$form_errors) {
-        $statement = $conn->prepare("SELECT id, username, email, full_name FROM users
-                                     WHERE email = ? AND status = 1 LIMIT 1");
+        $statement = $conn->prepare("SELECT id, username, email, name AS full_name FROM people
+                                     WHERE password IS NOT NULL AND email = ? AND active = 1 LIMIT 1");
         $statement->bind_param('s', $email);
         $statement->execute();
         $user = $statement->get_result()->fetch_assoc();
@@ -92,7 +92,7 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             choose a new one.
                         </p>
 
-                        <form method="post" action="<?php echo url('forgot.php'); ?>" novalidate>
+                        <form method="post" action="<?php echo url('forgot'); ?>" novalidate>
                             <?php echo csrf_field(); ?>
 
                             <div class="mb-3">

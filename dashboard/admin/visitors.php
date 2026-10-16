@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        trusted with content, and wiping the record of who has been here is a
        different kind of power. */
     if (!is_admin()) {
-        flash('error', 'Only a website admin can do that.');
+        flash('error', 'Only an administrator can do that.');
         redirect(admin_url('visitors'));
     }
 

@@ -11,7 +11,7 @@
  * So the image column leaves those six tables, the upload box leaves those six
  * forms, and the pictures leave the public pages. Events and the gallery keep
  * theirs, and so do upload_image(), delete_uploaded_image(), admin_image_field()
- * and admin_save_image() in app/functions.php and app/includes/admin/parts.php, because
+ * and save_image() in app/functions.php, because
  * the two modules that keep pictures are the only two callers left.
  *
  * TWO THINGS WORTH KNOWING BEFORE RUNNING THIS

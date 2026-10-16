@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $image = admin_save_image(
+        $image = save_image(
             $_FILES['image'] ?? null,
             post_checkbox('remove_image'),
             'gallery',

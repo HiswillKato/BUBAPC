@@ -199,7 +199,7 @@ function redirect($path)
         $our_host = strtolower(preg_replace('#:\d+$#', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
 
         if ($host === $our_host) {
-            header('Location: ' . url_raw($path));
+            header('Location: ' . $path);
             exit;
         }
 
@@ -598,6 +598,31 @@ function show_flashes()
         echo '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
         echo '</div>';
     }
+}
+
+/**
+ * Print a list of things that went wrong at the top of a form, on any page.
+ * Both the public forms and the admin panel use this, so a message is worded
+ * and laid out in one place.
+ */
+function form_errors($errors, $heading = 'Please fix the following before saving:')
+{
+    if (!$errors) {
+        return;
+    }
+    ?>
+    <div class="alert alert-danger" role="alert">
+        <p class="fw-semibold mb-2">
+            <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+            <?php echo e($heading); ?>
+        </p>
+        <ul class="mb-0 ps-3">
+            <?php foreach ($errors as $error): ?>
+                <li><?php echo e($error); ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php
 }
 
 /* =========================================================================
@@ -1084,6 +1109,45 @@ function delete_uploaded_image($path)
     }
 }
 
+/**
+ * Handle the picture on a form: a new file, the "remove" tick, and the old
+ * file on disk. The path that goes into the database is the one this returns,
+ * so the form field name is never trusted.
+ *
+ * Returns ['path' => ..., 'error' => ...]. The error is worth showing but does
+ * not stop the saving of the words, so a picture problem never loses the rest
+ * of the form. Both the admin panel and a person editing their own page use
+ * this, so the rule about what a picture may be lives in one place.
+ */
+function save_image($file_item, $remove_ticked, $folder, $old_path = '')
+{
+    $result = ['path' => $old_path, 'error' => ''];
+
+    $upload = upload_image($file_item, $folder);
+    if ($upload['error'] !== '') {
+        $result['error'] = $upload['error'];
+        return $result;
+    }
+
+    if ($remove_ticked) {
+        delete_uploaded_image($old_path);
+        $result['path'] = $upload['path'];
+        return $result;
+    }
+
+    if ($upload['path'] !== '') {
+        /* A fresh file replaces the old one, but the old file is only unlinked
+           once the new one is safely on disk, so a picture problem never loses
+           the one that was already there. */
+        if ($old_path !== '' && $old_path !== $upload['path']) {
+            delete_uploaded_image($old_path);
+        }
+        $result['path'] = $upload['path'];
+    }
+
+    return $result;
+}
+
 /* =========================================================================
    12. YOUTUBE
    ========================================================================= */
@@ -1217,18 +1281,25 @@ function weekly_program_by_day($conn)
  * and nowhere else.
  *
  * The first five are the people who hold an office, and they are what the
- * leadership page shows. The last two are the students and the alumni.
+ * leadership page shows. The last four are the students, the alumni, and the
+ * two groups that belong to no directory page at all: 'member' is somebody who
+ * registered themselves on register.php, and 'staff' is an account the office
+ * made for the website. Those two are kept at the end on purpose, because
+ * leader_categories() and the public filters take the first five and so never
+ * offer them to a visitor or a leader.
  */
 function people_categories()
 {
     return [
-        'pastor'            => 'Pastors',
-        'church_admin'      => 'Church Admins',
-        'elder'             => 'Elders',
-        'department_leader' => 'Department Leaders',
-        'family_leader'     => 'Family Leaders',
-        'student'           => 'Students',
-        'alumnus'           => 'Alumni',
+        'pastor'            => 'Pastor',
+        'church_admin'      => 'Church admin',
+        'elder'             => 'Elder',
+        'department_leader' => 'Department leader',
+        'family_leader'     => 'Family leader',
+        'student'           => 'Student',
+        'alumnus'           => 'Alumnus',
+        'member'            => 'Member',
+        'staff'             => 'Staff',
     ];
 }
 
@@ -1245,7 +1316,7 @@ function leader_categories()
 
 /**
  * The groups the people page can be filtered by, in the order the filter
- * boxes are shown: everybody, the office holders, the students, the alumni.
+ * boxes are shown: the office holders, the pastors, the alumni.
  *
  * $where_sql is the SQL filter to add, already written out with no placeholders
  * in it, because the group is checked against people_categories() first and so
@@ -1256,17 +1327,13 @@ function people_filters()
     $leader_list = "'" . implode("','", array_keys(leader_categories())) . "'";
 
     return [
-        'all' => [
-            'label'      => 'Everyone',
-            'where_sql'  => '',
-        ],
         'leadership' => [
             'label'      => 'Leadership',
             'where_sql'  => "category IN ($leader_list)",
         ],
-        'students' => [
-            'label'      => 'Students',
-            'where_sql'  => "category = 'student'",
+        'pastors' => [
+            'label'      => 'Pastors',
+            'where_sql'  => "category = 'pastor'",
         ],
         'alumni' => [
             'label'      => 'Alumni',
@@ -1277,14 +1344,15 @@ function people_filters()
 
 /**
  * Read the filter asked for in the address, for example ?group=alumni.
- * Anything that is not one of the four real groups comes back as 'all', so a
- * mistyped or hand-edited address shows the whole directory rather than an
- * error page.
+ * Anything that is not one of the real groups - including the plain /people
+ * address, which asks for nothing - comes back as 'leadership', so the page
+ * always has a group to show and a mistyped or hand-edited address is never a
+ * dead end.
  */
 function people_filter_from_url()
 {
     $asked = isset($_GET['group']) ? trim((string) $_GET['group']) : '';
-    return array_key_exists($asked, people_filters()) ? $asked : 'all';
+    return array_key_exists($asked, people_filters()) ? $asked : 'leadership';
 }
 
 /**
@@ -1293,7 +1361,13 @@ function people_filter_from_url()
  */
 function person_by_slug($conn, $slug)
 {
-    $statement = $conn->prepare("SELECT * FROM people WHERE slug = ? AND status = 1 LIMIT 1");
+    /* A 'member' or a 'staff' row is an account, not a page on the website, so
+       it is left out even when it happens to be marked as shown. */
+    $statement = $conn->prepare(
+        "SELECT * FROM people
+         WHERE slug = ? AND status = 1 AND category NOT IN ('member', 'staff')
+         LIMIT 1"
+    );
     $statement->bind_param('s', $slug);
     $statement->execute();
     $row = $statement->get_result()->fetch_assoc();
@@ -1745,6 +1819,7 @@ function search_site($conn, $search_term, $per_group = 6)
         'Leadership' => [
             "SELECT * FROM people
              WHERE status = 1
+               AND category NOT IN ('member', 'staff')
                AND (name LIKE ? OR position LIKE ? OR bio LIKE ?)
              ORDER BY display_order ASC, name ASC LIMIT ?",
             'sssi',
@@ -1890,7 +1965,7 @@ function render_devotional($devotional, $link = '')
         </p>
 
         <?php if (!empty($devotional['scripture_text']) || !empty($devotional['scripture_reference'])): ?>
-            <div class="card border-0 border-start border-4 border-gold bg-gold-soft rounded-4 my-4">
+            <div class="card border-0 border-start border-4 border-warning bg-warning-subtle rounded-4 my-4">
                 <div class="card-body">
                     <?php if (!empty($devotional['scripture_text'])): ?>
                         <p class="fst-italic mb-2">&ldquo;<?php echo e($devotional['scripture_text']); ?>&rdquo;</p>
@@ -1939,36 +2014,53 @@ function status_badge($status, $active_flag = null)
 /**
  * What one website account is called, in words a church member would use.
  *
- * The two administrator roles are named with different words on purpose and
- * that is the whole point of the wording. A "website administrator" is whoever
- * was trained on the website and looks after the accounts and the settings; a
- * "church administrator" is somebody the church itself made an administrator,
- * such as a secretary or a treasurer, so that they can keep the writing up to
- * date. Printing the same word for both is what leaves a church secretary
- * wondering whether the users screen is open to her, so the labels never share
- * a word. Where a screen needs to say both, it says both.
+ * A word here is a website job, not a church office. 'Administrator' is the
+ * one full role: a website or a church administrator, both with the same
+ * rights, who may open the users and the settings as well as the content.
+ * An editor writes the content; a pastor and a church leader are named for
+ * the office they hold and, like an editor, may write the content and
+ * nothing more. A member is a church member who signed themselves up on
+ * register.php.
  *
- * This is the wording for the role column in the users table, and it is not the
- * same word as the group a person belongs to on the people table. That one says
- * where somebody stands in the church and gives them a page of their own; this
- * one says what one sign-in may do here. A person can be a church administrator
- * in both, in one, or in neither, so the two are not joined up anywhere.
+ * This is the wording for the role column in the users table, and it is not
+ * the same word as the group a person belongs to on the people table. That
+ * one says where somebody stands in the church and gives them a page of
+ * their own; this one says what one sign-in may do here. A person can hold a
+ * church office and still be only an editor here, or hold no office and be
+ * an administrator.
  *
  * staff_roles() in app/auth.php is the list of the roles that get into the
- * admin panel. This is the list of what to call them, and it deliberately
- * carries all four so that a role the panel turns away still has a name on the
- * users screen.
+ * admin panel. This is the list of what to call them, and it carries every
+ * value the role column can hold, so a role the panel turns away still has a
+ * name on the users screen.
  */
 function user_role_label($role)
 {
     $labels = [
-        'admin'        => 'Website administrator',
-        'editor'       => 'Editor',
-        'church_admin' => 'Church administrator',
-        'member'       => 'Church member',
+        'admin'  => 'Administrator',
+        'editor' => 'Editor',
+        'pastor' => 'Pastor',
+        'leader' => 'Church leader',
+        'member' => 'Church member',
     ];
 
     return $labels[$role] ?? 'Unknown';
+}
+
+/**
+ * The three ways a person can register on the website, in the order the form
+ * offers them. A member and an alumnus are an ordinary account that may sign in
+ * at once; a leader is put on the same account but waits for an administrator
+ * to switch it on. The wording lives here so the register form and the users
+ * list cannot drift apart.
+ */
+function standing_labels()
+{
+    return [
+        'member'  => 'Member',
+        'alumnus' => 'Alumni',
+        'leader'  => 'Leader',
+    ];
 }
 
 /**
@@ -1983,7 +2075,7 @@ function user_role_label($role)
  * so a caller keeps saying admin_url('events/form.php') and never has to know
  * what the file was renamed to.
  *
- * A module with no entry here has no form - leaders, logs, newsletter and
+ * A module with no entry here has no form - leaders, logs, subscribers and
  * visitors are read-only screens - so asking for one is a mistake worth showing
  * rather than hiding.
  */
@@ -2014,9 +2106,9 @@ function admin_form_file($module)
  * out of /admin and into /dashboard/admin without touching the hundred-odd links
  * that point into it.
  *
- * The list screens get a short address with no file name, which .htaccess rewrites
- * to the .php file. The form screens keep the .php name, so they are real files
- * that Apache serves directly and cannot be shadowed by a rewrite.
+ * Every screen gets a short address with no file name; .htaccess rewrites it onto
+ * the .php file. A form screen is named after the single thing it edits, so
+ * 'events/form.php' becomes /dashboard/admin/add-event.
  */
 function admin_url($module = '')
 {
@@ -2045,7 +2137,7 @@ function admin_url($module = '')
        address does not exist, which is the point: the mistake is visible in the
        address bar instead of quietly landing on the wrong screen. */
     if ($file !== '') {
-        return url('dashboard/admin/' . $file . '.php' . $query);
+        return url('dashboard/admin/' . $file . $query);
     }
 
     return url('dashboard/admin/' . $screen . $query);
@@ -2156,7 +2248,8 @@ function log_action_label($action)
         'program_updated'   => 'changed a programme',
         'program_deleted'   => 'deleted a programme',
         'contact_received'  => 'sent a contact message',
-        'newsletter_added'  => 'joined the newsletter',
+        'devotional_added'  => 'joined the devotional list',
+        'newsletter_added'  => 'joined the devotional list',
         'settings_changed'  => 'changed the website settings',
         'log_cleared'       => 'cleared the activity log',
     ];

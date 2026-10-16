@@ -28,17 +28,17 @@ The website uses a straightforward web stack:
 - PHP for server-side functionality
 - MySQLi with MariaDB/MySQL for data storage
 - Bootstrap 5, HTML, CSS, and JavaScript for the interface
-- Apache for local development and hosting
+- nginx for local development and hosting
 
 ## Running the project locally
 
-To work on the site, you'll need a PHP-enabled Apache server and a MariaDB or MySQL database. Clone the repository into your web server's project directory:
+To work on the site, you'll need a PHP-enabled nginx server (PHP-FPM) and a MariaDB or MySQL database. Clone the repository into your web server's document root:
 
 ```bash
 git clone https://github.com/HiswillKato/BUBAPC.git
 ```
 
-Set up the database and application configuration according to the files included in the project, then open the site through your local Apache host. Configuration details may change as development continues. Keep database passwords and other secrets out of Git.
+Set up the database and application configuration according to the files included in the project, then open the site through your local nginx host. Configuration details may change as development continues. Keep database passwords and other secrets out of Git.
 
 ## Project status
 

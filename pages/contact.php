@@ -27,6 +27,7 @@ $canonical = 'contact';
 $form_errors = [];
 $name = '';
 $email = '';
+$phone = '';
 $subject = '';
 $message = '';
 
@@ -35,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $name    = post_text('name');
     $email   = post_text('email');
+    $phone   = post_text('phone');
     $subject = post_text('subject');
     $message = post_text('message');
 
@@ -43,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!is_valid_email($email)) {
         $form_errors['email'] = 'Please give an email address we can reply to.';
+    }
+    if (mb_strlen($phone) > 40) {
+        $form_errors['phone'] = 'That phone number is too long.';
     }
     if (is_empty_value($subject)) {
         $form_errors['subject'] = 'Please give the message a subject.';
@@ -57,9 +62,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $looks_like_a_robot = post_text('website') !== '';
 
     if (!$form_errors && !$looks_like_a_robot) {
-        $statement = $conn->prepare("INSERT INTO messages (name, email, subject, message, seen)
-                                     VALUES (?, ?, ?, ?, 0)");
-        $statement->bind_param('ssss', $name, $email, $subject, $message);
+        $statement = $conn->prepare("INSERT INTO messages (name, email, phone, subject, message, seen)
+                                     VALUES (?, ?, ?, ?, ?, 0)");
+        $statement->bind_param('sssss', $name, $email, $phone, $subject, $message);
         $statement->execute();
         $statement->close();
 
@@ -67,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            the messages table, so the pastor is told the moment somebody writes
            rather than only when the admin panel is opened. Best-effort: a mail
            server that is down must not stop the thank-you below. */
-        mail_contact_notice($name, $email, $subject, $message);
+        mail_contact_notice($name, $email, $phone, $subject, $message);
 
         /* Written after the row is saved, and saying only that a message
            arrived rather than repeating what was said in it, so the activity
@@ -137,7 +142,17 @@ page_header(
                                 <?php endif; ?>
                             </div>
 
-                            <div class="col-12">
+                            <div class="col-md-6">
+                                <label class="form-label" for="phone">Your phone <span class="text-body-secondary fw-normal">(optional)</span></label>
+                                <input type="tel" class="form-control<?php echo isset($form_errors['phone']) ? ' is-invalid' : ''; ?>"
+                                       id="phone" name="phone" value="<?php echo e($phone); ?>"
+                                       maxlength="40" autocomplete="tel">
+                                <?php if (isset($form_errors['phone'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($form_errors['phone']); ?></div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="col-md-6">
                                 <label class="form-label" for="subject">Subject</label>
                                 <input type="text" class="form-control<?php echo isset($form_errors['subject']) ? ' is-invalid' : ''; ?>"
                                        id="subject" name="subject" value="<?php echo e($subject); ?>"

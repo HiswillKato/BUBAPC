@@ -17,11 +17,14 @@ define('BUBAPC_SKIP_MAINTENANCE', true);
 
 require_once __DIR__ . '/../app/init.php';
 
-/* Someone who is already signed in has no business on the login page. */
+/* Someone who is already signed in has no business on the login page. Staff go
+   back to the panel and a church member to their own account, the same split
+   the menu link makes. */
 if (is_logged_in()) {
-    redirect('admin');
+    redirect(is_staff() ? admin_url() : member_url());
 }
 
+$page_title = 'Login';
 $login_username = '';
 $errors = [];
 
@@ -38,7 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('login');
     }
 
-    $statement = $conn->prepare("SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1");
+    $statement = $conn->prepare(
+        "SELECT p.*, p.name AS full_name
+         FROM people p
+         WHERE p.password IS NOT NULL AND (p.username = ? OR p.email = ?)
+         LIMIT 1"
+    );
     $statement->bind_param('ss', $login_username, $login_username);
     $statement->execute();
     $result = $statement->get_result();
@@ -48,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* The same message for a wrong name and a wrong password, so the form
        never tells a stranger whether an account exists. */
     $password_ok = $user && password_verify($password, $user['password']);
-    $account_usable = $user && (int) $user['status'] === 1;
+    $account_usable = $user && (int) $user['active'] === 1;
 
     login_record_attempt($conn, $login_username, (bool) ($password_ok && $account_usable));
 
@@ -73,14 +81,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* Staff go to the admin panel and church members to their own account
            page. A member has no business in /dashboard/admin/, so sending them there
-           would only bounce them straight back out again. The list of the
-           staff roles is the one in app/auth.php, so a role added there is
-           sent to the right place without a word changing here. */
-        redirect(in_array($user['role'], staff_roles(), true) ? 'admin' : 'member');
+           would only bounce them straight back out again. is_staff() is the one
+           answer to who may open the panel, so a church admin, who is staff by
+           their directory group and not by a role, lands in the right place. */
+        redirect(is_staff() ? admin_url() : member_url());
     }
 
     if ($password_ok && !$account_usable) {
-        $errors[] = 'That account has been switched off. Please ask somebody with website administrator access to turn it back on.';
+        /* A leader who has never signed in is waiting to be approved, which
+           reads differently from an account an admin has switched off. */
+        if ($user['role'] === 'leader' && $user['login'] === null) {
+            $errors[] = 'That account is waiting to be approved by an administrator. Please try again later.';
+        } else {
+            $errors[] = 'That account has been switched off. Please ask somebody with administrator access to turn it back on.';
+        }
     } else {
         $errors[] = 'That username or password is not right.';
     }

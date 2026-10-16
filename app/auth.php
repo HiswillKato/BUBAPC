@@ -1,13 +1,24 @@
 <?php
 /**
- * BUBAPC - Sessions, CSRF protection and website user login
+ * BUBAPC - the sign-in session, CSRF protection and who may do what
  *
- * IMPORTANT: website users are NOT the same thing as church leaders.
- * A Pastor is a church leader stored in the people table.
- * An "admin" or "editor" here is only a person who manages this website.
- * A "member" is a church member who signed themselves up on register.php:
- * they may sign in and edit their own details, but they may not touch
- * anything else, and the admin panel is closed to them.
+ * There is one table about people, and this file signs them in. A row in
+ * `people` with a password is an account and a row without one is a plain
+ * directory page, so the account and the page are the same thing and no query
+ * has to join two tables to know who somebody is.
+ *
+ * role is the website job, not the church job: 'admin' may open the users and
+ * the settings as well as the content, and 'editor', 'pastor' and 'leader' may
+ * manage the content but never the settings. A 'member' is a church member who
+ * signed themselves up on register.php: they may sign in and edit their own
+ * details, but the admin panel is closed to them.
+ *
+ * A church position such as pastor or elder is the person's category, which
+ * decides which page they appear on. One thing sits on top of the roles: a
+ * person filed under "Church Admins" is an administrator through that group
+ * alone, whatever the role says, because the group is the church's own senior
+ * list. is_admin() is the one place that reads it, so a church admin and a
+ * website admin share one kind of power.
  */
 
 /* Start the session on every page. The session settings were already made
@@ -31,6 +42,13 @@ function is_logged_in()
 /**
  * The details of the logged in website user.
  * Returns an empty array when nobody is logged in.
+ *
+ * An account is a row in people with a password, so this is simply that row.
+ * Two aliases are added for the callers that were written when an account was
+ * a separate idea: full_name is the person's name, and person_category is their
+ * group, which is_admin(), is_staff() and the panel menu read to tell a church
+ * admin from a website admin. It is read here, in the one place the signed in
+ * user is built, so nothing below asks the database for it again.
  */
 function current_user()
 {
@@ -40,58 +58,106 @@ function current_user()
         return [];
     }
 
-    // Read the user once per request and keep the result for this page.
+    // Read the person once per request and keep the result for this page.
     if (!empty($_SESSION['user_data'])) {
         return $_SESSION['user_data'];
     }
 
     $id = (int) $_SESSION['user_id'];
-    $statement = $conn->prepare("SELECT id, username, full_name, email, phone, role, can_manage_users,
-                                        status, login, created
-                                 FROM users WHERE id = ? LIMIT 1");
+    $statement = $conn->prepare(
+        "SELECT p.*, p.name AS full_name, p.category AS person_category, p.id AS person_id
+         FROM people p
+         WHERE p.id = ? AND p.password IS NOT NULL LIMIT 1"
+    );
     $statement->bind_param('i', $id);
     $statement->execute();
-    $result = $statement->get_result();
-    $user = $result->fetch_assoc();
+    $person = $statement->get_result()->fetch_assoc();
     $statement->close();
 
-    // The user was deleted or deactivated while logged in, so log them out.
-    if (!$user || (int) $user['status'] !== 1) {
+    /* The account was deleted or switched off while the person was signed in,
+       so they are signed out on the next thing they do. A switched off account
+       is one with active at 0. */
+    if (!$person || (int) $person['active'] !== 1) {
         logout_user();
         return [];
     }
 
-    $_SESSION['user_data'] = $user;
-    return $user;
+    $_SESSION['user_data'] = $person;
+    return $person;
+}
+
+/**
+ * The directory page behind this sign in, or an empty array.
+ *
+ * Now that a row is both the page and the sign-in, this is the signed in person
+ * themselves - unless they are a 'member' or a 'staff' account, which belongs
+ * to no page. Those two have nothing on the public site to edit, so they are
+ * handed back an empty array, exactly as a person with no page always was.
+ */
+function current_person($conn)
+{
+    $person = current_user();
+
+    if ($person === [] || in_array($person['category'], ['member', 'staff'], true)) {
+        return [];
+    }
+
+    return $person;
+}
+
+/**
+ * Can this person sign in at all? True when the row carries a password, which
+ * is what separates a sign-in from a plain directory page. Used by the lists to
+ * put an "Account" badge on the right rows.
+ */
+function person_can_sign_in($person)
+{
+    return !empty($person['password']);
+}
+
+/**
+ * Who may look at the whole website while it is closed for maintenance.
+ *
+ * An administrator - the same answer as everywhere else in the panel, because
+ * a website admin and a church admin both run the place. A church leader with
+ * an ordinary account may not: the website is not theirs to close.
+ */
+function may_bypass_maintenance()
+{
+    return is_admin();
 }
 
 /**
  * The roles that may open the admin panel, in the order the users screen
  * shows them.
  *
- * 'church_admin' is somebody the church itself made an administrator - a
- * secretary, a treasurer, whoever keeps the records - rather than somebody who
- * was trained on a website. They are staff, so they may add and change all the
- * content. What they may not do, unless the one extra box on their account is
- * ticked, is open the users and the settings. That box is read by is_admin()
- * and by nothing else.
+ * 'admin' is a website or a church administrator and reaches the users and
+ * the settings screens as well as the content. The two kinds of admin share
+ * this one role and have the same rights. 'editor' writes the content,
+ * 'pastor' marks a religious leader and 'leader' any other church leader;
+ * all three may add and change the content but never the users or the
+ * settings.
  *
  * This list lives here so that is_staff() keeps its promise of being the one
- * place that answers "who can get into the admin panel". A fourth role added
+ * place that answers "who can get into the admin panel". A role added
  * anywhere else in the project would be refused at the door, which is the
  * answer we want: the list is the door.
  */
 function staff_roles()
 {
-    return ['admin', 'editor', 'church_admin'];
+    return ['admin', 'editor', 'pastor', 'leader'];
 }
 
 /**
- * May this person open the screens that change the website itself, meaning the
- * users and the settings?
+ * Is the signed in account an administrator, in effect?
  *
- * That is a website admin, and a church admin whose account has the extra box
- * ticked. An editor never can, however long they have been here.
+ * Two things make one: the 'admin' role, for somebody who runs the website and
+ * has no page of their own in the directory, and the "Church Admins" group,
+ * which a church leader is already filed under. A church admin linked to such
+ * a page is an administrator everywhere a website admin is - the users, the
+ * settings and the whole panel - not only at the maintenance door. The group
+ * is the church's own senior list, so reading it here is what folds the two
+ * kinds of admin into one kind of power.
  */
 function is_admin()
 {
@@ -100,19 +166,24 @@ function is_admin()
         return false;
     }
 
-    if ($user['role'] === 'admin') {
-        return true;
-    }
+    return $user['role'] === 'admin' || is_church_admin();
+}
 
-    /* The box only counts on a church admin. The form offers it for that one
-       role and nothing else reads the column, so the two together mean that a
-       member who somehow ended up with the box ticked is still only a member. */
-    return $user['role'] === 'church_admin' && !empty($user['can_manage_users']);
+/**
+ * Is the signed in account linked to a directory person in the "Church Admins"
+ * group? The group is the people category 'church_admin'. The group is read
+ * from the cached user row, so this costs nothing after the first check on a
+ * page.
+ */
+function is_church_admin()
+{
+    return (current_user()['person_category'] ?? '') === 'church_admin';
 }
 
 /**
  * Is this person website staff, meaning somebody who may open the admin
- * panel? That is the three roles in staff_roles(), and nothing else.
+ * panel? That is the roles in staff_roles(), and a directory person filed
+ * under "Church Admins", and nothing else.
  *
  * This is the one answer the admin panel depends on. require_staff() calls it,
  * and it is the only place that decides who is staff, so the answer to "who
@@ -121,7 +192,11 @@ function is_admin()
 function is_staff()
 {
     $user = current_user();
-    return isset($user['role']) && in_array($user['role'], staff_roles(), true);
+    if (!isset($user['role'])) {
+        return false;
+    }
+
+    return in_array($user['role'], staff_roles(), true) || is_church_admin();
 }
 
 /**
@@ -198,14 +273,14 @@ function require_login()
 }
 
 /**
- * Only a website admin may open this page.
+ * Only an administrator - a website or a church admin - may open this page.
  */
 function require_admin()
 {
     require_login();
     if (!is_admin()) {
-        flash('error', 'Only somebody with website administrator access can open that page.');
-        redirect('admin');
+        flash('error', 'Only somebody with administrator access can open that page.');
+        redirect(admin_url());
     }
 }
 
@@ -240,7 +315,7 @@ function require_staff()
  * signing in from being used afterwards, and clearing anything already in the
  * session stops a page that was open before signing in from carrying over.
  *
- * $user is a row from the users table, not a list of typed-in values.
+ * $user is a row from the people table, not a list of typed-in values.
  */
 function sign_user_in($user)
 {
@@ -249,10 +324,14 @@ function sign_user_in($user)
     session_regenerate_id(true);
 
     $_SESSION['user_id'] = (int) $user['id'];
-    $_SESSION['user_data'] = $user;
+    /* One row is what the session carries, and it is the row current_user()
+       builds, not the raw login row handed in here. That row is the one that
+       knows the person's directory group, which is_admin() and is_staff() read
+       to tell a church admin from an ordinary member. */
+    unset($_SESSION['user_data']);
     $_SESSION['logged_in_at'] = time();
 
-    $statement = $conn->prepare("UPDATE users SET login = NOW() WHERE id = ?");
+    $statement = $conn->prepare("UPDATE people SET login = NOW() WHERE id = ?");
     $user_id = (int) $user['id'];
     $statement->bind_param('i', $user_id);
     $statement->execute();
@@ -262,7 +341,7 @@ function sign_user_in($user)
        the account that signed in, rather than as the person who was signed in
        before. The line is written here rather than in login.php because a
        member registering and signing in arrives the same way. */
-    log_action($conn, 'user_signed_in', $user['full_name'] . ' signed in');
+    log_action($conn, 'user_signed_in', ($user['full_name'] ?? $user['name']) . ' signed in');
 }
 
 /**
@@ -454,7 +533,7 @@ if (!defined('BUBAPC_INSTALLER') && !defined('BUBAPC_SKIP_MAINTENANCE')) {
         $maintenance_on = is_maintenance_mode($conn);
     }
 
-    if ($maintenance_on && !is_admin()) {
+    if ($maintenance_on && !may_bypass_maintenance()) {
         $maintenance_message = setting_get($conn, 'maintenance_message', '');
         if (trim($maintenance_message) === '') {
             $maintenance_message = 'We are carrying out some work on the website. Please check back shortly.';

@@ -48,6 +48,15 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         <strong><?php echo e($message['name']); ?></strong>
                         &lt;<a href="mailto:<?php echo e($message['email']); ?>"><?php echo e($message['email']); ?></a>&gt;
                     </p>
+                    <?php if (!empty($message['phone'])): ?>
+                        <p class="text-body-secondary small mb-1">
+                            <i class="fa-solid fa-phone me-1" aria-hidden="true"></i>
+                            Phone
+                            <a href="tel:<?php echo e(preg_replace('/[^0-9+]/', '', $message['phone'])); ?>">
+                                <?php echo e($message['phone']); ?>
+                            </a>
+                        </p>
+                    <?php endif; ?>
                     <p class="text-body-secondary small mb-4">
                         Sent <?php echo format_date($message['created'], 'j F Y \a\t g:ia'); ?>
                         (<?php echo e(ago($message['created'])); ?>)
@@ -57,7 +66,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         <h2 class="h5 mb-3"><?php echo e($message['subject']); ?></h2>
                     <?php endif; ?>
 
-                    <div class="border-start border-3 border-gold ps-3">
+                    <div class="border-start border-3 border-warning ps-3">
                         <?php echo paragraphs($message['message']); ?>
                     </div>
                 </div>

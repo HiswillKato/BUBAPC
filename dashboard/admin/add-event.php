@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? slug($conn, 'events', $values['title'])
             : $event['slug'];
 
-        $image = admin_save_image(
+        $image = save_image(
             $_FILES['image'] ?? null,
             post_checkbox('remove_image'),
             'events',

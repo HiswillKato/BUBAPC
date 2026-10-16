@@ -87,64 +87,12 @@ CREATE DATABASE IF NOT EXISTS `bubapc`
   COLLATE utf8mb4_unicode_ci;
 USE `bubapc`;
 
--- ------------------------------------------------------------
--- users - every account that can sign in to this website, which
--- is the admin panel staff and the church members who registered.
---
--- role is the website job, not the church job: 'admin' may open the
--- users and settings screens, 'editor' may only manage content,
--- 'church_admin' is somebody the church itself made an administrator -
--- a secretary, a treasurer - who may manage the content, and 'member'
--- is a church member who signed themselves up on register.php. Only
--- 'admin', 'editor' and 'church_admin' may open the admin panel at
--- all; require_staff() is what keeps a member out of it.
---
--- 'church_admin' here and people.category 'church_admin' are two
--- different things that happen to share a word, and they are not
--- joined up. This column says what one account may do on this website;
--- the category in the people table says where one person stands in the
--- church and whether they get a page of their own. Somebody can be a
--- church admin in both tables, in only one, or in neither.
---
--- can_manage_users is the extra tick on a 'church_admin' account. A
--- church admin manages the content by default; this raises one of them
--- to the same reach as a website admin, so they can open the users and
--- settings screens. It is ignored for every other role, because only a
--- 'church_admin' can be given it and only a 'church_admin' reads it.
---
--- A church position such as pastor or elder belongs in the
--- people table, not here.
---
--- username is only used by the staff accounts, which choose their
--- own. A member signs in with the email address instead, so theirs
--- is copied from the email column, which is why both keys are still
--- unique but the two are not required to be the same string.
---
--- phone is only filled in by members; staff leave it empty.
---
--- status is 1 for an account that may sign in and 0 for one that
--- has been switched off. Removing the row entirely is also fine.
---
--- login is the moment of the last successful sign-in, or empty if
--- the account has never signed in.
--- ------------------------------------------------------------
-DROP TABLE IF EXISTS `users`;
-CREATE TABLE `users` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `username` VARCHAR(64) NOT NULL,
-  `full_name` VARCHAR(160) NOT NULL DEFAULT '',
-  `email` VARCHAR(190) NOT NULL,
-  `phone` VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Members only, staff leave it empty',
-  `password` VARCHAR(255) NOT NULL COMMENT 'Always a password_hash() value, never a plain word',
-  `role` ENUM('admin','editor','church_admin','member') NOT NULL DEFAULT 'member',
-  `can_manage_users` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 lets a church_admin also open the users and settings screens',
-  `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 can sign in, 0 is switched off',
-  `login` DATETIME DEFAULT NULL COMMENT 'The last successful sign-in, or empty',
-  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- There used to be a second table, `users`, holding every account that
+-- could sign in. It has been folded into `people`, so one row is now
+-- the whole of a person: where the church lists them AND what they may
+-- do on the website. An account is a person row with a `password`; a
+-- row with no password is a directory page with no sign-in. Nothing
+-- joins the two tables any more because there is nothing to join.
 
 -- ------------------------------------------------------------
 -- tokens - one-time links, currently only password resets.
@@ -168,7 +116,7 @@ CREATE TABLE `users` (
 DROP TABLE IF EXISTS `tokens`;
 CREATE TABLE `tokens` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user` INT UNSIGNED NOT NULL COMMENT 'A row in users',
+  `user` INT UNSIGNED NOT NULL COMMENT 'A row in people',
   `type` ENUM('password_reset') NOT NULL DEFAULT 'password_reset',
   `hash` CHAR(64) NOT NULL COMMENT 'SHA-256 of the token, never the token itself',
   `expires` DATETIME NOT NULL COMMENT 'Hours after issue, from TOKEN_RESET_HOURS',
@@ -202,7 +150,7 @@ CREATE TABLE `tokens` (
 DROP TABLE IF EXISTS `logs`;
 CREATE TABLE `logs` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `actor` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'A row in users, or 0 for a visitor',
+  `actor` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'A row in people, or 0 for a visitor',
   `action` VARCHAR(60) NOT NULL COMMENT 'The event name, for example event_created',
   `details` VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Finished English text, ready to print',
   `ip` VARCHAR(45) NOT NULL DEFAULT '',
@@ -463,14 +411,18 @@ CREATE TABLE `families` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- people - everyone the church lists on the website, in one table.
+-- people - one row for every person, whether the church lists them
+-- on the website, signs them in to the panel, or both.
 --
 -- This table used to be called "leaders" and held only the people
--- who hold an office. It is now one table for all five groups, so
--- a student, a pastor and an alumnus are all rows in the same place
--- and the website can join on them. See people_categories() in
--- app/functions.php for the list of groups, which is the only place
--- the names live.
+-- who hold an office. It grew into one table for the five listed
+-- groups, and it is now also the accounts table: the old `users`
+-- table was folded in here. One row is the whole of a person - the
+-- directory page AND the sign-in - so an account is a row with a
+-- password and a row with no password is a page with no sign-in.
+-- Nothing joins the two tables any more because there is nothing to
+-- join. See people_categories() in app/functions.php for the list of
+-- groups, which is the only place the names live.
 --
 -- category decides the group, and so which page a person appears on:
 --
@@ -480,6 +432,14 @@ CREATE TABLE `families` (
 --       goes in the students list
 --   alumnus
 --       goes in the alumni list
+--   member
+--       signed themselves up on register.php; no directory page
+--   staff
+--       an account the office made for the website; no directory page
+--
+-- member and staff are apppended to the list on purpose: the public
+-- filters and leader_categories() take the first five, so these two
+-- never appear in a dropdown a visitor or a leader is offered.
 --
 -- A person has exactly one category, on purpose. It is one dropdown
 -- in the admin form and a beginner maintaining the site cannot get it
@@ -503,7 +463,28 @@ CREATE TABLE `families` (
 -- a 'published' / 'draft' ENUM like the tables above. The public
 -- pages and the site search all run "WHERE status = 1". If you change
 -- this column to the ENUM, those queries stop finding anything and
--- every page comes back empty.
+-- every page comes back empty. A member or staff account has status 0
+-- because it belongs to no directory page.
+--
+-- The sign-in columns below are the old users table, folded in:
+--
+-- username   the sign-in name, which is the email address. NULL when
+--            the person has no sign-in, and unique only among the
+--            rows that have one, so a directory person and an account
+--            may share an email without a clash. Sign-in looks up
+--            username = email so changing an email here and in the
+--            account happen in the same UPDATE.
+-- password   a password_hash() value, or NULL for no sign-in
+-- role       the website job, not the church job. 'admin' may open
+--            the settings and the log as well as the content; every
+--            other staff role may manage content only; 'member' may
+--            not open the panel at all. NULL when there is no sign-in.
+-- standing   what a self-registered person chose; a 'leader' waits
+--            for an administrator to switch the account on
+-- active     1 may sign in, 0 switched off. The login form checks
+--            this, so a member waiting for approval simply cannot
+--            sign in yet.
+-- login      the last successful sign-in, or empty
 --
 -- display_order decides who is listed first inside a group. Pastors
 -- near the top looks right, so give them a low number.
@@ -513,10 +494,16 @@ CREATE TABLE `people` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(160) NOT NULL,
   `slug` VARCHAR(160) NOT NULL COMMENT 'Makes /people/bro-daniel-waire work',
-  `category` ENUM('pastor','church_admin','elder','department_leader','family_leader','student','alumnus') NOT NULL DEFAULT 'student',
+  `category` ENUM('pastor','church_admin','elder','department_leader','family_leader','student','alumnus','member','staff') NOT NULL DEFAULT 'student',
   `position` VARCHAR(160) NOT NULL DEFAULT '' COMMENT 'The exact title, for example "Bishop"',
   `phone` VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Left empty when the church does not publish it',
   `email` VARCHAR(190) NOT NULL DEFAULT '',
+  `username` VARCHAR(190) DEFAULT NULL COMMENT 'The sign-in name, which is the email. NULL when there is no sign-in',
+  `password` VARCHAR(255) DEFAULT NULL COMMENT 'A password_hash() value, or NULL for no sign-in',
+  `role` ENUM('admin','editor','pastor','leader','member') DEFAULT NULL COMMENT 'The website job; NULL when there is no sign-in',
+  `standing` ENUM('member','alumnus','leader') NOT NULL DEFAULT 'member' COMMENT 'What a self-registered person chose; a leader waits for approval',
+  `active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 may sign in, 0 is switched off',
+  `login` DATETIME DEFAULT NULL COMMENT 'The last successful sign-in, or empty',
   `family` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'A row in families, or 0',
   `department` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'A row in departments, or 0',
   `joined_year` SMALLINT DEFAULT NULL COMMENT 'The year the person started, for example 2019',
@@ -529,8 +516,10 @@ CREATE TABLE `people` (
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `slug` (`slug`),
+  UNIQUE KEY `username` (`username`),
   KEY `status` (`status`),
   KEY `category` (`category`,`display_order`),
+  KEY `active` (`active`),
   KEY `family` (`family`),
   KEY `department` (`department`),
   KEY `display_order` (`display_order`)
@@ -572,6 +561,7 @@ CREATE TABLE `messages` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(160) NOT NULL DEFAULT '',
   `email` VARCHAR(190) NOT NULL DEFAULT '',
+  `phone` VARCHAR(40) NOT NULL DEFAULT '',
   `subject` VARCHAR(200) NOT NULL DEFAULT '',
   `message` TEXT,
   `seen` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '0 = unread, 1 = marked read',
@@ -582,9 +572,9 @@ CREATE TABLE `messages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------
--- subscribers - the addresses typed into the form in the footer.
+-- subscribers - the addresses on the daily devotional list.
 --
--- The form posts to newsletter-subscribe.php, which returns JSON
+-- The form posts to devotional-subscribe.php, which returns JSON
 -- because assets/js/main.js sends it with fetch() rather than
 -- letting the page jump.
 --
@@ -597,9 +587,12 @@ CREATE TABLE `messages` (
 -- unsubscribed. Never delete the row, switch it off instead, so the
 -- address cannot be added a second time by mistake.
 --
--- People who tick the newsletter box while registering on
+-- People who tick the daily devotional box while registering on
 -- register.php are added here too, from the same place as the
 -- footer form, so a church member is only ever on this list once.
+--
+-- Every morning, bin/send-devotional.php emails the devotional
+-- dated for that day to the addresses where status = 1.
 -- ------------------------------------------------------------
 DROP TABLE IF EXISTS `subscribers`;
 CREATE TABLE `subscribers` (

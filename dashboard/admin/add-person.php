@@ -2,13 +2,8 @@
 /**
  * BUBAPC - Admin: add or change one person
  *
- * The group is the one box that matters. It is chosen from the church's own
- * list of groups, because that single choice decides which page the person
- * appears on: the leadership page, the students list, or the alumni list.
- *
- * Everything else on this form is detail. The years, the phone number and the
- * email are all optional, and nothing here is published unless it is filled in
- * and the person is switched on.
+ * One page for one person: the group decides which page they appear on, and
+ * the login part (administrators only) decides whether they can sign in.
  */
 
 require_once __DIR__ . '/../../app/init.php';
@@ -20,32 +15,47 @@ $active_module = 'people';
 $person_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 $person = $person_id ? admin_row($conn, 'people', $person_id) : [];
 
-if ($person_id && !$person) {
-    flash('error', 'That person is no longer here.');
-    redirect(admin_url('people'));
-}
-
-$is_new = $person_id === 0;
-
-$categories = people_categories();
+$is_new = $person_id < 1;
 
 $values = array_merge([
-    'name' => '',
-    'slug' => '',
-    'category' => 'student',
-    'position' => '',
-    'phone' => '',
-    'email' => '',
-    'family_id' => 0,
-    'department_id' => 0,
-    'joined_year' => '',
+    'name'           => '',
+    'slug'           => '',
+    'category'       => 'student',
+    'position'       => '',
+    'phone'          => '',
+    'email'          => '',
+    'family_id'      => 0,
+    'department_id'  => 0,
+    'joined_year'    => '',
     'graduated_year' => '',
-    'bio' => '',
-    'testimony' => '',
-    'image' => '',
-    'display_order' => 0,
-    'status' => 1,
+    'bio'            => '',
+    'testimony'      => '',
+    'image'          => '',
+    'display_order'  => 0,
+    'status'         => 1,
 ], $person);
+
+/* The row names its family and department as ids in `family` and `department`;
+   the form and the checks below call them family_id and department_id. */
+$values['family_id'] = (int) ($person['family'] ?? 0);
+$values['department_id'] = (int) ($person['department'] ?? 0);
+
+/* Giving or changing a sign-in is an administrator's job. An editor or a
+   church leader opens this form to keep the directory up to date, and must not
+   be able to hand out rights with it, so without this the login card would be
+   a way to make yourself an administrator. */
+$can_manage_login = is_admin();
+
+/* The sign-in card's starting state. A row with a password already has an
+   account; it opens on its own role and on the switch it was left at, so an
+   account that is switched off opens with the box empty and can be switched
+   back on by ticking it. A person in the Church Admins group opens on "Church
+   admin", because that is where their rights come from. */
+$has_account = ($person['password'] ?? null) !== null;
+$values['login'] = ($has_account && (int) ($person['active'] ?? 0) === 1) ? 1 : 0;
+$values['login_role'] = ($values['category'] === 'church_admin')
+    ? 'church_admin'
+    : ($person['role'] ?? 'member');
 
 $errors = [];
 
@@ -54,11 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $values['name'] = post_text('name');
     $values['position'] = post_text('position');
-    $values['phone'] = post_text('phone');
     $values['email'] = post_text('email');
-    $values['bio'] = post_text('bio');
-    $values['testimony'] = post_text('testimony');
-    $values['display_order'] = (int) ($_POST['display_order'] ?? 0);
     $values['status'] = post_checkbox('status') ? 1 : 0;
 
     admin_check_required($values['name'], 'The name', $errors);
@@ -66,47 +72,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* The group is looked up in the church's own list, so a value that did
        not come from the drop down is refused rather than saved. */
     $chosen_category = post_text('category');
-    if (!array_key_exists($chosen_category, $categories)) {
+    if (!array_key_exists($chosen_category, people_categories())) {
         $errors[] = 'Please choose a group from the list.';
     } else {
         $values['category'] = $chosen_category;
     }
 
-    /* The family and the department are ids from a drop down. They are cast
-       to a number and checked against the real table, so a value that did not
-       come from the list cannot point at a row that is not there. */
-    $values['family_id'] = admin_check_group_choice(
-        $conn, 'families', (int) ($_POST['family_id'] ?? 0), 'The family', $errors
-    );
-    $values['department_id'] = admin_check_group_choice(
-        $conn, 'departments', (int) ($_POST['department_id'] ?? 0), 'The department', $errors
-    );
-
-    $values['joined_year'] = admin_check_year(
-        $_POST['joined_year'] ?? '', 'The year they joined', $errors
-    );
-    $values['graduated_year'] = admin_check_year(
-        $_POST['graduated_year'] ?? '', 'The year they graduated', $errors
-    );
-
     if ($values['email'] !== '' && !is_valid_email($values['email'])) {
         $errors[] = 'The email address does not look like an email address.';
     }
 
-    /* Telling us the year somebody left but not which year they arrived is
-       almost always a slip on the form, so it is pointed out rather than
-       quietly saved. */
-    if ($values['graduated_year'] !== null && $values['joined_year'] === null) {
-        $errors[] = 'You have given the year they graduated but not the year they joined. '
-            . 'Fill the first box in, or leave both empty.';
+    /* The sign-in switch, the role and the password. */
+    $login_on = post_checkbox('login');
+    $values['login'] = $login_on;
+    $login_role = post_text('login_role');
+    if (!in_array($login_role, ['church_admin', 'admin', 'editor', 'pastor', 'leader', 'member'], true)) {
+        $login_role = 'member';
+    }
+    $values['login_role'] = $login_role;
+
+    /* "Church admin" is not a sign-in role of its own: the full rights live in
+       the Church Admins group, and this is a short way of saying "put them in
+       it". Choosing it moves the person into that group, so the group box and
+       the sign-in box on this page cannot end up disagreeing. */
+    if ($login_role === 'church_admin') {
+        $values['category'] = 'church_admin';
+    }
+
+    /* The row keeps an ordinary role even for a church admin, because the
+       rights come from the group. The group is what is_admin() reads, so a
+       church admin keeps them only while they stay in the group. */
+    $account_role = $login_role === 'church_admin' ? 'member' : $login_role;
+    $login_password = (string) ($_POST['login_password'] ?? '');
+
+    if ($can_manage_login && $login_on) {
+        /* The address is what the person signs in with, so it has to be a real
+           one before an account can be made from it. */
+        if (!is_valid_email($values['email'])) {
+            $errors[] = 'Give this person a real email address first: it is what they will sign in with.';
+        }
+
+        /* A row with no password yet needs one now. A row that already has a
+           sign-in may keep the password it has, so an empty box means "leave
+           it". */
+        if ($login_password !== '') {
+            $problem = password_problem($login_password);
+            if ($problem !== '') {
+                $errors[] = $problem;
+            }
+        } elseif (!$has_account) {
+            $errors[] = 'Give this person a password: it is needed the first time they sign in.';
+        }
+
+        /* The address must not already belong to a different sign in. This
+           person's own row is ignored, so saving the form again is fine. */
+        if (is_valid_email($values['email'])) {
+            $statement = $conn->prepare(
+                "SELECT id FROM people WHERE password IS NOT NULL AND (username = ? OR email = ?) AND id <> ? LIMIT 1"
+            );
+            $statement->bind_param('ssi', $values['email'], $values['email'], $person_id);
+            $statement->execute();
+            $email_taken = (bool) $statement->get_result()->fetch_assoc();
+            $statement->close();
+
+            if ($email_taken) {
+                $errors[] = 'That email address already belongs to another sign in. Use a different address.';
+            }
+        }
     }
 
     if (!$errors) {
-        /* The address is made from the name and never typed, so it cannot arrive
-           with a capital or a space in it. slug() adds a number when another
-           person already has this one. On an edit the address that is already saved
-           is kept, because somebody's page may already have been printed and
-           shared, and a corrected spelling must not break those links. */
+        /* The address is made from the name and never typed, so it cannot
+           arrive with a capital or a space in it. slug() adds a number when
+           another person already has this one. On an edit the address that is
+           already saved is kept, because somebody's page may already have been
+           printed and shared. */
         $values['slug'] = $is_new
             ? slug($conn, 'people', $values['name'])
             : $person['slug'];
@@ -115,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            the person's initials instead, so an empty answer here is a normal
            answer and not a half-finished form. A problem with the file never
            stops the rest of the person being saved. */
-        $image = admin_save_image(
+        $image = save_image(
             $_FILES['image'] ?? null,
             post_checkbox('remove_image'),
             'people',
@@ -126,6 +166,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('error', 'The person was saved, but the picture was not: ' . $image['error']);
         }
 
+        /* The account columns, all on this same row. Switching the box off
+           never deletes the sign-in: a row that already had one keeps its
+           password and role and is only switched off, so an admin can bring it
+           back by ticking the box again. A row that never had one is left with
+           none. A member signs in with the address they typed, so the sign-in
+           name follows it; a staff row keeps the username it already has. */
+        if ($can_manage_login && $login_on) {
+            /* A row that already signs in keeps its name; a new account signs
+               in with the email address, which is the same string, so the
+               address in the box above is what it is made from. */
+            $sign_in_name = ($person['username'] ?? '') !== ''
+                ? $person['username']
+                : mb_substr($values['email'], 0, 190);
+            $sign_in_role = $account_role;
+            $sign_in_active = 1;
+            $sign_in_password = $login_password !== ''
+                ? password_hash($login_password, PASSWORD_DEFAULT)
+                : ($person['password'] ?? null);
+        } elseif ($can_manage_login) {
+            /* The switch was left off. An account that was already there is
+               switched off but kept, so an administrator can turn it back on;
+               a person who never had one stays without one. */
+            $sign_in_name = $person['username'] ?? null;
+            $sign_in_role = $person['role'] ?? null;
+            $sign_in_active = $has_account ? 0 : (int) ($person['active'] ?? 1);
+            $sign_in_password = $person['password'] ?? null;
+        } else {
+            /* An editor or a church leader may not touch a sign-in, so whatever
+               the row already had is left exactly as it was. */
+            $sign_in_name = $person['username'] ?? null;
+            $sign_in_role = $person['role'] ?? null;
+            $sign_in_active = (int) ($person['active'] ?? 1);
+            $sign_in_password = $person['password'] ?? null;
+        }
+
         if ($is_new) {
             /* The two year columns are written as NULLIF(?, 0) rather than a
                plain placeholder. bind_param() hands MySQL a 0 for an empty
@@ -133,18 +208,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                back into an empty column, which is what an unfilled box means. */
             $statement = $conn->prepare(
                 "INSERT INTO people
-                    (name, slug, category, position, phone, email, family, department,
-                     joined_year, graduated_year, bio, testimony, image, display_order, status)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULLIF(?, 0), NULLIF(?, 0), ?, ?, ?, ?, ?)"
+                    (name, slug, category, position, phone, email, username, password, role, active,
+                     family, department, joined_year, graduated_year, bio, testimony, image, display_order, status)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULLIF(?, 0), NULLIF(?, 0), ?, ?, ?, ?, ?)"
             );
             $statement->bind_param(
-                'ssssssiiiisssii',
+                'sssssssssiiiiisssii',
                 $values['name'],
                 $values['slug'],
                 $values['category'],
                 $values['position'],
                 $values['phone'],
                 $values['email'],
+                $sign_in_name,
+                $sign_in_password,
+                $sign_in_role,
+                $sign_in_active,
                 $values['family_id'],
                 $values['department_id'],
                 $values['joined_year'],
@@ -165,19 +244,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement = $conn->prepare(
                 "UPDATE people
                  SET name = ?, slug = ?, category = ?, position = ?, phone = ?, email = ?,
-                     family = ?, department = ?, joined_year = NULLIF(?, 0),
-                     graduated_year = NULLIF(?, 0), bio = ?, testimony = ?, image = ?,
-                     display_order = ?, status = ?
+                     username = ?, password = ?, role = ?, active = ?,
+                     family = ?, department = ?, joined_year = NULLIF(?, 0), graduated_year = NULLIF(?, 0),
+                     bio = ?, testimony = ?, image = ?, display_order = ?, status = ?
                  WHERE id = ?"
             );
             $statement->bind_param(
-                'ssssssiiiisssiii',
+                'sssssssssiiiiisssiii',
                 $values['name'],
                 $values['slug'],
                 $values['category'],
                 $values['position'],
                 $values['phone'],
                 $values['email'],
+                $sign_in_name,
+                $sign_in_password,
+                $sign_in_role,
+                $sign_in_active,
                 $values['family_id'],
                 $values['department_id'],
                 $values['joined_year'],
@@ -198,32 +281,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         redirect(admin_url('people'));
     }
-
-    /* A form that came back with a mistake still has to show the years that
-       were typed, and the helper above hands back NULL for a bad one, which
-       would quietly blank the box the editor just filled in. */
-    $values['joined_year'] = post_text('joined_year');
-    $values['graduated_year'] = post_text('graduated_year');
 }
-
-/* The family and the department drop downs, both with "not in one" first. */
-$family_options = [0 => 'Not in a family'];
-$statement = $conn->prepare("SELECT id, name FROM families WHERE active = 1 ORDER BY display_order ASC, name ASC");
-$statement->execute();
-$result = $statement->get_result();
-while ($row = $result->fetch_assoc()) {
-    $family_options[$row['id']] = $row['name'];
-}
-$statement->close();
-
-$department_options = [0 => 'Not in a department'];
-$statement = $conn->prepare("SELECT id, name FROM departments WHERE active = 1 ORDER BY display_order ASC, name ASC");
-$statement->execute();
-$result = $statement->get_result();
-while ($row = $result->fetch_assoc()) {
-    $department_options[$row['id']] = $row['name'];
-}
-$statement->close();
 
 $page_title = $is_new ? 'Add a person' : 'Edit person';
 $page_heading = $is_new ? 'Add a person' : 'Edit person';
@@ -234,76 +292,73 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        <div class="<?php echo $is_new ? 'col-12' : 'col-lg-8'; ?>">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 mb-3">
                     <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">Who they are</h2>
                         <?php
                         admin_text_field('name', 'Full name', $values['name'], '',
                             'Pastor Ruth Nakato', 'data-slug-source');
-                        admin_select('category', 'Group', $categories, $values['category'],
-                            'This one box decides which page the person appears on: the leadership page, '
-                            . 'the students list, or the alumni list.');
+                        admin_select('category', 'Group', people_categories(), $values['category'],
+                            'Decides which page the person appears on. Member and Staff appear on no page.');
                         admin_text_field('position', 'Job title', $values['position'], '',
-                            'Bishop, Head Teacher, House Coordinator. Leave empty if there is none.');
-                        ?>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">Where they belong</h2>
-                        <?php
-                        admin_select('family_id', 'Family', $family_options, (int) $values['family_id'],
-                            'A family is a group of students who meet through the week. Leave it on '
-                            . '"Not in a family" for anybody who does not have one yet.');
-                        admin_select('department_id', 'Department', $department_options, (int) $values['department_id'],
-                            'The ministry or team they are part of, if any.');
-                        ?>
-                        <div class="row g-2">
-                            <div class="col-sm-6">
-                                <?php admin_text_field('joined_year', 'Year they joined',
-                                    (string) ($values['joined_year'] ?? ''), '', '2019'); ?>
-                            </div>
-                            <div class="col-sm-6">
-                                <?php admin_text_field('graduated_year', 'Year they graduated',
-                                    (string) ($values['graduated_year'] ?? ''),
-                                    'Shown as "Class of" on the alumni page. Does not change the group.', '2023'); ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">Their story</h2>
-                        <?php
-                        admin_textarea('bio', 'About them', $values['bio'],
-                            'A few sentences, in plain words. Leave an empty line between paragraphs.', 6);
-                        admin_textarea('testimony', 'Testimony', $values['testimony'],
-                            'Only shown on the alumni page, and only when the group above is Alumni. '
-                            . 'Leave empty for everybody else.', 6);
-                        ?>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php
-                        admin_slug_field(url('people'), $values['slug']);
+                            'e.g. Bishop, Head Teacher');
+                        admin_text_field('email', 'Email', $values['email'], '', 'name@example.com');
                         admin_image_field('image', 'Photograph', $values['image'],
-                            'Optional. Shown as a circle. With no picture, their initials are shown instead.');
-                        admin_text_field('display_order', 'Order inside the group', (string) $values['display_order'],
-                            'Lower numbers come first. You can also change this from the list.', '0');
+                            'Optional. Initials are shown when there is none.');
                         admin_checkbox('status', 'Show this person on the website', (int) $values['status'] === 1);
                         ?>
+
+                        <?php if ($can_manage_login): ?>
+                            <hr class="my-4">
+                            <h2 class="h6 text-uppercase text-body-secondary mb-3">Website login</h2>
+                            <?php
+                            admin_checkbox('login', 'Let this person sign in', (int) $values['login'] === 1,
+                                'They sign in with the email above.');
+
+                            admin_select('login_role', 'What they can do', [
+                                'church_admin' => 'Church admin - full access',
+                                'member'       => 'Member - can only edit their own details',
+                                'leader'       => 'Leader - can change all the content',
+                                'pastor'       => 'Pastor - can change all the content',
+                                'editor'       => 'Editor - can change all the content',
+                                'admin'        => 'Website admin - content, users and settings',
+                            ], $values['login_role'],
+                                'Give a role other than Member only to somebody who helps run the website.');
+
+                            if ($values['login_role'] === 'church_admin') {
+                                echo '<p class="small text-body-secondary">A church admin can do '
+                                    . 'everything a website administrator can. Choosing this also files '
+                                    . 'them under <strong>Church Admins</strong>.</p>';
+                            }
+                            ?>
+
+                            <div class="mb-2">
+                                <label class="form-label" for="login_password">
+                                    <?php echo $has_account ? 'New password' : 'Password'; ?>
+                                </label>
+                                <input type="password" class="form-control" id="login_password" name="login_password"
+                                       minlength="<?php echo (int) MIN_PASSWORD_LENGTH; ?>" autocomplete="new-password">
+                                <div class="form-text">
+                                    At least <?php echo (int) MIN_PASSWORD_LENGTH; ?> characters, with a letter and a number.
+                                    <?php echo $has_account
+                                        ? 'Leave empty to keep the saved password.'
+                                        : 'Needed for the first sign in.'; ?>
+                                </div>
+                            </div>
+
+                            <?php if ($has_account): ?>
+                                <p class="small text-body-secondary mb-0">
+                                    Signs in as <code><?php echo e($person['username']); ?></code>
+                                    (<?php echo (int) ($person['active'] ?? 0) === 1 ? 'on' : 'off'; ?>).
+                                </p>
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -311,8 +366,8 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
             </form>
         </div>
 
-        <div class="col-lg-4">
-            <?php if (!$is_new): ?>
+        <?php if (!$is_new): ?>
+            <div class="col-lg-4">
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-3">On the website</h2>
@@ -325,7 +380,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         </p>
                         <p class="small text-body-secondary mb-0">
                             <?php echo e($person['name']); ?> appears under
-                            <strong><?php echo e($categories[$person['category']] ?? $person['category']); ?></strong>
+                            <strong><?php echo e(people_categories()[$person['category']] ?? $person['category']); ?></strong>
                             <?php echo (int) $person['status'] === 1 ? '' : ', but is currently hidden'; ?>.
                         </p>
                     </div>
@@ -335,38 +390,14 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Remove this person</h2>
                         <p class="small text-body-secondary">
-                            They come off the website at once and the picture is deleted. Any department
-                            or family they led will go on naming them, so nothing is left saying
-                            "Led by" nobody. If you only want them off the website for now, untick the
-                            switch on the form instead &mdash; that keeps the record.
+                            They come off the website at once and their picture is deleted. To take them
+                            off the website but keep the record, untick the switch on the form instead.
                         </p>
                         <?php echo admin_delete_button('people', $person_id, $person['name']); ?>
                     </div>
                 </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">The groups are church roles</h2>
-                        <p class="small text-body-secondary mb-0">
-                            The groups in the box are where a person sits in the church. They are not the
-                            roles on the website: who may sign in to this panel is decided under Users,
-                            and only an admin there can change it.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">Who is on this page</h2>
-                        <p class="small text-body-secondary mb-0">
-                            A student is a person like any other, so they are added here and pointed at
-                            their family and their department. That way the family page can list its own
-                            students, and the department page can show who is in the team.
-                        </p>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php endif; ?>
     </div>
 
 <?php require_once __DIR__ . '/../../app/includes/admin/footer.php'; ?>

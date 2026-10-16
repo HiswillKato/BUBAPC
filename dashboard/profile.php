@@ -19,6 +19,11 @@ require_login();
 $member = current_user();
 $errors = [];
 
+/* A linked person's name, email and phone are kept on their church profile,
+   where they also appear on the site. Editing them here as well would let the
+   two drift apart, so this page only holds the password for those people. */
+$person = current_person($conn);
+
 $full_name = $member['full_name'];
 $email = $member['email'];
 $phone = $member['phone'];
@@ -36,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* The current password is asked for even though the session already
            proves who this is. It is what stops somebody walking up to a
            browser that is still signed in and taking the account over. */
-        $statement = $conn->prepare("SELECT password FROM users WHERE id = ? LIMIT 1");
+        $statement = $conn->prepare("SELECT password FROM people WHERE id = ? LIMIT 1");
         $member_id = (int) $member['id'];
         $statement->bind_param('i', $member_id);
         $statement->execute();
@@ -62,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                otherwise print "Only variables should be passed by reference". */
             $hash = password_hash($new_password, PASSWORD_DEFAULT);
 
-            $statement = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $statement = $conn->prepare("UPDATE people SET password = ? WHERE id = ?");
             $statement->bind_param('si', $hash, $member_id);
             $saved = $statement->execute();
             $statement->close();
@@ -80,6 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'Your password could not be changed. Please try again.';
         }
     } else {
+        /* A linked person edits their own details on their church profile, so
+           a details form should never arrive from here. Send them to where the
+           change belongs rather than quietly ignoring it. */
+        if ($person) {
+            redirect('dashboard/person');
+        }
+
         $full_name = post_text('full_name');
         $email = post_text('email');
         $phone = post_text('phone');
@@ -92,13 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!is_valid_email($email)) {
             $errors[] = 'Please type a real email address, for example name@example.com.';
-        } elseif (mb_strtolower($email) !== mb_strtolower($member['email'])) {
-            /* Only look for a clash when the address is actually changing,
-               otherwise saving the form untouched would always fail against
-               this person's own row. */
-            $statement = $conn->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
+        } elseif ($email !== $member['email']) {
+            /* The address is the sign-in name, so no other account may use it.
+               A directory-only person may share it, so the check is limited to
+               rows that carry a password. */
+            $statement = $conn->prepare(
+                "SELECT id FROM people WHERE password IS NOT NULL AND (username = ? OR email = ?) AND id <> ? LIMIT 1"
+            );
             $member_id = (int) $member['id'];
-            $statement->bind_param('si', $email, $member_id);
+            $statement->bind_param('ssi', $email, $email, $member_id);
             $statement->execute();
             $clash = (bool) $statement->get_result()->fetch_assoc();
             $statement->close();
@@ -109,12 +123,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
+            /* The name, the email and the sign-in name are on the one row now,
+               so they are written together. The sign-in name follows the
+               address, because a member signs in with the address they typed. */
             $statement = $conn->prepare(
-                "UPDATE users SET full_name = ?, email = ?, username = ?, phone = ? WHERE id = ?"
+                "UPDATE people SET name = ?, email = ?, username = ?, phone = ? WHERE id = ?"
             );
-            /* username follows the address, because a member signs in with the
-               address they typed. Staff accounts are not edited here, so their
-               own username is never touched. */
             $member_id = (int) $member['id'];
             $statement->bind_param(
                 'ssssi',
@@ -167,6 +181,21 @@ require_once __DIR__ . '/../app/includes/public/header.php';
 
                     <?php show_flashes(); ?>
 
+                    <?php if ($person): ?>
+                        <div class="card border-0 shadow rounded-4 mb-4">
+                            <div class="card-body p-4 p-md-5">
+                                <h2 class="h5 mb-4">Your details</h2>
+                                <p class="text-body-secondary mb-3">
+                                    Your name, email and phone are kept on your church profile, where
+                                    they also appear on the site, so they are changed there.
+                                </p>
+                                <a href="<?php echo url('dashboard/person'); ?>" class="btn btn-primary">
+                                    <i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>
+                                    My church profile
+                                </a>
+                            </div>
+                        </div>
+                    <?php else: ?>
                     <div class="card border-0 shadow rounded-4 mb-4">
                         <div class="card-body p-4 p-md-5">
                             <h2 class="h5 mb-4">Your details</h2>
@@ -206,6 +235,7 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             </form>
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <div class="card border-0 shadow rounded-4">
                         <div class="card-body p-4 p-md-5">

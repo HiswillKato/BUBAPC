@@ -77,12 +77,12 @@ $login_next = $login_next ?? ($_POST['next'] ?? ($_GET['next'] ?? ''));
 
         <p class="small text-body-secondary">
             <i class="fa-solid fa-key me-1" aria-hidden="true"></i>
-            <a href="<?php echo url('forgot.php'); ?>">Forgot your password?</a>
+            <a href="<?php echo url('forgot'); ?>">Forgot your password?</a>
         </p>
 
         <p class="small text-body-secondary mb-0">
             <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
-            For website managers. If you are a member,
+            For administrators. If you are a member,
             <a href="<?php echo url('contact'); ?>">contact the church office</a>.
         </p>
     </div>

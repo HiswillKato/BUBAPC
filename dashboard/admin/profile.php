@@ -4,7 +4,7 @@
  *
  * Every signed in person has this page, editors included, because changing
  * your own password is not an admin job. Nobody can edit anybody else's account
- * from here: that is the Users page, and it is for admins only.
+ * from here: that is the People page, and it is for admins only.
  */
 
 require_once __DIR__ . '/../../app/init.php';
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $statement = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $statement = $conn->prepare("UPDATE people SET password = ? WHERE id = ?");
             $hash = password_hash($new_password, PASSWORD_DEFAULT);
             $statement->bind_param('si', $hash, $my_id);
             $statement->execute();
@@ -74,10 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors['email'] = 'That email address does not look right.';
         }
 
-        /* Somebody else may already have that address on their account. */
+        /* Somebody else may already have that address on their account. A
+           directory-only person may share it, so the check is limited to rows
+           that carry a sign-in. */
         if (!is_empty_value($email)) {
-            $statement = $conn->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
-            $statement->bind_param('si', $email, $my_id);
+            $statement = $conn->prepare(
+                "SELECT id FROM people WHERE password IS NOT NULL AND (username = ? OR email = ?) AND id <> ? LIMIT 1"
+            );
+            $statement->bind_param('ssi', $email, $email, $my_id);
             $statement->execute();
             $taken = $statement->get_result()->fetch_assoc();
             $statement->close();
@@ -88,14 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (!$errors) {
-            $statement = $conn->prepare("UPDATE users SET full_name = ?, email = ? WHERE id = ?");
+            $statement = $conn->prepare("UPDATE people SET name = ?, email = ? WHERE id = ?");
             $statement->bind_param('ssi', $full_name, $email, $my_id);
             $statement->execute();
             $statement->close();
 
-            /* The session keeps a copy of the name, so it is refreshed here or
-               the old name would keep showing in the side menu. */
-            $_SESSION['user_data'] = admin_row($conn, 'users', $my_id);
+            /* The session keeps a copy of the row, so it is thrown away here
+               and current_user() reads the fresh one when the header needs it. */
+            unset($_SESSION['user_data']);
 
             $done = 'Your details have been saved.';
         }
@@ -163,7 +167,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         <p class="small text-body-secondary mb-3">
                             Your username is <code><?php echo e($me['username']); ?></code>. It is kept as it
                             is so that somebody who has typed it for years is not confused. Only an admin
-                            can change it, on the Users page.
+                            can change it, on the People page.
                         </p>
 
                         <?php admin_form_buttons(admin_url('profile'), 'Save my details'); ?>

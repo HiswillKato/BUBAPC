@@ -5,20 +5,20 @@
  * One page for everybody the church lists. The group in the address decides
  * what is shown:
  *
- *   /people                 everyone: pastors, students and alumni
- *   /people?group=students  the students
- *   /people?group=alumni    the alumni
- *   /people?group=leadership the people who hold an office
- *   /people/sis-grace-auma  one person, with their story
+ *   /people                  the people who hold an office
+ *   /people?group=pastors    the pastors
+ *   /people?group=alumni     the alumni
+ *   /people/sis-grace-auma   one person, with their story
  *
- * The leadership page shows the same people as the leadership group, but only
- * the five office groups, and it is the page the church links to from the menu.
- * This page is the full list, so a student or an alumnus can be found here.
+ * The leadership page shows the same people as the leadership group, but it is
+ * the page the church links to from the menu. This page is the full list, so a
+ * pastor or an alumnus can be found here.
  *
  * The group names all come from people_filters(), which checks the word in the
  * address against the church's own list of groups. A word that is not on the
- * list shows the whole directory rather than an error, so a mistyped or
- * hand-edited address is never a dead end.
+ * list, and the plain /people address itself, falls back to the office holders
+ * rather than an error, so a mistyped or hand-edited address is never a dead
+ * end.
  */
 
 require_once __DIR__ . '/../app/init.php';
@@ -80,7 +80,7 @@ if ($slug !== '') {
                 <div class="col-lg-8">
 
                     <?php if (!empty($person['testimony']) && $person['category'] === 'alumnus'): ?>
-                        <div class="card border-0 border-start border-4 border-gold bg-gold-soft rounded-4 mb-4">
+                        <div class="card border-0 border-start border-4 border-warning bg-warning-subtle rounded-4 mb-4">
                             <div class="card-body">
                                 <p class="text-uppercase fw-bold small text-gold-dark mb-2">Testimony</p>
                                 <?php echo paragraphs($person['testimony']); ?>
@@ -109,7 +109,7 @@ if ($slug !== '') {
                     </div>
 
                     <a class="btn btn-outline-primary mt-4" href="<?php echo url('people'); ?>">
-                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>All people
+                        <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>Everyone who serves
                     </a>
                 </div>
 
@@ -255,16 +255,14 @@ $chosen = $filters[$group];
 $group_name = $chosen['label'];
 
 $page_titles = [
-    'all'        => 'Our people',
     'leadership' => 'Everyone who serves',
-    'students'   => 'Our students',
+    'pastors'    => 'Our pastors',
     'alumni'     => 'Our alumni',
 ];
 
 $page_subtitles = [
-    'all'        => 'The pastors, the students and the alumni of ' . SITE_NAME . ', all in one place.',
     'leadership' => 'Everyone who holds an office and carries a part of the work of the church.',
-    'students'   => 'The students who meet with us through the week, and the family or department each one belongs to.',
+    'pastors'    => 'The pastors who shepherd the church and lead its work.',
     'alumni'     => 'Those who have been through the students\' work here before, and what it has meant to them since.',
 ];
 
@@ -273,15 +271,14 @@ $page_subtitles = [
    hand written rather than cut off the label, because "Alumni" has no
    singular form to cut down to. */
 $group_one = [
-    'all'        => 'person',
     'leadership' => 'person',
-    'students'   => 'student',
+    'pastors'    => 'pastor',
     'alumni'     => 'alumnus',
 ];
 
 $page_title = $page_titles[$group];
 $page_description = $page_subtitles[$group];
-$canonical = $group === 'all' ? 'people' : 'people?group=' . $group;
+$canonical = $group === 'leadership' ? 'people' : 'people?group=' . $group;
 
 require_once __DIR__ . '/../app/includes/public/header.php';
 

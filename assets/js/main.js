@@ -30,6 +30,7 @@
                 var next = isDark ? 'light' : 'dark';
 
                 document.documentElement.setAttribute('data-theme', next);
+                document.documentElement.setAttribute('data-bs-theme', next);
                 try {
                     localStorage.setItem('bubapc-theme', next);
                 } catch (error) {
@@ -42,7 +43,7 @@
         /* ------------------------------------------------------------------
            2. ADMIN SIDE MENU (slides in on phones)
            ------------------------------------------------------------------ */
-        var sidebar = document.getElementById('admin-sidebar');
+        var sidebar = document.getElementById('adminSidebar');
         var sidebarBackdrop = document.querySelector('.admin-sidebar-backdrop');
 
         var setSidebar = function (open) {
@@ -214,18 +215,18 @@
         }
 
         /* ------------------------------------------------------------------
-           9. NEWSLETTER SIGN UP
+           9. DAILY DEVOTIONAL SIGN UP
            The form posts in the background so the page never reloads.
            It still works without JavaScript, because the same form is a
-           normal POST to newsletter-subscribe.
+           normal POST to devotional-subscribe.
            ------------------------------------------------------------------ */
-        document.querySelectorAll('[data-newsletter-form]').forEach(function (form) {
+        document.querySelectorAll('[data-devotional-form]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
                 event.preventDefault();
 
-                var message = form.querySelector('[data-newsletter-message]');
+                var message = form.querySelector('[data-devotional-message]');
                 var button = form.querySelector('button[type="submit"]');
-                var buttonText = form.querySelector('.newsletter-button-text');
+                var buttonText = form.querySelector('.devotional-button-text');
                 var email = form.querySelector('input[name="email"]');
 
                 if (!email.value) {
@@ -247,7 +248,7 @@
                         return response.json();
                     })
                     .then(function (data) {
-                        message.className = 'newsletter-message small mt-2 mb-0 text-' + (data.ok ? 'success' : 'danger');
+                        message.className = 'devotional-message small mt-2 mb-0 text-' + (data.ok ? 'success' : 'danger');
                         message.textContent = data.message;
 
                         if (data.ok) {
@@ -255,7 +256,7 @@
                         }
                     })
                     .catch(function () {
-                        message.className = 'newsletter-message small mt-2 mb-0 text-danger';
+                        message.className = 'devotional-message small mt-2 mb-0 text-danger';
                         message.textContent = 'Something went wrong. Please try again.';
                     })
                     .then(function () {
@@ -422,6 +423,33 @@
 
             slugSource.addEventListener('input', updateSlug);
             updateSlug();
+        }
+
+        /* ------------------------------------------------------------------
+           15b. THE CHURCH ADMIN GROUP FOLLOWS ITS SIGN IN
+           On the person form two boxes say the same thing: the Group, and
+           the "What they can do" sign in. A church admin is chosen as the
+           sign in role and filed under the Church Admins group, so picking
+           it in either box keeps the other one in step rather than letting
+           the two be left disagreeing.
+           ------------------------------------------------------------------ */
+        var roleSelect = document.getElementById('login_role');
+        var groupSelect = document.getElementById('category');
+
+        if (roleSelect && groupSelect) {
+            roleSelect.addEventListener('change', function () {
+                if (roleSelect.value === 'church_admin') {
+                    groupSelect.value = 'church_admin';
+                } else if (groupSelect.value === 'church_admin') {
+                    groupSelect.value = 'student';
+                }
+            });
+
+            groupSelect.addEventListener('change', function () {
+                if (groupSelect.value === 'church_admin') {
+                    roleSelect.value = 'church_admin';
+                }
+            });
         }
 
         /* ------------------------------------------------------------------

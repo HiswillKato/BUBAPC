@@ -12,8 +12,10 @@
  *                       the one thing here worth a visitor's time
  *   Media             - what it publishes and keeps: archive, gallery, notices
  *   Attend            - coming to a service: the program, events, contact
- *   Register          - the one thing the bar asks a visitor to DO, so it is a
- *                       filled button at the end rather than another link
+ *   Login · Register  - a visitor who already has an account signs in with the
+ *                       plain Login link; Register is the one thing the bar
+ *                       asks a newcomer to DO, so it is a filled button at the
+ *                       end rather than another link
  *
  * Three dropdowns rather than four: Program and Contact used to be separate
  * items, which made the bar longer and left Contact reading as a section when
@@ -37,29 +39,22 @@
 $search_term = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
 $available_social = social_links();
 
-/* Asked for once here, because the same account link is printed twice - in the
-   top strip and again inside the collapsed menu, which is the only way in on a
-   phone. Both copies must agree, so there is one answer to work from. */
-$account_link = account_link();
+/* The top strip is only for accounts a visitor can follow, so YouTube is kept
+   to the footer instead. */
+unset($available_social['YouTube']);
 ?>
+<?php if ($available_social): ?>
 <div class="topbar bg-brand-deep text-white d-none d-md-block">
-    <div class="container d-flex justify-content-end align-items-center gap-4 py-1 small">
-        <?php if ($available_social): ?>
-            <div class="d-flex align-items-center gap-3">
-                <?php foreach ($available_social as $network => $social): ?>
-                    <a class="text-reset" href="<?php echo e($social['url']); ?>"
-                       target="_blank" rel="noopener" aria-label="BUBAPC on <?php echo e($network); ?>">
-                        <i class="<?php echo e($social['icon']); ?>" aria-hidden="true"></i>
-                    </a>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-
-        <a class="text-reset  fw-semibold" href="<?php echo $account_link['url']; ?>">
-            <i class="fa-solid <?php echo e($account_link['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account_link['label']); ?>
-        </a>
+    <div class="container d-flex justify-content-end align-items-center gap-3 py-1 small">
+        <?php foreach ($available_social as $network => $social): ?>
+            <a class="text-reset" href="<?php echo e($social['url']); ?>"
+               target="_blank" rel="noopener" aria-label="BUBAPC on <?php echo e($network); ?>">
+                <i class="<?php echo e($social['icon']); ?>" aria-hidden="true"></i>
+            </a>
+        <?php endforeach; ?>
     </div>
 </div>
+<?php endif; ?>
 
 <header class="site-header sticky-top bg-body border-bottom">
     <nav class="navbar navbar-expand-lg py-2">
@@ -85,13 +80,13 @@ $account_link = account_link();
                    button, which is filled, sat flush against the outline search
                    circle with nothing between them. */ ?>
             <div class="d-flex align-items-center gap-2 order-lg-3 ms-auto ms-lg-3">
-                <button class="icon-button btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+                <button class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
                         type="button" data-bs-toggle="collapse" data-bs-target="#bubapc-search"
                         aria-controls="bubapc-search" aria-expanded="false" aria-label="Search the website">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
                 </button>
 
-                <button class="icon-button theme-toggle btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+                <button class="theme-toggle btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
                         type="button" id="theme-toggle" aria-label="Switch between light and dark mode">
                     <i class="fa-solid fa-moon" aria-hidden="true"></i>
                     <i class="fa-solid fa-sun" aria-hidden="true"></i>
@@ -124,13 +119,11 @@ $account_link = account_link();
                            href="<?php echo url('leadership'); ?>" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">Our Church</a>
                         <ul class="dropdown-menu rounded-4 shadow border-0 p-2">
+                            <li><a class="dropdown-item rounded-3" href="<?php echo url('people?group=pastors'); ?>">Pastors</a></li>
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('leadership'); ?>">Leadership</a></li>
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('departments'); ?>">Departments</a></li>
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('families'); ?>">Families</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item rounded-3" href="<?php echo url('people?group=students'); ?>">Students</a></li>
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('people?group=alumni'); ?>">Alumni</a></li>
-                            <li><a class="dropdown-item rounded-3" href="<?php echo url('people'); ?>">Everyone</a></li>
                         </ul>
                     </li>
 
@@ -168,7 +161,7 @@ $account_link = account_link();
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle fw-semibold<?php echo nav_active('programs') || nav_active('events') || nav_active('contact') ? ' active' : ''; ?>"
                            href="<?php echo url('programs'); ?>" role="button"
-                           data-bs-toggle="dropdown" aria-expanded="false">Attend</a>
+                           data-bs-toggle="dropdown" aria-expanded="false">Programs</a>
                         <ul class="dropdown-menu rounded-4 shadow border-0 p-2">
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('programs'); ?>">Weekly Program</a></li>
                             <li><a class="dropdown-item rounded-3" href="<?php echo url('events'); ?>">Special Events</a></li>
@@ -177,15 +170,25 @@ $account_link = account_link();
                         </ul>
                     </li>
 
-                    <?php /* A member who is not signed in yet is somebody the church
-                           has never heard from, so this is the one way to reach the
-                           registration form from any page. It is a filled button
-                           rather than another link because it is the one thing in
-                           the bar a visitor is being asked to DO, and putting it
-                           last gives the eye an end to stop at. It disappears once
-                           somebody is signed in, because by then the account link
-                           above is the useful one. */ ?>
+                    <?php /* A visitor who has not signed in gets two things here:
+                           a plain Login link for somebody who already has an
+                           account, and the Register button for somebody the church
+                           has never heard from, which is the one way to reach the
+                           registration form from any page. Register is a filled
+                           button rather than another link because it is the one
+                           thing in the bar a visitor is being asked to DO, and
+                           putting it last gives the eye an end to stop at. Both
+                           disappear once somebody is signed in. The Login link's
+                           address, word and icon come from account_link(), so the
+                           bar and the account menu cannot drift apart. */ ?>
                     <?php if (!is_logged_in()): ?>
+                        <?php $account = account_link(); ?>
+                        <li class="nav-item">
+                            <a class="nav-link fw-semibold<?php echo nav_active('login') ? ' active' : ''; ?>"
+                               href="<?php echo e($account['url']); ?>"
+                               <?php echo nav_active('login') ? 'aria-current="page"' : ''; ?>>
+                                <i class="fa-solid <?php echo e($account['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account['label']); ?></a>
+                        </li>
                         <li class="nav-item">
                             <?php /* The button carries aria-current rather than an
                                    `active` class: Bootstrap styles .nav-link.active
@@ -198,14 +201,6 @@ $account_link = account_link();
                                <?php echo nav_active('register') ? 'aria-current="page"' : ''; ?>>Register</a>
                         </li>
                     <?php endif; ?>
-
-                    <?php /* The top strip is hidden on a phone, so the way in for a
-                             website manager is repeated here where the menu is open. */ ?>
-                    <li class="nav-item d-md-none">
-                        <a class="nav-link fw-semibold" href="<?php echo $account_link['url']; ?>">
-                            <i class="fa-solid <?php echo e($account_link['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account_link['label']); ?>
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>

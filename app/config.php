@@ -44,7 +44,7 @@ define('BASE_URL', '');
 // Leave it empty to allow any name (ideal on this machine, where it answers
 // as http://bubapc/), fill it here on the live website:
 //     define('BUBAPC_HOSTS', ['bubapc.int.yt', 'www.bubapc.int.yt']);
-define('BUBAPC_HOSTS', []);
+define('BUBAPC_HOSTS', ['bubapc', 'bubapc.int.yt', 'www.bubapc.int.yt']);
 
 // Only needed when the project sits in a sub folder and not in the root of
 // the domain, for example '/bubapc'. Leave as '' for the normal case.
@@ -56,7 +56,7 @@ define('BASE_PATH', '');
 // These are used by send_mail() in app/mail.php, which is the ONE way this
 // website sends an email. Three things use it today: the password reset
 // pages, the contact form (a copy of every message goes to the mailbox
-// below), and the newsletter.
+// below), and the daily devotional list.
 //
 // Mail is sent through Postfix on this machine, which delivers to local
 // mailboxes. Empty MAIL_USER means no SMTP authentication is needed, which
@@ -67,12 +67,12 @@ define('BASE_PATH', '');
 // mail domain (mail.local here). An address in a domain that does not resolve
 // is accepted by the mail server and then bounces, which looks like a working
 // send and is not one.
-define('MAIL_FROM', 'noreply@mail.local');
+define('MAIL_FROM', 'bubapcministries@gmail.com');
 define('MAIL_FROM_NAME', SITE_NAME);
 
 // Where contact messages go. The admin mailbox on this machine is
 // admin@mail.local, which is what dovecot reads.
-define('MAIL_ADMIN', 'admin@mail.local');
+define('MAIL_ADMIN', 'bubapcministries@gmail.com');
 define('MAIL_HOST', '127.0.0.1');
 define('MAIL_PORT', 25);
 define('MAIL_USER', '');
@@ -96,9 +96,9 @@ define('BUBAPC_LOGS', true);
 /* =========================================================================
    4. CONTACT DETAILS
    ========================================================================= */
-define('SITE_EMAIL', 'admin@bubapc.local');
-define('SITE_PHONE', '+256 700 000 000');
-define('SITE_LOCATION', 'Busitema, Uganda');
+define('SITE_EMAIL', 'bubapcministries@gmail.com');
+define('SITE_PHONE', '256 700 000 000');
+define('SITE_LOCATION', 'Busitema University Main campus - Busitema, Busia, Uganda');
 
 /* =========================================================================
    5. SOCIAL MEDIA LINKS
@@ -137,7 +137,7 @@ define('UPLOAD_FOLDER', 'assets/uploads');
    ========================================================================= */
 // Set to true while testing so PHP shows errors on the screen.
 // Turn it to false on the live website.
-define('SHOW_ERRORS', true);
+define('SHOW_ERRORS', false);
 
 // How many wrong passwords are allowed before the account is locked,
 // and for how many minutes the lock lasts.

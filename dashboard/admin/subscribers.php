@@ -1,20 +1,22 @@
 <?php
 /**
- * BUBAPC - Admin: the newsletter list
+ * BUBAPC - Admin: the daily devotional list
  *
- * These are the addresses that came in through the form in the footer. Nothing
- * is sent automatically: the list is here so that whoever writes the next
- * devotional has the addresses to write to.
+ * These are the addresses that came in through the form in the footer and the
+ * box on register.php. Every morning, the devotional dated for that day is
+ * emailed to the addresses that are switched on here, by bin/send-devotional.php
+ * run from cron.
  *
- * Deleting an address is a POST, and the button asks first, because an address
- * that is deleted by accident is gone for good.
+ * Switching an address off stops the mail but keeps the row, so it can be
+ * switched back on. Deleting is a POST, and the button asks first, because an
+ * address that is deleted by accident is gone for good.
  */
 
 require_once __DIR__ . '/../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
 require_once __DIR__ . '/../../app/includes/admin/parts.php';
 
-$active_module = 'newsletter';
+$active_module = 'subscribers';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
@@ -25,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$subscriber) {
         flash('error', 'That address is no longer on the list.');
-        redirect(admin_url('newsletter'));
+        redirect(admin_url('subscribers'));
     }
 
     if ($action === 'delete') {
@@ -44,11 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->close();
 
         flash('success', $new_status === 1
-            ? $subscriber['email'] . ' will get mail again.'
-            : $subscriber['email'] . ' will not get any more mail. The address is kept, so it can be switched back on.');
+            ? $subscriber['email'] . ' will get the devotional again.'
+            : $subscriber['email'] . ' will not get the devotional any more. The address is kept, so it can be switched back on.');
     }
 
-    redirect(admin_url('newsletter'));
+    redirect(admin_url('subscribers'));
 }
 
 /* The export is a download rather than a change, so it is a plain link. Only
@@ -63,7 +65,7 @@ if (isset($_GET['export'])) {
     $statement->close();
 
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="bubapc-newsletter-' . date('Y-m-d') . '.csv"');
+    header('Content-Disposition: attachment; filename="bubapc-devotional-' . date('Y-m-d') . '.csv"');
     $output = fopen('php://output', 'w');
 
     /* The empty $escape is passed on purpose. PHP has said for a while that the
@@ -132,10 +134,10 @@ while ($row = $result->fetch_assoc()) {
 }
 $statement->close();
 
-$page_title = 'Newsletter';
-$page_heading = 'Newsletter';
+$page_title = 'Devotional list';
+$page_heading = 'Devotional list';
 $page_actions = $active_count > 0
-    ? '<a class="btn btn-outline-secondary" href="' . admin_url('newsletter?export=1') . '">'
+    ? '<a class="btn btn-outline-secondary" href="' . admin_url('subscribers?export=1') . '">'
         . '<i class="fa-solid fa-file-csv me-1" aria-hidden="true"></i>Download as a spreadsheet</a>'
     : '';
 
@@ -147,8 +149,9 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
         <i class="fa-solid fa-circle-info mt-1" aria-hidden="true"></i>
         <div>
             <strong>Nobody is on the list yet.</strong>
-            The form in the footer of every page adds addresses here. This website does not send email by
-            itself, so the list is a list to copy into whatever program you write with.
+            The form in the footer of every page adds addresses here, and so does the box on the
+            register page. Every morning the devotional dated for that day is emailed to everyone
+            switched on, by <code>bin/send-devotional.php</code> run from cron.
         </div>
     </div>
 <?php endif; ?>
@@ -159,7 +162,7 @@ if ($filter !== '') {
     $filter_query['filter'] = $filter;
 }
 ?>
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('newsletter'); ?>" role="search">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('subscribers'); ?>" role="search">
     <div class="col-12 col-md">
         <label class="visually-hidden" for="filter-search">Search</label>
         <div class="input-group">
@@ -179,7 +182,7 @@ if ($filter !== '') {
     <div class="col-12 col-md-auto d-flex gap-2">
         <button type="submit" class="btn btn-primary">Filter</button>
         <?php if ($search !== '' || $filter !== ''): ?>
-            <a class="btn btn-outline-secondary" href="<?php echo admin_url('newsletter'); ?>">Clear</a>
+            <a class="btn btn-outline-secondary" href="<?php echo admin_url('subscribers'); ?>">Clear</a>
         <?php endif; ?>
     </div>
 </form>
@@ -228,8 +231,8 @@ if ($filter !== '') {
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
                                 echo admin_action_group(
-                                    admin_toggle_button('newsletter', $subscriber['id'], $subscriber['status'], 'Send to them', 'Stop sending')
-                                    . admin_delete_button('newsletter', $subscriber['id'], $subscriber['email'])
+                                    admin_toggle_button('subscribers', $subscriber['id'], $subscriber['status'], 'Send to them', 'Stop sending')
+                                    . admin_delete_button('subscribers', $subscriber['id'], $subscriber['email'])
                                 );
                                 ?>
                             </td>

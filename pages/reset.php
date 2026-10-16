@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Put the hash in a variable first: bind_param() takes its values by
            reference, so handing it the result of a function call produces a
            notice and stores nothing. */
-        $statement = $conn->prepare('UPDATE users SET password = ? WHERE id = ?');
+        $statement = $conn->prepare('UPDATE people SET password = ? WHERE id = ?');
         $user_id = (int) $token_row['user'];
         $statement->bind_param('si', $hash, $user_id);
         $statement->execute();
@@ -93,7 +93,7 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             <?php echo e(TOKEN_RESET_HOURS); ?> hours. This one has already been used,
                             or it has expired.
                         </p>
-                        <a class="btn btn-primary" href="<?php echo url('forgot.php'); ?>">
+                        <a class="btn btn-primary" href="<?php echo url('forgot'); ?>">
                             <i class="fa-solid fa-paper-plane me-1" aria-hidden="true"></i>Ask for a new link
                         </a>
 
@@ -104,7 +104,7 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             <?php echo e(MIN_PASSWORD_LENGTH); ?> characters, with a letter and a number in it.
                         </p>
 
-                        <form method="post" action="<?php echo url('reset.php'); ?>" novalidate>
+                        <form method="post" action="<?php echo url('reset'); ?>" novalidate>
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="token" value="<?php echo e($token); ?>">
 

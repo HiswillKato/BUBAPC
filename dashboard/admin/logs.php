@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        trace of a change made by somebody with more access than they have,
        so the button that destroys it belongs to the website admin only. */
     if (!is_admin()) {
-        flash('error', 'Only somebody with website administrator access can clear the log.');
+        flash('error', 'Only somebody with administrator access can clear the log.');
         redirect(admin_url('logs'));
     }
 
@@ -95,11 +95,11 @@ $pagination = paginate($total_logs, $per_page, $current_page);
    a visitor who has never signed in, which the COALESCE says in as much. */
 $statement = $conn->prepare(
     "SELECT l.id, l.actor, l.action, l.details, l.ip, l.created,
-            COALESCE(u.full_name, '') AS full_name,
-            COALESCE(u.username, '') AS username,
-            COALESCE(u.role, '') AS role
+            COALESCE(p.name, '') AS full_name,
+            COALESCE(p.username, '') AS username,
+            COALESCE(p.role, '') AS role
      FROM logs l
-     LEFT JOIN users u ON u.id = l.actor
+     LEFT JOIN people p ON p.id = l.actor
      $where_sql
      ORDER BY l.created DESC, l.id DESC
      LIMIT ? OFFSET ?"

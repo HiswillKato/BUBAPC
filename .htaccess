@@ -67,12 +67,13 @@ RewriteRule ^\.env$ - [F,L]
 #   /dashboard/profile          -> dashboard/profile.php
 #   /dashboard/admin            -> dashboard/admin/index.php
 #   /dashboard/admin/events     -> dashboard/admin/events.php
+#   /dashboard/admin/add-event  -> dashboard/admin/add-event.php
 #
-# The add/change screens keep the .php name in the address
-# (/dashboard/admin/add-event.php?id=4). A dot is not in the pattern below, so
-# those requests fall through to the real-file rule and Apache serves them
-# directly - which is what you want for a screen that takes an id, because no
-# rewrite stands between the address and the file.
+# Every screen has the same short address: the segment names the file and the
+# rule below adds the .php, so /dashboard/admin/add-person?id=4 serves
+# dashboard/admin/add-person.php. The pattern has no dot in it, so a request
+# that still carries ".php" falls through to the real-file rule and is served
+# directly too - both addresses keep working.
 #
 # Every page inside dashboard/ calls require_login() or require_staff() itself:
 # being sent here is not a secret, and the folder is served as real files.

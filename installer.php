@@ -88,7 +88,7 @@ define('BUBAPC_CONFIG_FILE', BUBAPC_ROOT . '/app/config.php');
  * server to be able to write into the project folder, which is a permission
  * worth not having to grant, and a stray install.lock that nobody remembers
  * would then lock a fresh copy out. Asking the database cannot be faked: if
- * there is an administrator in the users table, the wizard has nothing left
+ * there is an administrator in the people table, the wizard has nothing left
  * to do.
  *
  * A database that cannot be reached counts as "not installed", because that
@@ -102,7 +102,7 @@ function install_already_done()
     }
 
     $done = false;
-    $result = @$link->query("SELECT COUNT(*) AS total FROM users WHERE role = 'admin'");
+    $result = @$link->query("SELECT COUNT(*) AS total FROM people WHERE role = 'admin'");
     if ($result instanceof mysqli_result) {
         $row = $result->fetch_assoc();
         $done = (int) ($row['total'] ?? 0) > 0;
@@ -370,30 +370,37 @@ function install_split_sql($sql_text)
  */
 function install_schema_ready($link)
 {
-    $result = @$link->query("SHOW TABLES LIKE 'users'");
+    $result = @$link->query("SHOW TABLES LIKE 'people'");
     return $result instanceof mysqli_result && $result->num_rows > 0;
 }
 
 /**
  * Create the first website administrator.
  *
- * Returns true, or a sentence saying why not. The password is hashed with
- * the same call the login page uses, so nothing here is readable back.
+ * Returns true, or a sentence saying why not. The administrator is a row in
+ * the people table, the one table that now holds both the directory people and
+ * the sign-in accounts; the password makes this row an account, and staff keeps
+ * it off every public page. The password is hashed with the same call the login
+ * page uses, so nothing here is readable back.
  */
 function install_create_admin($link, $username, $full_name, $email, $password)
 {
     $statement = $link->prepare(
-        'INSERT INTO users (username, full_name, email, password, role, status)
-         VALUES (?, ?, ?, ?, ?, 1)'
+        "INSERT INTO people (name, slug, category, email, username, password, role, standing, active, status)
+         VALUES (?, ?, 'staff', ?, ?, ?, 'admin', 'member', 1, 0)"
     );
     if (!$statement) {
         return 'The administrator could not be saved: ' . e($link->error);
     }
 
     $hash = password_hash($password, PASSWORD_DEFAULT);
-    $role = 'admin';
 
-    $statement->bind_param('sssss', $username, $full_name, $email, $hash, $role);
+    /* The slug must be unique among people; it is built from the sign-in name
+       and given a short tail so it can never collide with a directory row. */
+    $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $username), '-'));
+    $slug = ($slug === '' ? 'admin' : $slug) . '-' . bin2hex(random_bytes(3));
+
+    $statement->bind_param('sssss', $full_name, $slug, $email, $username, $hash);
 
     if (!$statement->execute()) {
         $message = $statement->error;
@@ -651,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($password !== $password_again) {
             $error = 'The two passwords are not the same.';
         } else {
-            // The same rule the users screen uses, so the first password is
+            // The same rule the people form uses, so the first password is
             // held to the same standard as every password after it.
             $problem = password_problem($password);
             if ($problem !== '') {
@@ -773,7 +780,7 @@ $checks = install_checks();
                 </p>
                 <pre class="bg-body-secondary p-3 rounded small mb-0"><code>php -r 'echo password_hash("YourNewPassword1", PASSWORD_DEFAULT), "\n";'
 
-mysql bubapc -e "UPDATE users SET password = 'PASTE_THE_HASH_HERE' WHERE username = 'admin';"
+mysql bubapc -e "UPDATE people SET password = 'PASTE_THE_HASH_HERE' WHERE username = 'admin';"
 
 sudo rm /var/www/bubapc/installer.php</code></pre>
             </div>

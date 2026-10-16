@@ -47,7 +47,7 @@ page_header(
             <?php else: ?>
 
                 <?php if ($next_service): ?>
-                    <div class="card border-0 border-start border-4 border-gold bg-gold-soft rounded-4 mb-5">
+                    <div class="card border-0 border-start border-4 border-warning bg-warning-subtle rounded-4 mb-5">
                         <div class="card-body p-4">
                             <p class="text-uppercase fw-bold small text-gold-dark mb-2">Next meeting</p>
                             <h2 class="h4 mb-1"><?php echo e($next_service['title'] ?: 'Service'); ?></h2>

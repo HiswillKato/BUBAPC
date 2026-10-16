@@ -3,8 +3,8 @@
  * BUBAPC - Announcements
  *
  * The short notices the church publishes. Each one is given an anchor
- * (#announcement-4) so a notice can be linked to directly from a message or a
- * newsletter, which is why a notice does not need a page of its own.
+ * (#announcement-4) so a notice can be linked to directly from a message or an
+ * email, which is why a notice does not need a page of its own.
  */
 
 require_once __DIR__ . '/../app/init.php';

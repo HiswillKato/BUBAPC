@@ -21,6 +21,11 @@ require_login();
 
 $member = current_user();
 
+/* Some accounts have a page in the directory behind them - a student or a
+   leader - and those people can edit that page here. A website admin, or a
+   member who signed up themselves, has none, and is shown the account only. */
+$person = current_person($conn);
+
 $page_title = 'My account';
 require_once __DIR__ . '/../app/includes/public/header.php';
 ?>
@@ -65,10 +70,23 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                                 </dd>
                             </dl>
 
-                            <a href="<?php echo url('dashboard/profile'); ?>" class="btn btn-primary mt-4">
-                                <i class="fa-solid fa-user-pen me-1" aria-hidden="true"></i>
-                                Change my details
-                            </a>
+                            <div class="d-flex flex-wrap gap-2 mt-4">
+                                <?php if ($person): ?>
+                                    <a href="<?php echo url('dashboard/person'); ?>" class="btn btn-primary">
+                                        <i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>
+                                        My church profile
+                                    </a>
+                                    <a href="<?php echo url('dashboard/profile'); ?>" class="btn btn-outline-primary">
+                                        <i class="fa-solid fa-user-pen me-1" aria-hidden="true"></i>
+                                        Account &amp; password
+                                    </a>
+                                <?php else: ?>
+                                    <a href="<?php echo url('dashboard/profile'); ?>" class="btn btn-primary">
+                                        <i class="fa-solid fa-user-pen me-1" aria-hidden="true"></i>
+                                        Change my details
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -79,6 +97,15 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             <h2 class="h6 text-uppercase small text-body-secondary mb-3">Church</h2>
 
                             <ul class="list-unstyled mb-0 d-grid gap-2">
+                                <?php if ($person): ?>
+                                    <li>
+                                        <a class="d-flex align-items-center gap-2 text-decoration-none"
+                                           href="<?php echo url('people/' . $person['slug']); ?>">
+                                            <i class="fa-solid fa-id-badge text-body-secondary" aria-hidden="true"></i>
+                                            My page on the site
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
                                 <li>
                                     <a class="d-flex align-items-center gap-2 text-decoration-none"
                                        href="<?php echo url('people'); ?>">

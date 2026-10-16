@@ -19,7 +19,7 @@
 
 require_once __DIR__ . '/../app/init.php';
 
-$page_title   = 'Home';
+$page_title   = SITE_FULL_NAME;
 $page_description = 'Welcome to ' . SITE_FULL_NAME . ' — ' . SITE_TAGLINE . '.';
 $body_class   = 'page-home';
 
@@ -215,7 +215,7 @@ $notices          = recent_announcements($conn, 3);
 
                     <?php if ($today_devotional): ?>
                         <?php if (!empty($today_devotional['scripture_text'])): ?>
-                            <div class="card border-0 border-start border-4 border-gold bg-gold-soft rounded-4 mb-4">
+                            <div class="card border-0 border-start border-4 border-warning bg-warning-subtle rounded-4 mb-4">
                                 <div class="card-body">
                                     <p class="fst-italic mb-2">&ldquo;<?php echo e($today_devotional['scripture_text']); ?>&rdquo;</p>
                                     <p class="small fw-bold mb-0 text-gold-dark"><?php echo e($today_devotional['scripture_reference']); ?></p>

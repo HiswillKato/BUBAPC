@@ -6,8 +6,8 @@
  * category they were given in the admin panel, so a pastor appears under
  * Pastors because that is what was chosen, not because their job title happens
  * to contain a certain word. Anyone the church has not filed under one of the
- * five office groups is not on this page - they are on /people instead, with
- * the students and the alumni.
+ * five office groups is not on this page - they are on the people page under
+ * their own group.
  *
  * Every person here also has a page of their own at /people/<slug>, which is
  * where the share buttons and the site search point.
@@ -133,7 +133,6 @@ $statement->close();
                     <div class="d-flex justify-content-center flex-wrap gap-2">
                         <a class="btn btn-gold" href="<?php echo url('departments'); ?>">See the departments</a>
                         <a class="btn btn-outline-primary" href="<?php echo url('families'); ?>">See the families</a>
-                        <a class="btn btn-outline-primary" href="<?php echo url('people?group=students'); ?>">Meet the students</a>
                     </div>
                 </div>
             </div>

@@ -2,10 +2,15 @@
 /**
  * BUBAPC - Admin: the list of people
  *
- * This is the one screen for all five groups the church has - the pastors,
- * the students, the alumni, and through them the departments and the families,
+ * This is the one screen for everybody the church keeps: the pastors, the
+ * students, the alumni, and the people who lead a department or a family,
  * because a student is a row here too and is pointed at their family and their
  * department from this form.
+ *
+ * A row here may also be a sign-in account: the same table holds the staff who
+ * run the website, recognised by the password on the row. The Sign in column
+ * says which rows can sign in and with what rights, so the whole church is read
+ * from one list instead of two.
  *
  * The list is sorted by group first and then by the order the church has set
  * inside each group, so the pastors come before the students. That is why
@@ -31,6 +36,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($action === 'delete') {
+        /* A row that can sign in is also an account, and only an administrator
+           may throw an account away. An editor keeps the directory tidy and
+           must not be able to delete the people who run the website. */
+        if (person_can_sign_in($person) && !is_admin()) {
+            flash('error', 'Only an administrator can remove a sign-in account.');
+            redirect(admin_url('people'));
+        }
+
         /* Before the row goes, anything that points at it has to be let go,
            or a department would be left naming a leader who is not there.
 
@@ -233,6 +246,7 @@ if ($category_filter !== '') {
                     <tr>
                         <th scope="col" class="ps-3">Name</th>
                         <th scope="col">Group</th>
+                        <th scope="col">Sign in</th>
                         <th scope="col">Belongs to</th>
                         <th scope="col" style="width:8rem">Order</th>
                         <th scope="col">Shown</th>
@@ -283,6 +297,21 @@ if ($category_filter !== '') {
                                 <span class="badge rounded-pill text-bg-light border">
                                     <?php echo e($categories[$person['category']] ?? $person['category']); ?>
                                 </span>
+                            </td>
+                            <td>
+                                <?php /* A password on the row makes it an account;
+                                         the rights come from its role. An account
+                                         that is switched off says so. */ ?>
+                                <?php if (person_can_sign_in($person)): ?>
+                                    <span class="badge rounded-pill text-bg-primary">
+                                        <?php echo e(user_role_label($person['role'])); ?>
+                                    </span>
+                                    <?php if ((int) $person['active'] !== 1): ?>
+                                        <span class="badge rounded-pill text-bg-secondary ms-1">Off</span>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <span class="text-body-tertiary">&mdash;</span>
+                                <?php endif; ?>
                             </td>
                             <td class="small text-body-secondary">
                                 <?php echo $belongs_to ? e(implode(' &middot; ', $belongs_to)) : '<span class="text-body-tertiary">&mdash;</span>'; ?>
