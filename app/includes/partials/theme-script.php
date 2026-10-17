@@ -2,7 +2,7 @@
 /**
  * Theme pre-load script. Must run before first paint.
  */
-if (!defined('APP_BOOTSTRAPPED')) { http_response_code(404); exit; } ?><script>
+if (!defined('APP_INITIALIZED')) { http_response_code(404); exit; } ?><script>
   (function(){
     try {
       var saved = localStorage.getItem('bubapc-theme');
