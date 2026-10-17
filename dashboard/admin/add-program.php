@@ -5,6 +5,11 @@
  * The day is a drop down rather than a box, because the database stores the
  * day as a number and 0 means Sunday. Letting somebody type it by hand is how
  * a meeting ends up on the wrong day.
+ *
+ * The venue is a plain box with one rule: a meeting run in two teams puts
+ * each team's place on its own line, separated by a semicolon, because the
+ * teams meet in different buildings. The help under it says so, and the
+ * public page prints each line separately.
  */
 
 require_once __DIR__ . '/../../app/init.php';
@@ -39,6 +44,9 @@ $values = array_merge([
     'day_of_week' => $day_from_url,
     'start_time' => '09:00:00',
     'end_time' => '',
+    'times' => '',
+    'venue' => '',
+    'description' => '',
     'sort_order' => 0,
     'active' => 1,
 ], $program);
@@ -50,6 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $values['title'] = post_text('title');
     $values['day_of_week'] = (int) ($_POST['day_of_week'] ?? 0);
+    $values['venue'] = post_text('venue');
+    $values['times'] = post_text('times');
+    $values['description'] = post_text('description');
     $values['sort_order'] = (int) ($_POST['sort_order'] ?? 0);
     $values['active'] = post_checkbox('active') ? 1 : 0;
 
@@ -70,15 +81,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$errors) {
         if ($is_new) {
             $statement = $conn->prepare(
-                "INSERT INTO programs (title, day_of_week, start_time, end_time, sort_order, active)
-                 VALUES (?, ?, ?, NULLIF(?, ''), ?, ?)"
+                "INSERT INTO programs (title, day_of_week, start_time, end_time, times, venue, description, sort_order, active)
+                 VALUES (?, ?, ?, NULLIF(?, ''), NULLIF(?, ''), ?, NULLIF(?, ''), ?, ?)"
             );
             $statement->bind_param(
-                'sissii',
+                'sisssssii',
                 $values['title'],
                 $values['day_of_week'],
                 $values['start_time'],
                 $values['end_time'],
+                $values['times'],
+                $values['venue'],
+                $values['description'],
                 $values['sort_order'],
                 $values['active']
             );
@@ -90,15 +104,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('success', '"' . $values['title'] . '" has been added to the weekly program.');
         } else {
             $statement = $conn->prepare(
-                "UPDATE programs SET title = ?, day_of_week = ?, start_time = ?, end_time = NULLIF(?, ''), sort_order = ?, active = ?
+                "UPDATE programs SET title = ?, day_of_week = ?, start_time = ?, end_time = NULLIF(?, ''),
+                 times = NULLIF(?, ''), venue = ?, description = NULLIF(?, ''), sort_order = ?, active = ?
                  WHERE id = ?"
             );
             $statement->bind_param(
-                'sissiii',
+                'sisssssiii',
                 $values['title'],
                 $values['day_of_week'],
                 $values['start_time'],
                 $values['end_time'],
+                $values['times'],
+                $values['venue'],
+                $values['description'],
                 $values['sort_order'],
                 $values['active'],
                 $program_id
@@ -141,9 +159,27 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                                 <?php admin_time_field('start_time', 'Start time', $values['start_time']); ?>
                             </div>
                             <div class="col-sm-6">
-                                <?php admin_time_field('end_time', 'End time', $values['end_time'], 'Leave empty if it does not end.'); ?>
+                                <?php admin_time_field('end_time', 'End time', $values['end_time'],
+                                    'Leave empty if it does not end. A meeting whose teams meet at different hours still '
+                                    . 'uses this as the window they all fall in.'); ?>
                             </div>
                         </div>
+                        <?php
+                        admin_textarea('times', 'Times, only if the teams differ', $values['times'],
+                            'Leave this empty when the whole meeting runs from the start time to the end time, which '
+                            . 'is almost always. When the teams of one meeting meet at different hours, write each '
+                            . 'team\'s time after a semicolon, for example '
+                            . '5:00-5:45 AM (Campus Team); 5:30-6:00 AM (Syaule Team). This is what a visitor reads '
+                            . 'instead of the window above.', 2);
+                        admin_textarea('venue', 'Venue', $values['venue'],
+                            'Write the main hall in full - Agape Palace (Main Hall). A meeting run in two teams puts '
+                            . 'each team and its place on its own line, separated by a semicolon, for example '
+                            . 'Campus Team: The Ginnery; Syaule Team: Online. Leave empty when the venue is not '
+                            . 'fixed, and say it in the line below instead.', 2);
+                        admin_textarea('description', 'What the meeting is for', $values['description'],
+                            'One line a visitor can read on the program page. Leave empty if there is nothing '
+                            . 'useful to add.', 3);
+                        ?>
                     </div>
                 </div>
 

@@ -266,8 +266,20 @@ page_header(
                                     <div class="card-body p-3">
                                         <p class="fw-semibold mb-2"><?php echo e($day_label); ?></p>
                                         <?php foreach ($day_programs as $program): ?>
+                                            <?php
+                                            /* "When we meet", so a meeting whose two teams meet at
+                                               different hours shows those hours, one per line; the one
+                                               window is only right when everybody meets together. */
+                                            $time_lines = program_times($program);
+                                            ?>
                                             <p class="small text-body-secondary mb-1">
-                                                <?php echo format_time($program['start_time']); ?>
+                                                <?php if ($time_lines): ?>
+                                                    <?php foreach ($time_lines as $time_line): ?>
+                                                        <span class="d-block"><?php echo $time_line; ?></span>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <?php echo format_time_range($program['start_time'], $program['end_time'] ?? ''); ?>
+                                                <?php endif; ?>
                                                 <?php if ($program['title'] !== ''): ?>
                                                     <span class="d-block text-truncate"><?php echo e($program['title']); ?></span>
                                                 <?php endif; ?>

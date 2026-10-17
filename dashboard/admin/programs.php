@@ -112,10 +112,23 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                                                href="<?php echo admin_url('programs/form.php?id=' . (int) $meeting['id']); ?>">
                                                 <?php echo e($meeting['title']); ?>
                                             </a>
+                                            <?php $time_lines = program_times($meeting); ?>
                                             <span class="small text-body-secondary">
-                                                <?php echo e(trim(format_time_range($meeting['start_time'], $meeting['end_time']))); ?>
+                                                <?php if ($time_lines): ?>
+                                                    <?php foreach ($time_lines as $time_line): ?>
+                                                        <span class="d-block"><?php echo $time_line; ?></span>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <?php echo e(trim(format_time_range($meeting['start_time'], $meeting['end_time']))); ?>
+                                                <?php endif; ?>
+                                                <?php foreach (team_lines($meeting['venue']) as $place): ?>
+                                                    <span class="d-block">
+                                                        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                                                        <?php echo e($place); ?>
+                                                    </span>
+                                                <?php endforeach; ?>
                                                 <?php if ((int) $meeting['active'] === 0): ?>
-                                                    <span class="badge rounded-pill text-bg-secondary ms-1">Hidden</span>
+                                                    <span class="badge rounded-pill text-bg-secondary mt-1">Hidden</span>
                                                 <?php endif; ?>
                                             </span>
                                         </div>

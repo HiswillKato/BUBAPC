@@ -10,6 +10,17 @@
  * The web installer (installer.php) is also allowed to write to this file.
  */
 
+// The church keeps time in Uganda. PHP falls back to UTC when nobody says
+// otherwise, and this machine's clock is not Uganda's, so every date() and
+// time() in the site would be hours out: the "next meeting" on the program
+// page would name the wrong one, and a devotional would appear a day early
+// or late. One line here covers every page, because every page loads this
+// file first.
+//
+// The installer only rewrites the define() lines below, so this call is
+// never touched by an install.
+date_default_timezone_set('Africa/Kampala');
+
 /* =========================================================================
    1. DATABASE CONNECTION DETAILS
    ========================================================================= */
@@ -98,7 +109,7 @@ define('BUBAPC_LOGS', true);
    ========================================================================= */
 define('SITE_EMAIL', 'bubapcministries@gmail.com');
 define('SITE_PHONE', '256 700 000 000');
-define('SITE_LOCATION', 'Busitema University Main campus - Busitema, Busia, Uganda');
+define('SITE_LOCATION', 'Agape Palace (Main Hall)');
 
 /* =========================================================================
    5. SOCIAL MEDIA LINKS

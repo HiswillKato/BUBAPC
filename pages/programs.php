@@ -51,11 +51,20 @@ page_header(
                         <div class="card-body p-4">
                             <p class="text-uppercase fw-bold small text-gold-dark mb-2">Next meeting</p>
                             <h2 class="h4 mb-1"><?php echo e($next_service['title'] ?: 'Service'); ?></h2>
+                            <?php $time_lines = program_times($next_service); ?>
                             <p class="mb-0">
                                 <i class="fa-solid fa-calendar-day me-1" aria-hidden="true"></i>
-                                <strong><?php echo e($next_service['day_label']); ?></strong>,
-                                <?php echo format_time_range($next_service['start_time'], $next_service['end_time'] ?? ''); ?>
+                                <strong><?php echo e($next_service['day_label']); ?></strong><?php if (!$time_lines): ?>,
+                                <?php echo format_time_range($next_service['start_time'], $next_service['end_time'] ?? ''); ?><?php endif; ?>
                             </p>
+                            <?php foreach ($time_lines as $time_line): ?>
+                                <p class="small mb-0"><?php echo $time_line; ?></p>
+                            <?php endforeach; ?>
+                            <?php foreach (team_lines($next_service['venue']) as $place): ?>
+                                <p class="small mb-0">
+                                    <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
+                                </p>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -76,17 +85,30 @@ page_header(
                                         <?php foreach ($day_programs as $program): ?>
                                             <li class="list-group-item px-0 py-3">
                                                 <div class="d-flex align-items-start gap-3">
+                                                    <?php /* The pill carries the whole window,
+                                                           start to end, so a visitor who does not
+                                                           already know the meeting reads one time
+                                                           instead of a start time with a vague
+                                                           "until" line under it. A meeting whose
+                                                           teams meet at different hours keeps
+                                                           those hours as their own lines below. */ ?>
                                                     <span class="badge rounded-pill text-bg-primary px-3 py-2">
-                                                        <?php echo format_time($program['start_time']); ?>
+                                                        <?php echo format_time_range($program['start_time'], $program['end_time'] ?? ''); ?>
                                                     </span>
-                                                    <div>
+                                                    <div class="flex-grow-1">
                                                         <p class="fw-semibold mb-0">
                                                             <?php echo e($program['title'] ?: 'Service'); ?>
                                                         </p>
-                                                        <?php if (!empty($program['end_time'])): ?>
-                                                            <p class="small text-body-secondary mb-0">
-                                                                until <?php echo format_time($program['end_time']); ?>
+                                                        <?php foreach (program_times($program) as $time_line): ?>
+                                                            <p class="small text-body-secondary mb-0"><?php echo $time_line; ?></p>
+                                                        <?php endforeach; ?>
+                                                        <?php foreach (team_lines($program['venue']) as $place): ?>
+                                                            <p class="small mb-0">
+                                                                <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
                                                             </p>
+                                                        <?php endforeach; ?>
+                                                        <?php if (!empty($program['description'])): ?>
+                                                            <p class="small text-body-secondary mb-0"><?php echo e($program['description']); ?></p>
                                                         <?php endif; ?>
                                                     </div>
                                                 </div>

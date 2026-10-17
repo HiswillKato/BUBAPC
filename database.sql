@@ -259,11 +259,24 @@ CREATE TABLE `programs` (
   `day_of_week` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0 Sunday .. 6 Saturday',
   `start_time` TIME NOT NULL,
   `end_time` TIME DEFAULT NULL,
+  `times` VARCHAR(190) DEFAULT NULL COMMENT 'One start-end per team, separated by a semicolon. Empty when the whole meeting runs together',
+  `venue` VARCHAR(200) NOT NULL DEFAULT '' COMMENT 'One place per team, separated by a semicolon. Empty when no venue is fixed',
+  `description` TEXT COMMENT 'One line saying what the meeting is for',
   `sort_order` SMALLINT NOT NULL DEFAULT 0 COMMENT 'Lower numbers are shown first inside one day',
   `active` TINYINT(1) NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   KEY `day_and_time` (`day_of_week`,`start_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- The church's official week is not seeded here: it lives in
+-- database/migrate-programs-official.php, which writes the same twelve
+-- meetings into any copy of this table without making duplicates. Run that
+-- script once after loading this file and the program page is correct.
+-- One row holds one meeting on one day, so Morning Glory appears on Monday,
+-- Wednesday and Friday as three rows. A meeting run in two teams is still
+-- one row: the teams are named in the venue, one place each, and when those
+-- teams meet at different hours those times go in `times`, both separated by
+-- a semicolon. `times` is empty for every meeting that runs start to end.
 
 -- ------------------------------------------------------------
 -- events - anything with a date and a place: retreats, services,

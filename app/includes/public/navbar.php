@@ -69,7 +69,13 @@ unset($available_social['YouTube']);
                 </span>
                 <span class="d-flex flex-column lh-1">
                     <span class="brand-name"><?php echo e(SITE_NAME); ?></span>
-                    <span class="brand-tagline"><?php echo e(SITE_TAGLINE); ?></span>
+                    <?php /* The tagline is desktop dressing. On a phone the bar
+                           already carries the flame mark and the church name,
+                           and a third line of small caps pushed the toggles
+                           into the next row. d-lg-block matches the navbar's
+                           own expand-lg breakpoint, so it reappears the moment
+                           the menu stops collapsing. */ ?>
+                    <span class="brand-tagline d-none d-lg-block"><?php echo e(SITE_TAGLINE); ?></span>
                 </span>
             </a>
 

@@ -107,17 +107,25 @@ $notices          = recent_announcements($conn, 3);
                                     <p class="text-uppercase fw-bold small text-gold-dark mb-3"><?php echo e($day_label); ?></p>
                                     <ul class="list-unstyled d-grid gap-3 mb-0">
                                         <?php foreach ($day_programs as $program): ?>
-                                            <li class="d-flex align-items-center gap-3">
+                                            <li class="d-flex align-items-start gap-3">
+                                                <?php /* The pill is the whole window, start to
+                                                       end, so the card reads as one time. A
+                                                       meeting whose teams meet at different
+                                                       hours keeps those hours as their own
+                                                       lines below. */ ?>
                                                 <span class="badge rounded-pill text-bg-primary px-3 py-2">
-                                                    <?php echo format_time($program['start_time']); ?>
+                                                    <?php echo format_time_range($program['start_time'], $program['end_time'] ?? ''); ?>
                                                 </span>
                                                 <div>
                                                     <p class="fw-semibold mb-0"><?php echo e($program['title'] ?: 'Service'); ?></p>
-                                                    <?php if (!empty($program['end_time'])): ?>
-                                                        <p class="small text-body-secondary mb-0">
-                                                            <?php echo format_time($program['end_time']); ?>
+                                                    <?php foreach (program_times($program) as $time_line): ?>
+                                                        <p class="small text-body-secondary mb-0"><?php echo $time_line; ?></p>
+                                                    <?php endforeach; ?>
+                                                    <?php foreach (team_lines($program['venue']) as $place): ?>
+                                                        <p class="small mb-0">
+                                                            <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
                                                         </p>
-                                                    <?php endif; ?>
+                                                    <?php endforeach; ?>
                                                 </div>
                                             </li>
                                         <?php endforeach; ?>

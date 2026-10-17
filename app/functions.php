@@ -1271,6 +1271,56 @@ function weekly_program_by_day($conn)
 }
 
 /**
+ * The lines of a per-team list, a line each.
+ *
+ * Two fields on a meeting hold one entry per team and use the same
+ * separator, the semicolon: the venue, because the teams of one meeting
+ * meet in different places, and the times, because they can meet at
+ * different hours too.
+ *
+ *     Campus Team: The Ginnery; Syaule Team: Online
+ *     5:00-5:45 AM (Campus Team); 5:30-6:00 AM (Syaule Team)
+ *
+ * Splitting them here means a page prints one team's detail per line rather
+ * than letting a long sentence run off the side of a narrow card, and there
+ * is one rule for the admin to remember when typing either field.
+ */
+function team_lines($text)
+{
+    $lines = [];
+    foreach (explode(';', (string) $text) as $line) {
+        $line = trim($line);
+        if ($line !== '') {
+            $lines[] = $line;
+        }
+    }
+    return $lines;
+}
+
+/**
+ * The time a meeting prints, as the lines a page shows.
+ *
+ * Most meetings run from their start to their end, so the one range is the
+ * whole answer and this returns nothing: each card shows that range itself, in
+ * the pill on the day cards and in the date line on the next-meeting card. A
+ * meeting whose two teams meet at different hours returns those
+ * hours instead, one line per team, because a single range would then be a
+ * sentence that is true of neither team.
+ *
+ * The lines come back ready to print: the times are text from the database,
+ * so they are escaped here, and a page must echo them as they stand rather
+ * than escape them a second time.
+ */
+function program_times($program)
+{
+    $lines = team_lines($program['times'] ?? '');
+    if (!$lines) {
+        return [];
+    }
+    return array_map('e', $lines);
+}
+
+/**
  * Every group a person on the website can belong to, in the order the groups
  * are shown.
  *
