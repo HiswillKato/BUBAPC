@@ -41,35 +41,7 @@
         }
 
         /* ------------------------------------------------------------------
-           2. ADMIN SIDE MENU (slides in on phones)
-           ------------------------------------------------------------------ */
-        var sidebar = document.getElementById('adminSidebar');
-        var sidebarBackdrop = document.querySelector('.admin-sidebar-backdrop');
-
-        var setSidebar = function (open) {
-            if (!sidebar) {
-                return;
-            }
-            sidebar.classList.toggle('is-open', open);
-            if (sidebarBackdrop) {
-                sidebarBackdrop.hidden = !open;
-            }
-        };
-
-        document.querySelectorAll('[data-sidebar-open]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                setSidebar(true);
-            });
-        });
-
-        document.querySelectorAll('[data-sidebar-close]').forEach(function (button) {
-            button.addEventListener('click', function () {
-                setSidebar(false);
-            });
-        });
-
-        /* ------------------------------------------------------------------
-           3. SHOW AND HIDE PASSWORDS
+           2. SHOW AND HIDE PASSWORDS
            ------------------------------------------------------------------ */
         document.querySelectorAll('[data-toggle-password]').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -84,7 +56,7 @@
         });
 
         /* ------------------------------------------------------------------
-           4. ASK BEFORE SOMETHING DESTRUCTIVE HAPPENS
+           3. ASK BEFORE SOMETHING DESTRUCTIVE HAPPENS
            Any link or button with data-confirm shows a message first.
            ------------------------------------------------------------------ */
         document.querySelectorAll('[data-confirm]').forEach(function (element) {
@@ -96,7 +68,7 @@
         });
 
         /* ------------------------------------------------------------------
-           5. COPY A LINK TO THE CLIPBOARD
+           4. COPY A LINK TO THE CLIPBOARD
            ------------------------------------------------------------------ */
         document.querySelectorAll('[data-copy-link]').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -129,7 +101,7 @@
         });
 
         /* ------------------------------------------------------------------
-           6. BACK TO TOP BUTTON
+           5. BACK TO TOP BUTTON
            ------------------------------------------------------------------ */
         var backToTop = document.getElementById('back-to-top');
 
@@ -144,7 +116,7 @@
         }
 
         /* ------------------------------------------------------------------
-           7. READING PROGRESS BAR (on the devotional page)
+           6. READING PROGRESS BAR (on the devotional page)
            ------------------------------------------------------------------ */
         var readingProgress = document.getElementById('reading-progress');
 
@@ -171,7 +143,7 @@
         }
 
         /* ------------------------------------------------------------------
-           8. COUNTDOWN TO AN EVENT
+           7. COUNTDOWN TO AN EVENT
            Give any element data-countdown="2026-10-04T18:00:00". The boxes
            are plain Bootstrap badges, so no CSS is needed for them. The
            background is the theme's own surface colour rather than
@@ -215,7 +187,7 @@
         }
 
         /* ------------------------------------------------------------------
-           9. DAILY DEVOTIONAL SIGN UP
+           8. DAILY DEVOTIONAL SIGN UP
            The form posts in the background so the page never reloads.
            It still works without JavaScript, because the same form is a
            normal POST to devotional-subscribe.
@@ -269,7 +241,7 @@
         });
 
         /* ------------------------------------------------------------------
-           10. IMAGE UPLOAD WITH DRAG AND DROP
+           9. IMAGE UPLOAD WITH DRAG AND DROP
            A file input inside a .dropzone becomes a drop zone that shows
            a preview of the chosen image before it is uploaded.
            ------------------------------------------------------------------ */
@@ -345,7 +317,7 @@
         });
 
         /* ------------------------------------------------------------------
-           11. IMAGE PICKER
+           10. IMAGE PICKER
            A select box where choosing an option shows the matching image.
            Used for the placeholder art on a new record.
            ------------------------------------------------------------------ */
@@ -364,7 +336,7 @@
         });
 
         /* ------------------------------------------------------------------
-           12. GALLERY MODAL
+           11. GALLERY MODAL
            A photograph button carries the two things the modal needs:
              data-gallery-image    the full size address of the photo
              data-gallery-caption  the words to show above it
@@ -387,7 +359,7 @@
         }
 
         /* ------------------------------------------------------------------
-           13. FILTER BAR HELP
+           12. FILTER BAR HELP
            When a filter changes it submits its form straight away.
            ------------------------------------------------------------------ */
         document.querySelectorAll('[data-auto-submit]').forEach(function (element) {
@@ -399,34 +371,7 @@
         });
 
         /* ------------------------------------------------------------------
-           14. SLUG PREVIEW
-           When a title is typed, show the URL it will get. Useful in the
-           admin forms, so nothing has to be typed twice.
-
-           Only while the address has still to be made. PHP writes
-           [data-slug-new] on the preview for that case only; on an edit the
-           address is already saved and fixed, and typing the title over it
-           would show an address the page does not actually have.
-           ------------------------------------------------------------------ */
-        var slugSource = document.querySelector('[data-slug-source]');
-        var slugPreview = document.querySelector('[data-slug-preview][data-slug-new]');
-
-        if (slugSource && slugPreview) {
-            var updateSlug = function () {
-                var text = slugSource.value.toLowerCase().trim()
-                    .replace(/[^a-z0-9\s\-_]/g, '')
-                    .replace(/[\s\-_]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-
-                slugPreview.textContent = text === '' ? 'your-title-here' : text;
-            };
-
-            slugSource.addEventListener('input', updateSlug);
-            updateSlug();
-        }
-
-        /* ------------------------------------------------------------------
-           15b. THE CHURCH ADMIN GROUP FOLLOWS ITS SIGN IN
+           13. THE CHURCH ADMIN GROUP FOLLOWS ITS SIGN IN
            On the person form two boxes say the same thing: the Group, and
            the "What they can do" sign in. A church admin is chosen as the
            sign in role and filed under the Church Admins group, so picking
@@ -453,7 +398,7 @@
         }
 
         /* ------------------------------------------------------------------
-           15. GIVE A FEEDBACK AFTER A ROW ACTION
+           14. GIVE A FEEDBACK AFTER A ROW ACTION
            A tiny "Saved" note under a form, so a click always feels like
            something happened even when the page barely moves.
            ------------------------------------------------------------------ */

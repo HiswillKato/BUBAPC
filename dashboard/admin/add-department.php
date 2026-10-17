@@ -134,81 +134,41 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('depar
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
                         admin_text_field('name', 'Name of the department', $values['name'], '',
-                            'Worship & Creative Arts', 'data-slug-source');
+                            'Worship & Creative Arts');
                         admin_leader_field((int) $values['leader_id'], $values['leader'], leader_choices($conn));
                         admin_textarea('description', 'What it does, and how to join', $values['description'],
                             'Leave an empty line between paragraphs. This is the page a visitor reads when they '
                             . 'are asking where they would fit in.', 8);
-                        ?>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('departments'), $values['slug']); ?>
-                        <?php
                         admin_text_field('display_order', 'Order on the page', (string) $values['display_order'],
                             'Lower numbers come first. You can also change this from the list.', '0');
                         admin_checkbox('active', 'Show this department on the website', (int) $values['active'] === 1);
+                        admin_form_buttons(admin_url('departments'), $is_new ? 'Add department' : 'Save changes');
                         ?>
                     </div>
                 </div>
-
-                <?php admin_form_buttons(admin_url('departments'), $is_new ? 'Add department' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('departments/' . $department['slug']); ?>">
-                                <?php echo url('departments/' . $department['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">
-                            <?php echo (int) $department['active'] === 1
-                                ? 'Currently shown on the departments page.'
-                                : 'Currently hidden from the website.'; ?>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this department</h2>
-                        <p class="small text-body-secondary">
-                            It comes off the website at once and the picture is deleted. If you only want it
-                            off the website for a while, use the switch on the form instead.
+                        <p class="small text-body-secondary mb-3">
+                            It comes off the website at once. If you only want it off for a while, use the
+                            switch on the form instead.
                         </p>
                         <?php echo admin_delete_button('departments', $department_id, 'the department "' . $department['name'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">Writing the description</h2>
-                        <p class="small text-body-secondary mb-0">
-                            Say what the department actually does during the week, and what somebody should do
-                            if they want to join. A visitor who reads that knows whether to come.
-                        </p>
                     </div>
                 </div>
             <?php endif; ?>

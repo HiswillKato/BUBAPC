@@ -319,6 +319,15 @@ a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item):not(.page-link
   font-size: 1.25rem;
   flex: 0 0 auto;
 }
+/* The tile is one link, so the whole card lifts rather than the label alone
+   underlining itself. The card's own transition carries it, and hover is
+   guarded so a phone never gets a number that sticks 3px down after a tap. */
+@media (hover: hover) {
+  .stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--bs-box-shadow) !important;
+  }
+}
 
 /* ---------------------------------------------------------------------------
    8. Media helpers.
@@ -428,13 +437,13 @@ a:not(.btn):not(.nav-link):not(.navbar-brand):not(.dropdown-item):not(.page-link
 .admin-shell #adminSidebar::-webkit-scrollbar { display: none; }
 .admin-shell #adminSidebar .offcanvas-body { scrollbar-width: none; }
 .admin-shell #adminSidebar .offcanvas-body::-webkit-scrollbar { display: none; }
-.admin-sidebar-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1050;
-  background: rgba(20, 12, 6, 0.55);
-}
-.admin-sidebar-backdrop[hidden] { display: none; }
+
+/* The menu is dark in both themes, so its brand has to say so: the brand name
+   and tagline are normally the heading and secondary colours of the page,
+   which are near-black on the light theme and vanish against this background. */
+.admin-shell #adminSidebar .brand-name { color: #fff; }
+.admin-shell #adminSidebar .brand-tagline { color: rgba(255, 255, 255, 0.55); }
+
 @media (min-width: 992px) {
   .admin-shell #adminSidebar {
     width: 280px;

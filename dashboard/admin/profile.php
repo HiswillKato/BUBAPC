@@ -113,7 +113,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
     <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="col-12 col-xl-10">
 
             <?php if ($done !== ''): ?>
                 <div class="alert alert-success" role="alert">
@@ -121,32 +121,17 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                 </div>
             <?php endif; ?>
 
-            <?php if ($errors): ?>
-                <div class="alert alert-danger" role="alert">
-                    <p class="fw-semibold mb-2">
-                        <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
-                        Please fix the following:
-                    </p>
-                    <ul class="mb-0 ps-3">
-                        <?php foreach ($errors as $error): ?>
-                            <li><?php echo e($error); ?></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            <?php endif; ?>
+            <?php admin_errors($errors); ?>
 
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="badge rounded-circle text-bg-brand d-inline-flex align-items-center justify-content-center"
-                              style="width:64px;height:64px;font-size:1.4rem">
-                            <?php echo initials($me['full_name']); ?>
-                        </span>
+                        <?php echo avatar($me['image'] ?? '', $me['full_name'], 64); ?>
                         <div>
                             <h2 class="h5 mb-1"><?php echo e($me['full_name']); ?></h2>
                             <p class="small text-body-secondary mb-0">
                                 <?php echo e(user_role_label($me['role'] ?? 'member')); ?>
-                                &middot; signed in as <code><?php echo e($me['username']); ?></code>
+                                &middot; signed in as <strong><?php echo e($me['username']); ?></strong>
                             </p>
                         </div>
                     </div>
@@ -164,20 +149,15 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                             </div>
                         </div>
 
-                        <p class="small text-body-secondary mb-3">
-                            Your username is <code><?php echo e($me['username']); ?></code>. It is kept as it
-                            is so that somebody who has typed it for years is not confused. Only an admin
-                            can change it, on the People page.
+                        <p class="small text-body-secondary mb-0">
+                            Your username never changes, so that somebody who has typed it for years is not
+                            confused. Only a website administrator can change it, on the People page.
                         </p>
 
                         <?php admin_form_buttons(admin_url('profile'), 'Save my details'); ?>
                     </form>
-                </div>
-            </div>
 
-            <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-body p-4">
-                    <h2 class="h5 mb-3">
+                    <h2 class="h5 mt-5 mb-3">
                         <i class="fa-solid fa-key me-2 text-gold" aria-hidden="true"></i>Change my password
                     </h2>
 
@@ -213,7 +193,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                             </div>
                         </div>
 
-                        <p class="small text-body-secondary mb-3">
+                        <p class="small text-body-secondary mb-0">
                             At least <?php echo (int) MIN_PASSWORD_LENGTH; ?> characters, with a capital
                             letter, a number and a symbol. A short sentence you will remember is better
                             than a short password you will not.

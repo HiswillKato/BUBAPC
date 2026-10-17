@@ -32,7 +32,7 @@ $values = array_merge([
     'scripture_text' => '',
     'further_study' => '',
     'devotional_date' => date('Y-m-d'),
-    'status' => 'draft',
+    'status' => 'published',
 ], $devotional);
 
 $errors = [];
@@ -122,28 +122,24 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('devot
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admin_text_field('title', 'Title', $values['title'], '', 'The Loudest Silence', 'data-slug-source');
+                        admin_text_field('title', 'Title', $values['title'], '', 'The Loudest Silence');
                         admin_date_field('devotional_date', 'The day this is for', $values['devotional_date'],
                             'Not the day you are typing it. A devotional for tomorrow can be written today.');
                         admin_textarea('message', 'The message', $values['message'],
                             'Leave an empty line between paragraphs. It is read on its own page on the website.', 18);
                         ?>
-                    </div>
-                </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">Scripture</h2>
                         <div class="row">
                             <div class="col-md-5">
@@ -164,69 +160,23 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                                 ?>
                             </div>
                         </div>
+
+                        <?php
+                        admin_status_field($values['status']);
+                        admin_form_buttons(admin_url('devotionals'), $is_new ? 'Add devotional' : 'Save changes');
+                        ?>
                     </div>
                 </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('devotionals'), $values['slug']); ?>
-                        <?php admin_status_field($values['status']); ?>
-                    </div>
-                </div>
-
-                <?php admin_form_buttons(admin_url('devotionals'), $is_new ? 'Add devotional' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('devotionals/' . $devotional['slug']); ?>">
-                                <?php echo url('devotionals/' . $devotional['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-3">Added <?php echo e(ago($devotional['created'])); ?>.</p>
-                        <a class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener"
-                           href="<?php echo url('devotionals/' . $devotional['slug']); ?>">
-                            <i class="fa-solid fa-arrow-up-right-from-square me-1" aria-hidden="true"></i>Open it
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this devotional</h2>
-                        <p class="small text-body-secondary">
-                            It comes off the website at once and the picture is deleted. This cannot be undone.
+                        <p class="small text-body-secondary mb-3">
+                            It comes off the website at once. This cannot be undone.
                         </p>
                         <?php echo admin_delete_button('devotionals', $devotional_id, 'the devotional "' . $devotional['title'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">Writing several at once</h2>
-                        <p class="small text-body-secondary mb-0">
-                            You can write next week's devotionals now. Give each one its own date, publish them,
-                            and the home page will show the right one every morning without anybody doing anything.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">What goes in the boxes</h2>
-                        <ul class="small text-body-secondary mb-0 ps-3">
-                            <li>The message is the whole devotional. Write it as it will be read.</li>
-                            <li>The reference is short, like Psalm 46:10. The words of the verse are optional.</li>
-                            <li>Further study is one reference per line.</li>
-                        </ul>
                     </div>
                 </div>
             <?php endif; ?>

@@ -15,7 +15,10 @@
  *   Login · Register  - a visitor who already has an account signs in with the
  *                       plain Login link; Register is the one thing the bar
  *                       asks a newcomer to DO, so it is a filled button at the
- *                       end rather than another link
+ *                       end rather than another link. Once somebody is signed
+ *                       in those two become one account menu, which is the only
+ *                       way back to the members area or the admin panel from
+ *                       the website itself.
  *
  * Three dropdowns rather than four: Program and Contact used to be separate
  * items, which made the bar longer and left Contact reading as a section when
@@ -186,7 +189,14 @@ unset($available_social['YouTube']);
                            putting it last gives the eye an end to stop at. Both
                            disappear once somebody is signed in. The Login link's
                            address, word and icon come from account_link(), so the
-                           bar and the account menu cannot drift apart. */ ?>
+                           bar and the account menu cannot drift apart.
+
+                           Somebody who IS signed in gets one menu where those two
+                           were, and it is the only way back to the members area
+                           or the admin panel from the website. It used to be
+                           nothing at all: the two links simply disappeared, and a
+                           member who wandered back to the public pages had to
+                           remember /dashboard to get to their own account. */ ?>
                     <?php if (!is_logged_in()): ?>
                         <?php $account = account_link(); ?>
                         <li class="nav-item">
@@ -205,6 +215,54 @@ unset($available_social['YouTube']);
                             <a class="btn btn-gold ms-lg-2"
                                href="<?php echo url('register'); ?>"
                                <?php echo nav_active('register') ? 'aria-current="page"' : ''; ?>>Register</a>
+                        </li>
+                    <?php else: ?>
+                        <?php
+                        $account = account_link();
+                        $mine = current_person($conn);
+                        ?>
+                        <li class="nav-item dropdown">
+                            <?php /* href is a way in with no JavaScript; Bootstrap
+                                   takes the click over when it loads. */ ?>
+                            <a class="nav-link dropdown-toggle fw-semibold"
+                               href="<?php echo e($account['url']); ?>" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid <?php echo e($account['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account['label']); ?>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end rounded-4 shadow border-0 p-2">
+                                <?php if (is_staff()): ?>
+                                    <li>
+                                        <a class="dropdown-item rounded-3" href="<?php echo admin_url(); ?>">
+                                            <i class="fa-solid fa-shield-halved me-2" aria-hidden="true"></i>Admin panel
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                <li>
+                                    <a class="dropdown-item rounded-3" href="<?php echo member_url(); ?>">
+                                        <i class="fa-solid fa-user me-2" aria-hidden="true"></i>My account
+                                    </a>
+                                </li>
+                                <?php if ($mine): ?>
+                                    <li>
+                                        <a class="dropdown-item rounded-3"
+                                           href="<?php echo url('people/' . $mine['slug']); ?>">
+                                            <i class="fa-solid fa-id-badge me-2" aria-hidden="true"></i>My page
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <?php /* Signing out changes the session, so it
+                                           is a POST with a token like every other
+                                           change on this site - never a link. */ ?>
+                                    <form method="post" action="<?php echo url('logout'); ?>">
+                                        <?php echo csrf_field(); ?>
+                                        <button type="submit" class="dropdown-item rounded-3 text-danger">
+                                            <i class="fa-solid fa-right-from-bracket me-2" aria-hidden="true"></i>Log out
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
                     <?php endif; ?>
                 </ul>

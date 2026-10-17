@@ -277,7 +277,7 @@ function admin_result_bar($pagination, $query = [], $label = 'records')
 function admin_form_buttons($cancel_url, $save_label = 'Save')
 {
     ?>
-    <div class="d-flex flex-wrap gap-2 mt-4 pt-3 border-top">
+    <div class="d-flex flex-wrap gap-2 mt-4">
         <button type="submit" class="btn btn-primary">
             <i class="fa-solid fa-circle-check" aria-hidden="true"></i> <?php echo e($save_label); ?>
         </button>
@@ -292,10 +292,11 @@ function admin_form_buttons($cancel_url, $save_label = 'Save')
  * $field_name   the name of the file input, for example 'poster'
  * $label        the words shown above the box
  * $current      the image already saved in the database, or ''
- * $hint         small text under the box
+ * $hint         small text under the box, or null for image_hint()
  */
-function admin_image_field($field_name, $label, $current = '', $hint = 'JPG, PNG or WEBP. Maximum 5 MB.')
+function admin_image_field($field_name, $label, $current = '', $hint = null)
 {
+    $hint = $hint ?? image_hint();
     ?>
     <div class="mb-3">
         <label class="form-label" for="<?php echo e($field_name); ?>"><?php echo e($label); ?></label>
@@ -467,47 +468,6 @@ function admin_time_field($name, $label, $value = '', $help = '')
 }
 
 /**
- * The website address of a record, for example /events/the-slug.
- *
- * $public_url  the public address of the section, for example url('events')
- * $value       the slug already saved
- *
- * The address is shown, not typed. It used to be a text box, which was asking
- * a question nobody could answer better than the computer: what letters, and
- * how many dashes? A typed address arrives with capitals, spaces and accents
- * in it and then looks broken in the address bar. So the slug is made from the
- * title by slug() and this only shows what came out.
- *
- * It is a <code> rather than a box on purpose. There is no name attribute, so
- * nothing is posted from here and there is no second copy of the slug to keep
- * in step; the part after the slash keeps its [data-slug-preview] marker so that
- * assets/js/main.js can keep it up to date while the title is being typed.
- *
- * That live preview is only right while the address has still to be made, so
- * the marker is only written when there is nothing saved yet. On an edit the
- * address is already decided and frozen, and letting the script overwrite it
- * with the title's version would show an address that is not the real one -
- * which is exactly the sort of thing a church secretary would trust and publish.
- */
-function admin_slug_field($public_url, $value = '')
-{
-    ?>
-    <div class="mb-3">
-        <span class="form-label d-block">Website address</span>
-        <p class="mb-1">
-            <i class="fa-solid fa-link me-1 text-body-secondary" aria-hidden="true"></i><code><?php echo e($public_url); ?>/<code data-slug-preview<?php echo $value === '' ? ' data-slug-new' : ''; ?>><?php echo e($value !== '' ? $value : 'your-title-here'); ?></code></code>
-        </p>
-        <div class="form-text">
-            Made from the title in lower case with dashes, so it can never come out
-            with a space or a capital in it. It is not typed and it is not something
-            to change: once the page is on the website, links to it have been printed
-            and shared, and a corrected title must not break them.
-        </div>
-    </div>
-    <?php
-}
-
-/**
  * Who leads this department or family.
  *
  * The drop down is every person in the people table who could lead a group,
@@ -559,7 +519,7 @@ function admin_leader_field($selected_id, $typed_name, $choices, $help = '')
  * Print the published / draft choice. It is two buttons rather than a drop down
  * because it is the one thing an editor changes most often.
  */
-function admin_status_field($value = 'draft')
+function admin_status_field($value = 'published')
 {
     $control = '<div class="btn-group w-100" role="group" aria-label="Status">';
     foreach (['published' => 'Published', 'draft' => 'Draft'] as $option => $label) {

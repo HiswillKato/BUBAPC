@@ -24,7 +24,7 @@ $values = array_merge([
     'slug' => '',
     'content' => '',
     'publish_date' => date('Y-m-d'),
-    'status' => 'draft',
+    'status' => 'published',
 ], $announcement);
 
 $errors = [];
@@ -103,72 +103,37 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('annou
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admin_text_field('title', 'Title', $values['title'], '', 'Registration is open for the Convention', 'data-slug-source');
+                        admin_text_field('title', 'Title', $values['title'], '', 'Registration is open for the Convention');
                         admin_date_field('publish_date', 'The date it appears on', $values['publish_date'],
                             'Backdating is fine: it only decides where the notice sits in the order.');
                         admin_textarea('content', 'The notice', $values['content'],
                             'Leave an empty line between paragraphs. Shown on the home page and on the notices page.', 8);
+                        admin_status_field($values['status']);
+                        admin_form_buttons(admin_url('announcements'), $is_new ? 'Add announcement' : 'Save changes');
                         ?>
                     </div>
                 </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('announcements'), $values['slug']); ?>
-                        <?php admin_status_field($values['status']); ?>
-                    </div>
-                </div>
-
-                <?php admin_form_buttons(admin_url('announcements'), $is_new ? 'Add announcement' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('announcements'); ?>#notice-<?php echo (int) $announcement['id']; ?>">
-                                <?php echo url('announcements'); ?>#notice-<?php echo (int) $announcement['id']; ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">Added <?php echo e(ago($announcement['created'])); ?>.</p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this announcement</h2>
-                        <p class="small text-body-secondary">
-                            It comes off the website at once and the picture is deleted. This cannot be undone.
+                        <p class="small text-body-secondary mb-3">
+                            It comes off the website at once. This cannot be undone.
                         </p>
                         <?php echo admin_delete_button('announcements', $announcement_id, 'the announcement "' . $announcement['title'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">How notices behave</h2>
-                        <ul class="small text-body-secondary mb-0 ps-3">
-                            <li>The newest published notice is shown on the home page.</li>
-                            <li>They stay on the notices page until you delete them, so nothing is lost.</li>
-                            <li>When a notice is old, delete it. A page full of last year&rsquo;s news is confusing.</li>
-                        </ul>
                     </div>
                 </div>
             <?php endif; ?>

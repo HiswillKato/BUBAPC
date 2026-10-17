@@ -140,15 +140,15 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('progr
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-7">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
                         admin_text_field('title', 'Name of the meeting', $values['title'], '', 'Midweek Prayer');
@@ -179,46 +179,26 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         admin_textarea('description', 'What the meeting is for', $values['description'],
                             'One line a visitor can read on the program page. Leave empty if there is nothing '
                             . 'useful to add.', 3);
-                        ?>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <?php
                         admin_text_field('sort_order', 'Order within the day', (string) $values['sort_order'],
                             'Lower numbers come first. Meetings are shown by start time anyway, so this only '
                             . 'matters when two of them start together.', '0');
                         admin_checkbox('active', 'Show this meeting on the website', (int) $values['active'] === 1,
                             'Switch it off for a term break instead of deleting it.');
+                        admin_form_buttons(admin_url('programs'), $is_new ? 'Add to the program' : 'Save changes');
                         ?>
                     </div>
                 </div>
-
-                <?php admin_form_buttons(admin_url('programs'), $is_new ? 'Add to the program' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-5">
             <?php if (!$is_new): ?>
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Remove this meeting</h2>
-                        <p class="small text-body-secondary">
+                        <p class="small text-body-secondary mb-3">
                             It comes off the weekly program at once. If it is only for this term, use the
                             switch on the form instead.
                         </p>
                         <?php echo admin_delete_button('programs', $program_id, 'the meeting "' . $program['title'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">A good week</h2>
-                        <p class="small text-body-secondary mb-0">
-                            Most churches run three or four meetings a week. The program page shows them
-                            under the day they happen, and the home page points at whatever is on next.
-                        </p>
                     </div>
                 </div>
             <?php endif; ?>

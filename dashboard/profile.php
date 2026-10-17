@@ -161,85 +161,74 @@ $page_title = 'My details';
 require_once __DIR__ . '/../app/includes/public/header.php';
 ?>
 
-    <section class="py-5">
+    <section class="py-4 py-lg-5">
         <div class="container">
+            <?php page_header(
+                'My details',
+                '',
+                [['Home', url('')], ['My account', member_url()], ['My details', null]]
+            ); ?>
+
+            <?php form_errors($errors); ?>
+            <?php show_flashes(); ?>
+
+            <?php /* One card holds both. They are two separate submissions, so
+                   each keeps its own form and its own button, and a heading -
+                   not a line - is what separates them. */ ?>
             <div class="row justify-content-center">
-                <div class="col-12 col-md-8 col-lg-7">
-                    <?php page_header(
-                        'My details',
-                        'Keep the church up to date with you.',
-                        [['Home', url('')], ['My account', member_url()], ['My details', null]]
-                    ); ?>
+                <div class="col-12 col-xl-10">
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4">
 
-                    <?php if ($errors): ?>
-                        <div class="alert alert-danger" role="alert">
-                            <?php foreach ($errors as $error): ?>
-                                <p class="mb-0"><?php echo e($error); ?></p>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php show_flashes(); ?>
-
-                    <?php if ($person): ?>
-                        <div class="card border-0 shadow rounded-4 mb-4">
-                            <div class="card-body p-4 p-md-5">
-                                <h2 class="h5 mb-4">Your details</h2>
+                            <?php if ($person): ?>
+                                <h2 class="h5 mb-3">Your church details</h2>
                                 <p class="text-body-secondary mb-3">
-                                    Your name, email and phone are kept on your church profile, where
-                                    they also appear on the site, so they are changed there.
+                                    Your name, email and phone are kept on your church profile, where they also
+                                    appear on the site.
                                 </p>
                                 <a href="<?php echo url('dashboard/person'); ?>" class="btn btn-primary">
                                     <i class="fa-solid fa-id-card me-1" aria-hidden="true"></i>
                                     My church profile
                                 </a>
-                            </div>
-                        </div>
-                    <?php else: ?>
-                    <div class="card border-0 shadow rounded-4 mb-4">
-                        <div class="card-body p-4 p-md-5">
-                            <h2 class="h5 mb-4">Your details</h2>
+                            <?php else: ?>
+                                <h2 class="h5 mb-3">Your details</h2>
 
-                            <form method="post" action="<?php echo url('dashboard/profile'); ?>" novalidate>
-                                <?php echo csrf_field(); ?>
-                                <input type="hidden" name="form" value="details">
+                                <form method="post" action="<?php echo url('dashboard/profile'); ?>" novalidate>
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="form" value="details">
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="full_name">Your name</label>
-                                    <input type="text" class="form-control" id="full_name" name="full_name"
-                                           value="<?php echo e($full_name); ?>"
-                                           required maxlength="160" autocomplete="name">
-                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="full_name">Your name</label>
+                                        <input type="text" class="form-control" id="full_name" name="full_name"
+                                               value="<?php echo e($full_name); ?>"
+                                               required maxlength="160" autocomplete="name">
+                                    </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label" for="email">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email"
-                                           value="<?php echo e($email); ?>"
-                                           required maxlength="190" autocomplete="email"
-                                           autocapitalize="none" spellcheck="false">
-                                    <div class="form-text">You sign in with this address.</div>
-                                </div>
+                                    <div class="mb-3">
+                                        <label class="form-label" for="email">Email</label>
+                                        <input type="email" class="form-control" id="email" name="email"
+                                               value="<?php echo e($email); ?>"
+                                               required maxlength="190" autocomplete="email"
+                                               autocapitalize="none" spellcheck="false">
+                                        <div class="form-text">You sign in with this address.</div>
+                                    </div>
 
-                                <div class="mb-4">
-                                    <label class="form-label" for="phone">Phone</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone"
-                                           value="<?php echo e($phone); ?>"
-                                           maxlength="40" autocomplete="tel">
-                                    <div class="form-text">Optional.</div>
-                                </div>
+                                    <div class="mb-4">
+                                        <label class="form-label" for="phone">Phone</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone"
+                                               value="<?php echo e($phone); ?>"
+                                               maxlength="40" autocomplete="tel">
+                                        <div class="form-text">Optional.</div>
+                                    </div>
 
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
-                                    Save my details
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    <?php endif; ?>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-floppy-disk me-1" aria-hidden="true"></i>
+                                        Save my details
+                                    </button>
+                                </form>
+                            <?php endif; ?>
 
-                    <div class="card border-0 shadow rounded-4">
-                        <div class="card-body p-4 p-md-5">
-                            <h2 class="h5 mb-4">Change your password</h2>
+                            <h2 class="h5 mt-4 mb-3">Change your password</h2>
 
                             <form method="post" action="<?php echo url('dashboard/profile'); ?>" novalidate>
                                 <?php echo csrf_field(); ?>
@@ -274,15 +263,15 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                             </form>
                         </div>
                     </div>
-
-                    <p class="mt-4 mb-0">
-                        <a href="<?php echo member_url(); ?>">
-                            <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
-                            Back to my account
-                        </a>
-                    </p>
                 </div>
             </div>
+
+            <p class="mt-4 mb-0">
+                <a href="<?php echo member_url(); ?>">
+                    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
+                    Back to my account
+                </a>
+            </p>
         </div>
     </section>
 

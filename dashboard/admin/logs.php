@@ -144,9 +144,9 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
         <i class="fa-solid fa-triangle-exclamation mt-1" aria-hidden="true"></i>
         <div>
             <strong><?php echo e($refused_today); ?> wrong password<?php echo $refused_today === 1 ? '' : 's'; ?> today.</strong>
-            Somebody who has simply forgotten their password gets locked out for
-            <?php echo e(LOGIN_LOCK_MINUTES); ?> minutes. A burst from several addresses
-            is worth looking at below, and the addresses that were tried are on every line.
+            Somebody who has simply forgotten their password is locked out for
+            <?php echo e(LOGIN_LOCK_MINUTES); ?> minutes. If the number keeps climbing, it is worth looking at
+            the list below.
         </div>
     </div>
 <?php endif; ?>

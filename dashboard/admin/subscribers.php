@@ -150,8 +150,8 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
         <div>
             <strong>Nobody is on the list yet.</strong>
             The form in the footer of every page adds addresses here, and so does the box on the
-            register page. Every morning the devotional dated for that day is emailed to everyone
-            switched on, by <code>bin/send-devotional.php</code> run from cron.
+            register page. Every morning, the devotional written for that day is sent out
+            automatically to everyone switched on.
         </div>
     </div>
 <?php endif; ?>

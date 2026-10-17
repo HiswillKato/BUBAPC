@@ -32,7 +32,7 @@ $values = array_merge([
     'scripture' => '',
     'sermon_date' => date('Y-m-d'),
     'video_url' => '',
-    'status' => 'draft',
+    'status' => 'published',
 ], $sermon);
 
 $errors = [];
@@ -131,33 +131,29 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('sermo
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admin_text_field('title', 'Title', $values['title'], '', 'A Voice, Not a Volume', 'data-slug-source');
+                        admin_text_field('title', 'Title', $values['title'], '', 'A Voice, Not a Volume');
                         admin_text_field('preacher', 'Preacher', $values['preacher'], '', 'Bishop Samuel Okello');
                         admin_date_field('sermon_date', 'Date preached', $values['sermon_date']);
                         admin_text_field('scripture', 'Scripture', $values['scripture'], 'For example Isaiah 40:1-5', 'Isaiah 40:1-5');
                         admin_textarea('description', 'Notes about this message', $values['description'],
                             'Leave an empty line between paragraphs. Shown on the website under the video.', 10);
                         ?>
-                    </div>
-                </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">Recording</h2>
                         <?php
                         admin_text_field('video_url', 'YouTube address', $values['video_url'],
-                            'Paste the address of the video, not the embed code. Leave empty if there is no recording.',
+                            'Paste the video\'s web address from YouTube. Leave empty if there is no recording.',
                             'https://www.youtube.com/watch?v=');
                         ?>
                         <?php $preview_embed_url = youtube_embed_url($values['video_url']); ?>
@@ -169,59 +165,23 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                             </div>
                             <p class="small text-body-secondary">That is how the video will appear on the website.</p>
                         <?php endif; ?>
+
+                        <?php
+                        admin_status_field($values['status']);
+                        admin_form_buttons(admin_url('sermons'), $is_new ? 'Add sermon' : 'Save changes');
+                        ?>
                     </div>
                 </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('sermons'), $values['slug']); ?>
-                        <?php admin_status_field($values['status']); ?>
-                    </div>
-                </div>
-
-                <?php admin_form_buttons(admin_url('sermons'), $is_new ? 'Add sermon' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('sermons/' . $sermon['slug']); ?>">
-                                <?php echo url('sermons/' . $sermon['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">Added <?php echo e(ago($sermon['created'])); ?>.</p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this sermon</h2>
-                        <p class="small text-body-secondary">
-                            It comes off the website at once and the picture is deleted. This cannot be undone.
+                        <p class="small text-body-secondary mb-3">
+                            It comes off the website at once. This cannot be undone.
                         </p>
                         <?php echo admin_delete_button('sermons', $sermon_id, 'the sermon "' . $sermon['title'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">Finding the video address</h2>
-                        <ol class="small text-body-secondary mb-0 ps-3">
-                            <li>Open the video on YouTube.</li>
-                            <li>Click <em>Share</em>, then <em>Copy</em>.</li>
-                            <li>Paste it into the box above.</li>
-                        </ol>
-                        <p class="small text-body-secondary mt-3 mb-0">
-                            The player on the website is put in by the website itself. Never paste the
-                            &lt;iframe&gt; code into the box.
-                        </p>
                     </div>
                 </div>
             <?php endif; ?>

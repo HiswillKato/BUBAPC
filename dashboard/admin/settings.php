@@ -64,14 +64,14 @@ $page_heading = 'Settings';
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
+    <div class="row justify-content-center">
 
-        <div class="col-lg-12">
+        <div class="col-12 col-xl-10">
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <h2 class="h5 mb-3">
                             <i class="fa-solid fa-screwdriver-wrench me-2 text-gold" aria-hidden="true"></i>

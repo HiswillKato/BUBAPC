@@ -291,21 +291,21 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('peopl
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="<?php echo $is_new ? 'col-12' : 'col-lg-8'; ?>">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
                         admin_text_field('name', 'Full name', $values['name'], '',
-                            'Pastor Ruth Nakato', 'data-slug-source');
+                            'Pastor Ruth Nakato');
                         admin_select('category', 'Group', people_categories(), $values['category'],
-                            'Decides which page the person appears on. Member and Staff appear on no page.');
+                            'Decides which page of the website the person is listed on.');
                         admin_text_field('position', 'Job title', $values['position'], '',
                             'e.g. Bishop, Head Teacher');
                         admin_text_field('email', 'Email', $values['email'], '', 'name@example.com');
@@ -315,8 +315,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         ?>
 
                         <?php if ($can_manage_login): ?>
-                            <hr class="my-4">
-                            <h2 class="h6 text-uppercase text-body-secondary mb-3">Website login</h2>
+                            <h2 class="h6 text-uppercase text-body-secondary mt-4 mb-3">Website login</h2>
                             <?php
                             admin_checkbox('login', 'Let this person sign in', (int) $values['login'] === 1,
                                 'They sign in with the email above.');
@@ -333,7 +332,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
 
                             if ($values['login_role'] === 'church_admin') {
                                 echo '<p class="small text-body-secondary">A church admin can do '
-                                    . 'everything a website administrator can. Choosing this also files '
+                                    . 'everything a website administrator can. Choosing this also lists '
                                     . 'them under <strong>Church Admins</strong>.</p>';
                             }
                             ?>
@@ -354,50 +353,30 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
 
                             <?php if ($has_account): ?>
                                 <p class="small text-body-secondary mb-0">
-                                    Signs in as <code><?php echo e($person['username']); ?></code>
+                                    Signs in as <strong><?php echo e($person['username']); ?></strong>
                                     (<?php echo (int) ($person['active'] ?? 0) === 1 ? 'on' : 'off'; ?>).
                                 </p>
                             <?php endif; ?>
                         <?php endif; ?>
+
+                        <?php admin_form_buttons(admin_url('people'), $is_new ? 'Add person' : 'Save changes'); ?>
                     </div>
                 </div>
-
-                <?php admin_form_buttons(admin_url('people'), $is_new ? 'Add person' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <?php if (!$is_new): ?>
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('people/' . $person['slug']); ?>">
-                                <?php echo url('people/' . $person['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">
-                            <?php echo e($person['name']); ?> appears under
-                            <strong><?php echo e(people_categories()[$person['category']] ?? $person['category']); ?></strong>
-                            <?php echo (int) $person['status'] === 1 ? '' : ', but is currently hidden'; ?>.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+            <?php if (!$is_new): ?>
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Remove this person</h2>
-                        <p class="small text-body-secondary">
+                        <p class="small text-body-secondary mb-3">
                             They come off the website at once and their picture is deleted. To take them
                             off the website but keep the record, untick the switch on the form instead.
                         </p>
                         <?php echo admin_delete_button('people', $person_id, $person['name']); ?>
                     </div>
                 </div>
-            </div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
 <?php require_once __DIR__ . '/../../app/includes/admin/footer.php'; ?>

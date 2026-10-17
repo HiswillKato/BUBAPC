@@ -35,7 +35,7 @@ $values = array_merge([
     'end_date' => '',
     'end_time' => '',
     'image' => '',
-    'status' => 'draft',
+    'status' => 'published',
     'slug' => '',
 ], $event);
 
@@ -157,31 +157,25 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('event
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        /* The title box is the source of the address preview, so
-                           main.js can show the address while it is being typed. */
-                        admin_text_field('title', 'Title', $values['title'], '', 'A Voice to Generations', 'data-slug-source');
-                        admin_text_field('theme', 'Theme or tag', $values['theme'], 'For example: Convention, Retreat, Prayer. Shown as a small badge.', 'Retreat');
+                        admin_text_field('title', 'Title', $values['title'], '', 'A Voice to Generations');
+                        admin_text_field('theme', 'Theme or tag', $values['theme'],
+                            'For example: Convention, Retreat, Prayer. Shown as a small label beside the event.', 'Retreat');
                         admin_textarea('description', 'Description', $values['description'],
                             'Leave an empty line between paragraphs. It will be read as a page on the website.', 10);
                         ?>
-                    </div>
-                </div>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">When and where</h2>
-
                         <div class="row">
                             <div class="col-sm-6">
                                 <?php admin_date_field('start_date', 'Start date', $values['start_date']); ?>
@@ -199,58 +193,24 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                                 <?php admin_text_field('venue', 'Venue', $values['venue'], 'Where it happens.', 'Busitema University Main Grounds'); ?>
                             </div>
                         </div>
+
+                        <?php
+                        admin_image_field('image', 'Picture', $values['image']);
+                        admin_status_field($values['status']);
+                        admin_form_buttons(admin_url('events'), $is_new ? 'Add event' : 'Save changes');
+                        ?>
                     </div>
                 </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('events'), $values['slug']); ?>
-                        <?php admin_status_field($values['status']); ?>
-                        <?php admin_image_field('image', 'Picture', $values['image']); ?>
-                    </div>
-                </div>
-
-                <?php admin_form_buttons(admin_url('events'), $is_new ? 'Add event' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('events/' . $event['slug']); ?>">
-                                <?php echo url('events/' . $event['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">
-                            Added <?php echo e(ago($event['created'])); ?>.
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this event</h2>
-                        <p class="small text-body-secondary">
+                        <p class="small text-body-secondary mb-3">
                             It comes off the website at once and the picture is deleted. This cannot be undone.
                         </p>
                         <?php echo admin_delete_button('events', $event_id, 'the event "' . $event['title'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">A few tips</h2>
-                        <ul class="small text-body-secondary mb-0 ps-3">
-                            <li>Save it as a draft first if you want to think it over. Nobody can see a draft.</li>
-                            <li>The address is made from the title. You can change it in the box if you like.</li>
-                            <li>A picture makes a card twice as easy to recognise on a phone.</li>
-                        </ul>
                     </div>
                 </div>
             <?php endif; ?>

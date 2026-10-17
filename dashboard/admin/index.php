@@ -1,19 +1,17 @@
 <?php
 /**
- * BUBAPC - The admin dashboard, the first page inside /admin
+ * BUBAPC - The admin dashboard, the first page inside /dashboard/admin
  *
  * Who reads this page: a pastor or a secretary who knows the church well and
  * knows nothing about websites. So the page answers two questions and stops:
- * how much has been written, and what is happening today. Each number is a link,
- * and the menu on the left lists everything, so there is no second list of links
- * on this page to work through.
+ * how much has been written, and what is happening today. The menu on the left
+ * lists everything, so there is no second list of links to work through here.
  *
  * That is why the numbers carry no sentence and no button. They used to, and
  * the extra words were saying nothing the number did not already say: a card
  * reading "Sermons, 12, 2 written but not on the website yet, Show the list"
- * is three ways of being told one thing, and the link was already in the menu.
- * A card now shows a name, a number, and - only when it is not zero - a short
- * count of what is waiting.
+ * is three ways of being told one thing. A card now shows a name, a number,
+ * and - only when it is not zero - a short count of what is waiting.
  *
  * What is deliberately not on this page: the activity log, the visitor counts,
  * the wrong-password counter and the published/unpublished table. Those are how
@@ -75,19 +73,16 @@ foreach ($count_tables as $table => $column) {
 $unread_messages = (int) db_one($conn, "SELECT COUNT(*) AS total FROM messages WHERE seen = 0")['total'];
 $subscribers = (int) db_one($conn, "SELECT COUNT(*) AS total FROM subscribers WHERE status = 1")['total'];
 
-/* The two things worth saying in a sentence, because a number cannot carry
-   them: when the next thing happens, and what visitors are being shown today. */
+/* The two things worth a date rather than a number: what is coming, and what
+   visitors are being shown today. Both are read whole, because both are
+   printed with their title and their date, and the title of yesterday's
+   devotional is not something to work out from a count. */
 $next_event = db_one($conn, "SELECT * FROM events
                              WHERE status = 'published' AND start_date >= CURDATE()
                              ORDER BY start_date ASC, start_time ASC LIMIT 1");
 $today_devotional = db_one($conn, "SELECT * FROM devotionals
                                    WHERE status = 'published' AND devotional_date <= CURDATE()
                                    ORDER BY devotional_date DESC LIMIT 1");
-
-/* Good morning is only right half the day, and the dashboard is often the
-   first thing anybody sees, so it says hello properly. */
-$hour = (int) date('G');
-$greeting = $hour < 12 ? 'Good morning' : ($hour < 18 ? 'Good afternoon' : 'Good evening');
 
 /* One number per thing, with the count of what is waiting attached only when
    there is something waiting. The keys are: icon, name, number, the short note,
@@ -112,7 +107,7 @@ $cards = [
 ?>
 
     <p class="text-body-secondary mb-4">
-        <?php echo e($greeting . ', ' . $admin['full_name']); ?>
+        <?php echo e(greeting() . ', ' . $admin['full_name']); ?>
         &middot; <?php echo format_date(date('Y-m-d'), 'l, j F Y'); ?>
     </p>
 
@@ -149,41 +144,55 @@ $cards = [
         <?php endforeach; ?>
     </div>
 
+    <?php /* Two cards, one fact each, side by side on a wide screen and stacked
+           on a phone. The title is the link, and it opens the record itself
+           rather than the list, because the list is already one click away in
+           the menu and "the next event" is the one thing the menu cannot
+           point at. */
+    ?>
     <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4">
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
                 <div class="card-body p-4">
-                    <h2 class="h5 mb-3">
-                        <i class="fa-solid fa-calendar-day me-2 text-gold" aria-hidden="true"></i>Today
+                    <h2 class="h6 text-uppercase small text-body-secondary mb-3">
+                        <i class="fa-solid fa-calendar-day me-2 text-gold" aria-hidden="true"></i>Next event
                     </h2>
 
                     <?php if ($next_event): ?>
-                        <p class="mb-3">
-                            <strong>Next: <?php echo e($next_event['title']); ?></strong>
-                            <span class="text-body-secondary">
-                                &middot; <?php echo event_date_label($next_event); ?>
-                                <?php if ($next_event['venue'] !== ''): ?>
-                                    &middot; <?php echo e($next_event['venue']); ?>
-                                <?php endif; ?>
-                            </span>
+                        <a class="h5 d-block mb-1"
+                           href="<?php echo admin_url('events/form.php?id=' . (int) $next_event['id']); ?>">
+                            <?php echo e($next_event['title']); ?>
+                        </a>
+                        <p class="small text-body-secondary mb-0">
+                            <?php echo event_date_label($next_event); ?>
+                            <?php if ($next_event['venue'] !== ''): ?>
+                                &middot; <?php echo e($next_event['venue']); ?>
+                            <?php endif; ?>
                         </p>
                     <?php else: ?>
-                        <p class="mb-3 text-body-secondary">
-                            Nothing is in the calendar yet.
-                        </p>
+                        <p class="text-body-secondary mb-0">Nothing is in the calendar yet.</p>
                     <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <h2 class="h6 text-uppercase small text-body-secondary mb-3">
+                        <i class="fa-solid fa-book-bible me-2 text-gold" aria-hidden="true"></i>Today's devotional
+                    </h2>
 
                     <?php if ($today_devotional): ?>
-                        <p class="mb-0">
-                            <strong>Devotional: <?php echo e($today_devotional['title']); ?></strong>
-                            <span class="text-body-secondary">
-                                &middot; <?php echo format_date($today_devotional['devotional_date'], 'j F'); ?>
-                            </span>
+                        <a class="h5 d-block mb-1"
+                           href="<?php echo admin_url('devotionals/form.php?id=' . (int) $today_devotional['id']); ?>">
+                            <?php echo e($today_devotional['title']); ?>
+                        </a>
+                        <p class="small text-body-secondary mb-0">
+                            <?php echo format_date($today_devotional['devotional_date'], 'l, j F Y'); ?>
                         </p>
                     <?php else: ?>
-                        <p class="mb-0 text-body-secondary">
-                            No devotional is on the website today.
-                        </p>
+                        <p class="text-body-secondary mb-0">No devotional is on the website today.</p>
                     <?php endif; ?>
                 </div>
             </div>

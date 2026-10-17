@@ -125,7 +125,7 @@ $page_title = 'My church profile';
 require_once __DIR__ . '/../app/includes/public/header.php';
 ?>
 
-    <section class="py-5">
+    <section class="py-4 py-lg-5">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-9 col-lg-8">
@@ -138,34 +138,21 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                     <?php form_errors($errors); ?>
                     <?php show_flashes(); ?>
 
-                    <div class="card border-0 shadow rounded-4 mb-4">
+                    <div class="card border-0 shadow rounded-4">
                         <div class="card-body p-4 p-md-5">
                             <form method="post" action="<?php echo url('dashboard/person'); ?>"
                                   enctype="multipart/form-data" novalidate>
                                 <?php echo csrf_field(); ?>
 
-                                <div class="d-flex align-items-center gap-3 mb-4">
-                                    <?php if (!empty($person['image'])): ?>
-                                        <img src="<?php echo upload_url($person['image']); ?>"
-                                             alt="<?php echo e($person['name']); ?>"
-                                             class="rounded-circle object-fit-cover flex-shrink-0"
-                                             width="72" height="72">
-                                    <?php else: ?>
-                                        <span class="d-inline-flex align-items-center justify-content-center
-                                                     rounded-circle bg-secondary-subtle text-body-secondary
-                                                     fw-semibold flex-shrink-0"
-                                              style="width: 72px; height: 72px; font-size: 1.5rem;">
-                                            <?php echo initials($person['name']); ?>
-                                        </span>
-                                    <?php endif; ?>
+                                <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 mb-4">
+                                    <?php echo avatar($person['image'], $person['name'], 72); ?>
 
                                     <div class="flex-grow-1">
                                         <label class="form-label" for="image">Your photograph</label>
                                         <input type="file" class="form-control" id="image" name="image"
                                                accept="image/jpeg,image/png,image/webp">
                                         <div class="form-text">
-                                            JPG, PNG or WEBP, up to
-                                            <?php echo round(MAX_UPLOAD_SIZE / 1048576); ?> MB.
+                                            <?php echo e(image_hint()); ?>
                                         </div>
                                         <?php if (!empty($person['image'])): ?>
                                             <div class="form-check mt-2">
@@ -225,12 +212,8 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                                     Save my profile
                                 </button>
                             </form>
-                        </div>
-                    </div>
 
-                    <div class="card border-0 shadow rounded-4">
-                        <div class="card-body p-4">
-                            <h2 class="h6 text-uppercase small text-body-secondary mb-3">
+                            <h2 class="h6 text-uppercase small text-body-secondary mt-4 mb-3">
                                 Kept by the church office
                             </h2>
                             <dl class="row mb-0 small">
@@ -241,14 +224,12 @@ require_once __DIR__ . '/../app/includes/public/header.php';
 
                                 <?php if ($person['position'] !== ''): ?>
                                     <dt class="col-sm-4 text-body-secondary fw-normal">Office</dt>
-                                    <dd class="col-sm-8"><?php echo e($person['position']); ?></dd>
+                                    <dd class="col-sm-8 mb-2"><?php echo e($person['position']); ?></dd>
                                 <?php endif; ?>
                             </dl>
 
                             <p class="small text-body-secondary mb-0">
-                                To change any of these, or your password,
-                                <a href="<?php echo member_url(); ?>">go to your account</a>
-                                or speak to the church office.
+                                Ask the church office to change any of these.
                             </p>
                         </div>
                     </div>

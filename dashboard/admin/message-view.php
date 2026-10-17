@@ -76,8 +76,7 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                 <div class="card-body p-4">
                     <h2 class="h6 mb-3">Write back</h2>
                     <p class="small text-body-secondary">
-                        This website does not send email. It only collects what people write, and your own
-                        email program sends the reply.
+                        Replying opens your own email program, so the reply comes from your own address.
                     </p>
                     <a class="btn btn-primary"
                        href="mailto:<?php echo e($message['email']); ?>?subject=<?php echo rawurlencode('Re: ' . ($message['subject'] !== '' ? $message['subject'] : 'Your message')); ?>">

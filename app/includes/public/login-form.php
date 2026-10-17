@@ -75,15 +75,9 @@ $login_next = $login_next ?? ($_POST['next'] ?? ($_GET['next'] ?? ''));
 
         <hr class="my-4">
 
-        <p class="small text-body-secondary">
+        <p class="small text-body-secondary mb-0">
             <i class="fa-solid fa-key me-1" aria-hidden="true"></i>
             <a href="<?php echo url('forgot'); ?>">Forgot your password?</a>
-        </p>
-
-        <p class="small text-body-secondary mb-0">
-            <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
-            For administrators. If you are a member,
-            <a href="<?php echo url('contact'); ?>">contact the church office</a>.
         </p>
     </div>
 </div>

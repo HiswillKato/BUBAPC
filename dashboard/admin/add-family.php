@@ -137,81 +137,41 @@ $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('famil
 require_once __DIR__ . '/../../app/includes/admin/header.php';
 ?>
 
-    <div class="row g-4">
-        <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
 
             <?php admin_errors($errors); ?>
 
             <form method="post" novalidate>
                 <?php echo csrf_field(); ?>
 
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
                         admin_text_field('name', 'Name of the family', $values['name'], '',
-                            'The Grace Family', 'data-slug-source');
+                            'The Grace Family');
                         admin_leader_field((int) $values['leader_id'], $values['leader'], leader_choices($conn));
                         admin_textarea('description', 'Who it is for, and when it meets', $values['description'],
                             'Leave an empty line between paragraphs. Mention the year of study it is for, and '
                             . 'the day and time it meets, because that is what a student is looking for.', 8);
-                        ?>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 text-uppercase text-body-secondary mb-3">On the website</h2>
-                        <?php admin_slug_field(url('families'), $values['slug']); ?>
-                        <?php
                         admin_text_field('display_order', 'Order on the page', (string) $values['display_order'],
                             'Lower numbers come first. You can also change this from the list.', '0');
                         admin_checkbox('active', 'Show this family on the website', (int) $values['active'] === 1);
+                        admin_form_buttons(admin_url('families'), $is_new ? 'Add family' : 'Save changes');
                         ?>
                     </div>
                 </div>
-
-                <?php admin_form_buttons(admin_url('families'), $is_new ? 'Add family' : 'Save changes'); ?>
             </form>
-        </div>
 
-        <div class="col-lg-4">
             <?php if (!$is_new): ?>
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-3">On the website</h2>
-                        <p class="small text-body-secondary mb-2">
-                            Address:
-                            <a class="d-block text-break" target="_blank" rel="noopener"
-                               href="<?php echo url('families/' . $family['slug']); ?>">
-                                <?php echo url('families/' . $family['slug']); ?>
-                            </a>
-                        </p>
-                        <p class="small text-body-secondary mb-0">
-                            <?php echo (int) $family['active'] === 1
-                                ? 'Currently shown on the families page.'
-                                : 'Currently hidden from the website.'; ?>
-                        </p>
-                    </div>
-                </div>
-
-                <div class="card border-danger rounded-4">
+                <div class="card border-danger rounded-4 mt-4">
                     <div class="card-body p-4">
                         <h2 class="h6 mb-2">Delete this family</h2>
-                        <p class="small text-body-secondary">
-                            It comes off the website at once and the picture is deleted. If you only want it
-                            off the website for a while, use the switch on the form instead.
+                        <p class="small text-body-secondary mb-3">
+                            It comes off the website at once. If you only want it off for a while, use the
+                            switch on the form instead.
                         </p>
                         <?php echo admin_delete_button('families', $family_id, 'the family "' . $family['name'] . '"'); ?>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="card border-0 shadow-sm rounded-4">
-                    <div class="card-body p-4">
-                        <h2 class="h6 mb-2">What a student needs to read</h2>
-                        <p class="small text-body-secondary mb-0">
-                            Somebody opening this page is usually alone on a campus and deciding whether to walk
-                            into a room of strangers. Say the day, the time, and what happens when they arrive.
-                        </p>
                     </div>
                 </div>
             <?php endif; ?>

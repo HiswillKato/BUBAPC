@@ -69,6 +69,39 @@ function agent()
 }
 
 /**
+ * A plain name for the browser an agent string came from, for showing on the
+ * visitors page: "Chrome", "Firefox", "Safari", "Edge" or "Other".
+ *
+ * agent() keeps the whole string because the visitor counter needs it to
+ * recognise a returning browser, but printed on its own it is a wall of jargon
+ * on a screen a church secretary reads. This is only ever used to print, never
+ * to match or to store, so the only thing that has to be right is the order of
+ * the checks: Edge and Opera both carry "Chrome" in their string, and Chrome
+ * carries "Safari", so the narrower names are tested first.
+ */
+function browser_name($user_agent)
+{
+    $browsers = [
+        'Edg'     => 'Edge',
+        'OPR'     => 'Opera',
+        'Samsung' => 'Samsung Internet',
+        'Firefox' => 'Firefox',
+        'Chrome'  => 'Chrome',
+        'Safari'  => 'Safari',
+        'MSIE'    => 'Internet Explorer',
+        'Trident' => 'Internet Explorer',
+    ];
+
+    foreach ($browsers as $needle => $name) {
+        if (stripos((string) $user_agent, $needle) !== false) {
+            return $name;
+        }
+    }
+
+    return $user_agent === '' ? 'Unknown' : 'Other';
+}
+
+/**
  * The address of the page the visitor came from, or an empty string when they
  * typed the address or followed a link in an app that does not say.
  *
@@ -529,6 +562,25 @@ function day_name($day_number)
     $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     $day_number = (int) $day_number;
     return isset($days[$day_number]) ? e($days[$day_number]) : '';
+}
+
+/**
+ * "Good morning", "Good afternoon" or "Good evening" for the hour now.
+ *
+ * Both dashboards open with it, because the first screen a member or a
+ * secretary sees in the day should say hello rather than hand over a page
+ * of instructions. It lives here so the two panels cannot drift into
+ * different greetings, and it takes no argument on purpose: there is one
+ * clock, so asking the caller for a time would only invite two answers.
+ */
+function greeting()
+{
+    $hour = (int) date('G');
+
+    if ($hour < 12) {
+        return 'Good morning';
+    }
+    return $hour < 18 ? 'Good afternoon' : 'Good evening';
 }
 
 /**
@@ -1022,6 +1074,20 @@ function verse_of_the_day()
 /* =========================================================================
    11. IMAGE UPLOADS
    ========================================================================= */
+
+/**
+ * The one sentence shown under every picture box on the site.
+ *
+ * Both sides of the site use it - the dropzone in an admin form and the plain
+ * file box on a member's own profile - so the words are written once and the
+ * number in them is worked out from MAX_UPLOAD_SIZE. A church secretary has to
+ * act on that number, and it must match what upload_image() will actually
+ * accept rather than being typed in a second time and left to drift.
+ */
+function image_hint()
+{
+    return 'A picture from your phone or camera, up to ' . round(MAX_UPLOAD_SIZE / 1048576) . ' MB.';
+}
 
 /**
  * Check that an uploaded file is a real image and store it in uploads.
@@ -1994,6 +2060,37 @@ function password_problem($password)
 /* =========================================================================
    18. SMALL DISPLAY HELPERS
    ========================================================================= */
+
+/**
+ * A person's circle: their photograph, or their initials when there is none.
+ *
+ * $size is the diameter in pixels and it sets both versions, so a row of
+ * people keeps one shape however many of them have a photograph - which is
+ * the rule the pages already followed by hand before this helper existed.
+ * $extra carries what depends on where the circle sits: 'flex-shrink-0'
+ * beside a name, 'mx-auto mb-3 fs-2' in the middle of a card. The same
+ * classes go on both versions for the same reason as the size.
+ *
+ * The image is always decorative (alt="") because the person's name is
+ * printed next to it everywhere this is used; an alt text as well would
+ * make a screen reader say the name twice. The initials are aria-hidden
+ * for the same reason.
+ */
+function avatar($image, $name, $size = 48, $extra = 'flex-shrink-0')
+{
+    $size = (int) $size;
+
+    if (!empty($image)) {
+        return '<img src="' . upload_url($image) . '" alt="" width="' . $size . '" height="' . $size
+            . '" class="rounded-circle object-fit-cover ' . e($extra) . '">';
+    }
+
+    /* The letters are a third of the circle, which is 1.5rem on the 72px
+       circle this site started with - the size the old inline style said. */
+    return '<span class="brand-mark bg-brand-soft text-brand rounded-circle d-inline-flex align-items-center justify-content-center '
+        . e($extra) . '" style="width:' . $size . 'px;height:' . $size . 'px;font-size:' . round($size / 3) . 'px"'
+        . ' aria-hidden="true">' . initials($name) . '</span>';
+}
 
 /**
  * Print one devotional as a full reading page.
