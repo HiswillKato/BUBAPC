@@ -275,12 +275,12 @@ function install_create_database($host, $user, $password, $database)
 function install_import_schema($link)
 {
     if (!is_readable(BUBAPC_SCHEMA_FILE)) {
-        return 'database/bubapc.sql could not be read.';
+        return 'database.sql could not be read.';
     }
 
     $sql_text = file_get_contents(BUBAPC_SCHEMA_FILE);
     if ($sql_text === false) {
-        return 'database/bubapc.sql could not be read.';
+        return 'database.sql could not be read.';
     }
 
     // One statement per call. The file separates them with a semicolon at
@@ -290,7 +290,7 @@ function install_import_schema($link)
 
     $done = 0;
     foreach ($statements as $one) {
-        // database/bubapc.sql says "CREATE DATABASE bubapc" and "USE bubapc"
+        // database.sql says "CREATE DATABASE bubapc" and "USE bubapc"
         // so that it can be fed straight to the mysql command line program.
         // In the browser those two lines are skipped on purpose: the person
         // installing may well have typed a different database name, and
@@ -932,7 +932,7 @@ sudo rm /var/www/bubapc/installer.php</code></pre>
                                     </label>
                                 </div>
                                 <div class="form-text">
-                                    The schema in <code>database/bubapc.sql</code> then drops and rebuilds
+                                    The schema in <code>database.sql</code> then drops and rebuilds
                                     every table, so <strong>this erases anything already in the database</strong>.
                                 </div>
                             </div>
