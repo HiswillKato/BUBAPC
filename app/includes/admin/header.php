@@ -64,12 +64,12 @@ $admin = current_user();
         <?php $admin_group = ''; foreach (admin_menu() as $item): ?>
           <?php if (!empty($item['admin_only']) && !is_admin()) continue; ?>
           <?php $item_group = $item['group'] ?? ''; if ($item_group !== $admin_group): if ($item_group !== ''): ?><p class="text-uppercase small text-white-50 mt-3 mb-1 px-2"><?php echo e($item_group); ?></p><?php endif; $admin_group = $item_group; endif; ?>
-          <a class="nav-link <?= $active_module === $item['key'] ? 'active bg-white text-dark' : 'text-white-50' ?>" href="<?php echo $item['url']; ?>">
+          <a class="nav-link <?= $active_module === $item['key'] ? 'active bg-primary text-white' : 'text-white-50' ?>" href="<?php echo $item['url']; ?>">
             <i class="fa-solid <?php echo e($item['icon']); ?> me-2"></i><?php echo e($item['label']); ?>
           </a>
         <?php endforeach; ?>
         <p class="text-uppercase small text-white-50 mt-3 mb-1 px-2">Account</p>
-        <a class="nav-link <?= $active_module === 'profile' ? 'active bg-white text-dark' : 'text-white-50' ?>" href="<?php echo admin_url('profile'); ?>"><i class="fa-solid fa-user me-2"></i>My profile</a>
+        <a class="nav-link <?= $active_module === 'profile' ? 'active bg-primary text-white' : 'text-white-50' ?>" href="<?php echo admin_url('profile'); ?>"><i class="fa-solid fa-user me-2"></i>My profile</a>
         <a class="nav-link text-white-50" href="<?php echo url(''); ?>" target="_blank" rel="noopener"><i class="fa-solid fa-globe me-2"></i>View website</a>
       </nav>
 
@@ -87,7 +87,7 @@ $admin = current_user();
     </div>
   </aside>
 
-  <div class="flex-grow-1 d-flex flex-column min-vh-100">
+  <div class="flex-grow-1 d-flex flex-column min-vh-100 min-width-0">
     <?php /* One row at every width, carrying the site and the icons and
            nothing else: the menu button on a phone, the site name, then the
            three buttons pushed to the right. The page heading and its one
