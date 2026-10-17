@@ -88,29 +88,60 @@ $admin = current_user();
   </aside>
 
   <div class="flex-grow-1 d-flex flex-column min-vh-100">
-    <?php /* One bar, one row that wraps. The button group carries no
-           left margin of its own: the heading's me-auto pushes it to the
-           right while there is room beside the heading, and the moment it
-           wraps onto a line of its own it starts at the left edge like the
-           rest of the page. Rendering the buttons twice - once hidden on
-           phones, once shown - is what this replaces. */ ?>
+    <?php /* One row at every width, carrying the site and the icons and
+           nothing else: the menu button on a phone, the site name, then the
+           three buttons pushed to the right. The page heading and its one
+           action used to sit here too, which is what folded this bar into two
+           rows on a phone with the buttons crowding the heading - both now live
+           at the top of the content, where there is a whole row to themselves.
+           Nothing here wraps, so the bar is the same height on a phone as on a
+           desktop, and the site name is what identifies the page when the menu
+           is behind its button. */ ?>
     <header class="sticky-top bg-body border-bottom">
-      <div class="container-fluid d-flex flex-wrap align-items-center gap-2 px-3 py-2">
+      <div class="container-fluid d-flex align-items-center gap-3 px-3 py-2">
         <button class="btn btn-outline-secondary rounded-circle d-lg-none" type="button"
                 data-bs-toggle="offcanvas" data-bs-target="#adminSidebar" aria-controls="adminSidebar"
                 aria-label="Open the menu">
           <i class="fa-solid fa-bars" aria-hidden="true"></i>
         </button>
-        <h1 class="h4 mb-0 me-auto"><?php echo e($page_heading); ?></h1>
-        <div class="d-flex align-items-center flex-wrap gap-2">
-          <?php echo $page_actions; ?>
+        <a class="h4 mb-0 text-body text-decoration-none text-truncate" href="<?php echo admin_url(); ?>">
+          <?php echo e(SITE_NAME); ?>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-2">
           <button class="theme-toggle btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
                   type="button" id="theme-toggle" aria-label="Switch between light and dark mode">
             <i class="fa-solid fa-moon" aria-hidden="true"></i>
             <i class="fa-solid fa-sun" aria-hidden="true"></i>
           </button>
+          <?php /* Settings is the one row of the menu an editor may not open -
+                 the screen behind it calls require_admin() - so the icon goes
+                 to exactly the people that row goes to, and no further. */ ?>
+          <?php if (is_admin()): ?>
+            <a class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+               href="<?php echo admin_url('settings'); ?>">
+              <i class="fa-solid fa-gears" aria-hidden="true"></i><span class="visually-hidden">Settings</span>
+            </a>
+          <?php endif; ?>
+          <a class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
+             href="<?php echo admin_url('profile'); ?>">
+            <i class="fa-solid fa-user" aria-hidden="true"></i><span class="visually-hidden">My profile</span>
+          </a>
         </div>
       </div>
     </header>
     <?php if (is_maintenance_mode($conn)): ?><div class="alert alert-warning rounded-0 mb-0"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>Maintenance mode is ON.</div><?php endif; ?>
     <div class="flex-grow-1 p-3 p-lg-4">
+      <?php /* The page's heading and its one action, at the top of the content
+             where they have a whole row to themselves at every width - which is
+             the whole reason the bar above could become a single line. The
+             heading comes first so a screen reads in the order it is worked in:
+             which screen this is, what may be done here, then the records.
+             Every screen sets a title, so the heading is always drawn; the
+             action only appears when the screen has one to offer. */ ?>
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+        <h1 class="h4 mb-0 me-auto"><?php echo e($page_heading); ?></h1>
+        <?php if ($page_actions !== ''): ?>
+          <div class="d-flex flex-wrap gap-2"><?php echo $page_actions; ?></div>
+        <?php endif; ?>
+      </div>
+

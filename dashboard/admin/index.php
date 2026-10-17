@@ -122,7 +122,7 @@ $cards = [
                                   aria-hidden="true">
                                 <i class="fa-solid <?php echo e($card[0]); ?>"></i>
                             </span>
-                            <span class="fw-semibold"><?php echo e($card[1]); ?></span>
+                            <span class="fw-semibold min-width-0"><?php echo e($card[1]); ?></span>
                         </span>
 
                         <span class="fs-2 fw-bold lh-1"><?php echo e(number_format($card[2])); ?></span>
