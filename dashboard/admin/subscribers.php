@@ -205,7 +205,7 @@ if ($filter !== '') {
 <?php else: ?>
     <div class="card border-0 shadow-sm rounded-4">
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table align-middle mb-0 table-sm">
                 <thead>
                     <tr>
                         <th scope="col" class="ps-3">Email address</th>

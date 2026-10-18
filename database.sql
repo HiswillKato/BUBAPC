@@ -447,12 +447,6 @@ CREATE TABLE `families` (
 --       goes in the alumni list
 --   member
 --       signed themselves up on register.php; no directory page
---   staff
---       an account the office made for the website; no directory page
---
--- member and staff are apppended to the list on purpose: the public
--- filters and leader_categories() take the first five, so these two
--- never appear in a dropdown a visitor or a leader is offered.
 --
 -- A person has exactly one category, on purpose. It is one dropdown
 -- in the admin form and a beginner maintaining the site cannot get it
@@ -476,7 +470,7 @@ CREATE TABLE `families` (
 -- a 'published' / 'draft' ENUM like the tables above. The public
 -- pages and the site search all run "WHERE status = 1". If you change
 -- this column to the ENUM, those queries stop finding anything and
--- every page comes back empty. A member or staff account has status 0
+-- every page comes back empty. A member account has status 0
 -- because it belongs to no directory page.
 --
 -- The sign-in columns below are the old users table, folded in:
@@ -488,10 +482,8 @@ CREATE TABLE `families` (
 --            username = email so changing an email here and in the
 --            account happen in the same UPDATE.
 -- password   a password_hash() value, or NULL for no sign-in
--- role       the website job, not the church job. 'admin' may open
---            the settings and the log as well as the content; every
---            other staff role may manage content only; 'member' may
---            not open the panel at all. NULL when there is no sign-in.
+-- role       the website job, not the church job. Roles in staff_roles()
+--            may access the admin panel as appropriate. NULL when there is no sign-in.
 -- standing   what a self-registered person chose; a 'leader' waits
 --            for an administrator to switch the account on
 -- active     1 may sign in, 0 switched off. The login form checks
@@ -507,13 +499,13 @@ CREATE TABLE `people` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(160) NOT NULL,
   `slug` VARCHAR(160) NOT NULL COMMENT 'Makes /people/bro-daniel-waire work',
-  `category` ENUM('pastor','church_admin','elder','department_leader','family_leader','student','alumnus','member','staff') NOT NULL DEFAULT 'student',
+  `category` ENUM('pastor','church_admin','elder','minister','department_leader','family_leader','student','alumnus','member') NOT NULL DEFAULT 'student',
   `position` VARCHAR(160) NOT NULL DEFAULT '' COMMENT 'The exact title, for example "Bishop"',
   `phone` VARCHAR(40) NOT NULL DEFAULT '' COMMENT 'Left empty when the church does not publish it',
   `email` VARCHAR(190) NOT NULL DEFAULT '',
   `username` VARCHAR(190) DEFAULT NULL COMMENT 'The sign-in name, which is the email. NULL when there is no sign-in',
   `password` VARCHAR(255) DEFAULT NULL COMMENT 'A password_hash() value, or NULL for no sign-in',
-  `role` ENUM('admin','editor','pastor','leader','member') DEFAULT NULL COMMENT 'The website job; NULL when there is no sign-in',
+  `role` ENUM('admin','church_admin','pastor','elder','minister','editor','leader','member') DEFAULT NULL COMMENT 'The website job; NULL when there is no sign-in',
   `standing` ENUM('member','alumnus','leader') NOT NULL DEFAULT 'member' COMMENT 'What a self-registered person chose; a leader waits for approval',
   `active` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 may sign in, 0 is switched off',
   `login` DATETIME DEFAULT NULL COMMENT 'The last successful sign-in, or empty',

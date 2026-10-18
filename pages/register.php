@@ -7,9 +7,7 @@
  * keep their name, email and phone number up to date.
  *
  * A member is NOT a website manager. The account is written with
- * role = 'member', and that is the whole of the separation: require_staff() in
- * app/includes/admin/parts.php turns members away from every page in /dashboard/admin/, so the database
- * role is the permission.
+ * role = 'member', and the admin gate turns members away from every page in /dashboard/admin/.
  *
  * A member registration makes a row in people with category 'member' and
  * status 0, so it exists as an account but belongs to no page on the public
@@ -76,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* An address that is already spoken for by an account, whether a member
-       or a member of staff, is turned away. A directory-only person may share
+       or an authorised member, is turned away. A directory-only person may share
        the address, so the check is limited to rows that carry a sign-in. */
     if (!$errors) {
         $statement = $conn->prepare(

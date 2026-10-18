@@ -49,7 +49,7 @@ require_staff();
  *
  * The key is the module name the page sets as $active_module, so the row for
  * the page you are on is highlighted. admin_only rows are hidden from an
- * editor who is staff but not an administrator.
+ * editor who is authorised.
  */
 function admin_menu()
 {
@@ -78,9 +78,26 @@ function admin_menu()
     ];
 
     $menu = [$dashboard];
-    foreach (['Content' => $content, 'Church' => $church, 'Inbox' => $inbox, 'System' => $system] as $group => $rows) {
+    $role = current_user()['role'] ?? '';
+    $full = has_full_access();
+    foreach (['Content' => $content, 'Church' => $church] as $group => $rows) {
         foreach ($rows as $row) {
             $row['group'] = $group;
+            $row['url'] = admin_url($row['key']);
+            $menu[] = $row;
+        }
+    }
+    if ($full || $role === 'editor') {
+        foreach ($inbox as $row) {
+            $row['group'] = 'Inbox';
+            $row['url'] = admin_url($row['key']);
+            $menu[] = $row;
+        }
+        foreach ($system as $row) {
+            if ($row['key'] === 'settings' && $role !== 'admin') {
+                continue;
+            }
+            $row['group'] = 'System';
             $row['url'] = admin_url($row['key']);
             $menu[] = $row;
         }

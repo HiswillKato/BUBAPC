@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
         /* The row is both the person and the sign-in, so the name, the email,
            the phone and the sign-in name are written together. A member signs
-           in with the address they typed, so the username follows it; a staff
+           in with the address they typed, so the username follows it; an account
            account keeps the username an admin gave it, and a row with no
            sign-in keeps its NULL. */
         $sign_in_name = ($person['password'] !== null && $person['role'] === 'member')

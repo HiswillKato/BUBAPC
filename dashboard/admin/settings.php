@@ -17,7 +17,11 @@
 require_once __DIR__ . '/../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
 require_once __DIR__ . '/../../app/includes/admin/parts.php';
-require_admin();
+if (current_user()['role'] ?? '' !== 'admin') {
+    flash('error', 'Only website administrators can open that page.');
+    redirect(admin_url());
+}
+require_staff();
 
 $active_module = 'settings';
 

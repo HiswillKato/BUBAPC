@@ -5,7 +5,7 @@
  * Where a church member lands after registering or signing in. There is not
  * much here on purpose: a member may read this and edit their own details, and
  * that is all. Anything to do with running the website lives in /dashboard/admin/, which
- * require_staff() keeps them out of.
+ * the admin gate keeps them out of.
  *
  * The point of the page is that the church has a list of its own members with
  * the details they gave, and a member can correct them without phoning the
@@ -20,7 +20,7 @@
 require_once __DIR__ . '/../app/init.php';
 
 /* A signed in person may use this page whichever kind of account they have. A
-   member is the ordinary case; a member of staff who wanders in simply edits
+   member is the ordinary case; an authorised member who wanders in simply edits
    their own name and number, which is the same form and harmless. */
 require_login();
 

@@ -378,16 +378,14 @@ function install_schema_ready($link)
  * Create the first website administrator.
  *
  * Returns true, or a sentence saying why not. The administrator is a row in
- * the people table, the one table that now holds both the directory people and
- * the sign-in accounts; the password makes this row an account, and staff keeps
- * it off every public page. The password is hashed with the same call the login
- * page uses, so nothing here is readable back.
+ * the people table, the one table that holds both directory people and accounts.
+ * The password is hashed with the same call the login page uses.
  */
 function install_create_admin($link, $username, $full_name, $email, $password)
 {
     $statement = $link->prepare(
         "INSERT INTO people (name, slug, category, email, username, password, role, standing, active, status)
-         VALUES (?, ?, 'staff', ?, ?, ?, 'admin', 'member', 1, 0)"
+         VALUES (?, ?, 'pastor', ?, ?, ?, 'admin', 'member', 1, 0)"
     );
     if (!$statement) {
         return 'The administrator could not be saved: ' . e($link->error);

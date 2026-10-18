@@ -40,9 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->close();
 
         if ($user) {
-            /* Any account may reset its password, member or staff. The link is
-               only useful to somebody who can read this mailbox, and the
-               address it goes to is the one already on the account. */
+            /* Any account may reset its password. The link is sent to the address on the account. */
             $raw = token_issue($conn, $user['id']);
 
             if ($raw !== '') {

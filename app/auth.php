@@ -44,11 +44,7 @@ function is_logged_in()
  * Returns an empty array when nobody is logged in.
  *
  * An account is a row in people with a password, so this is simply that row.
- * Two aliases are added for the callers that were written when an account was
- * a separate idea: full_name is the person's name, and person_category is their
- * group, which is_admin(), is_staff() and the panel menu read to tell a church
- * admin from a website admin. It is read here, in the one place the signed in
- * user is built, so nothing below asks the database for it again.
+ * Two aliases: full_name is the person's name, and person_category is their group.
  */
 function current_user()
 {
@@ -90,7 +86,7 @@ function current_user()
  * The directory page behind this sign in, or an empty array.
  *
  * Now that a row is both the page and the sign-in, this is the signed in person
- * themselves - unless they are a 'member' or a 'staff' account, which belongs
+ * themselves - unless they are a 'member' account, which belongs
  * to no page. Those two have nothing on the public site to edit, so they are
  * handed back an empty array, exactly as a person with no page always was.
  */
@@ -98,7 +94,7 @@ function current_person($conn)
 {
     $person = current_user();
 
-    if ($person === [] || in_array($person['category'], ['member', 'staff'], true)) {
+    if ($person === [] || in_array($person['category'], ['member'], true)) {
         return [];
     }
 
@@ -138,14 +134,11 @@ function may_bypass_maintenance()
  * all three may add and change the content but never the users or the
  * settings.
  *
- * This list lives here so that is_staff() keeps its promise of being the one
- * place that answers "who can get into the admin panel". A role added
- * anywhere else in the project would be refused at the door, which is the
- * answer we want: the list is the door.
+ * Roles that can access the admin panel.
  */
 function staff_roles()
 {
-    return ['admin', 'editor', 'pastor', 'leader'];
+    return ['admin', 'church_admin', 'pastor', 'elder', 'minister', 'editor', 'leader'];
 }
 
 /**
@@ -166,7 +159,7 @@ function is_admin()
         return false;
     }
 
-    return $user['role'] === 'admin' || is_church_admin();
+    return $user['role'] === 'admin';
 }
 
 /**
@@ -181,14 +174,90 @@ function is_church_admin()
 }
 
 /**
- * Is this person website staff, meaning somebody who may open the admin
- * panel? That is the roles in staff_roles(), and a directory person filed
- * under "Church Admins", and nothing else.
- *
- * This is the one answer the admin panel depends on. require_staff() calls it,
- * and it is the only place that decides who is staff, so the answer to "who
- * can see the website admin panel" lives in a single function.
+ * Is this person authorised to open the admin panel?
  */
+function is_leader()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'leader';
+}
+
+function is_editor()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'editor';
+}
+
+function is_pastor()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'pastor';
+}
+
+function is_elder()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'elder';
+}
+
+function is_minister()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'minister';
+}
+
+function is_church_admin_role()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    return $user['role'] === 'church_admin';
+}
+
+function has_full_access()
+{
+    $user = current_user();
+    if (!isset($user['role'])) {
+        return false;
+    }
+    $role = $user['role'];
+    return in_array($role, ['admin', 'church_admin', 'pastor', 'elder', 'minister'], true);
+}
+
+function can_manage_all_content()
+{
+    $role = current_user()['role'] ?? '';
+    return has_full_access() || in_array($role, ['editor'], true);
+}
+
+function can_manage_users()
+{
+    $role = current_user()['role'] ?? '';
+    return $role === 'admin';
+}
+
+function can_manage_settings()
+{
+    $role = current_user()['role'] ?? '';
+    return $role === 'admin';
+}
+
 function is_staff()
 {
     $user = current_user();
@@ -196,7 +265,7 @@ function is_staff()
         return false;
     }
 
-    return in_array($user['role'], staff_roles(), true) || is_church_admin();
+    return in_array($user['role'], staff_roles(), true);
 }
 
 /**
@@ -226,13 +295,8 @@ function member_url()
  * panel and forget the icon, and the menu would then offer a person a door it
  * had decided to lock.
  *
- * Nobody signed in gets the login page, which is the one page both kinds of
- * person is welcome on. A member is sent to their own account page and staff
- * to the admin panel, so nobody is ever handed a link to a page they are not
- * allowed to open.
- *
- * The shield icon means "this opens the website admin panel", which is why
- * staff get it and members get a plain person.
+ * Nobody signed in gets the login page. A member is sent to their own account page
+ * and those who may access the admin panel to the admin panel.
  */
 function account_link()
 {
@@ -285,23 +349,13 @@ function require_admin()
 }
 
 /**
- * Only website staff may open this page, and only a website admin may open
- * the users and settings screens.
- *
- * Every page inside the admin panel calls this, because a church member is a
- * real account that can sign in and must never be able to reach /dashboard/admin/ by
- * typing the address or by following a bookmark. A member who lands here is
- * sent to their own account page with an explanation rather than shown an
- * error page, because getting turned away is normal for them, not a fault.
- *
- * Note the order: require_login() runs first, so somebody who is not signed
- * in at all is asked to sign in rather than being told they are not staff.
+ * Only authorised members may open the admin panel.
  */
 function require_staff()
 {
     require_login();
     if (!is_staff()) {
-        flash('error', 'The admin panel is for website staff, so that page is not for you.');
+        flash('error', 'The admin panel is for authorised members only.');
         redirect(member_url());
     }
 }
@@ -326,8 +380,7 @@ function sign_user_in($user)
     $_SESSION['user_id'] = (int) $user['id'];
     /* One row is what the session carries, and it is the row current_user()
        builds, not the raw login row handed in here. That row is the one that
-       knows the person's directory group, which is_admin() and is_staff() read
-       to tell a church admin from an ordinary member. */
+       knows the person's directory group, which is_admin() and is_staff() read. */
     unset($_SESSION['user_data']);
     $_SESSION['logged_in_at'] = time();
 

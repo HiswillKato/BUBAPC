@@ -1396,13 +1396,9 @@ function program_times($program)
  * group is added in this function and the column list in database.sql
  * and nowhere else.
  *
- * The first five are the people who hold an office, and they are what the
- * leadership page shows. The last four are the students, the alumni, and the
- * two groups that belong to no directory page at all: 'member' is somebody who
- * registered themselves on register.php, and 'staff' is an account the office
- * made for the website. Those two are kept at the end on purpose, because
- * leader_categories() and the public filters take the first five and so never
- * offer them to a visitor or a leader.
+ * The first five (or six now) are the people who hold an office, and they are what the
+ * leadership page shows. The rest are students, alumni, and members who have no directory page.
+ * leader_categories() returns the office holders.
  */
 function people_categories()
 {
@@ -1410,12 +1406,12 @@ function people_categories()
         'pastor'            => 'Pastor',
         'church_admin'      => 'Church admin',
         'elder'             => 'Elder',
+        'minister'          => 'Minister',
         'department_leader' => 'Department leader',
         'family_leader'     => 'Family leader',
         'student'           => 'Student',
         'alumnus'           => 'Alumnus',
         'member'            => 'Member',
-        'staff'             => 'Staff',
     ];
 }
 
@@ -1427,7 +1423,7 @@ function people_categories()
  */
 function leader_categories()
 {
-    return array_slice(people_categories(), 0, 5, true);
+    return array_slice(people_categories(), 0, 6, true);
 }
 
 /**
@@ -1477,11 +1473,11 @@ function people_filter_from_url()
  */
 function person_by_slug($conn, $slug)
 {
-    /* A 'member' or a 'staff' row is an account, not a page on the website, so
+    /* A 'member' row is an account, not a page on the website, so
        it is left out even when it happens to be marked as shown. */
     $statement = $conn->prepare(
         "SELECT * FROM people
-         WHERE slug = ? AND status = 1 AND category NOT IN ('member', 'staff')
+         WHERE slug = ? AND status = 1 AND category NOT IN ('member')
          LIMIT 1"
     );
     $statement->bind_param('s', $slug);
@@ -1585,7 +1581,7 @@ function people_in_group($conn, $group, $group_id, $limit = 0, $except_person_id
        the category column holds a word, not a number to sort on. A family page
        does not do this, because a family is read by name. */
     if ($group === 'department') {
-        $sql .= " ORDER BY FIELD(category, 'pastor','church_admin','elder',
+        $sql .= " ORDER BY FIELD(category, 'pastor','church_admin','elder','minister',
                                       'department_leader','family_leader','student','alumnus'),";
     } else {
         $sql .= ' ORDER BY';
@@ -1935,7 +1931,7 @@ function search_site($conn, $search_term, $per_group = 6)
         'Leadership' => [
             "SELECT * FROM people
              WHERE status = 1
-               AND category NOT IN ('member', 'staff')
+               AND category NOT IN ('member')
                AND (name LIKE ? OR position LIKE ? OR bio LIKE ?)
              ORDER BY display_order ASC, name ASC LIMIT ?",
             'sssi',
@@ -2176,19 +2172,20 @@ function status_badge($status, $active_flag = null)
  * church office and still be only an editor here, or hold no office and be
  * an administrator.
  *
- * staff_roles() in app/auth.php is the list of the roles that get into the
- * admin panel. This is the list of what to call them, and it carries every
- * value the role column can hold, so a role the panel turns away still has a
- * name on the users screen.
+ * The roles that can access the admin panel are defined in staff_roles()
+ * in app/auth.php. This function provides human-readable labels for all roles.
  */
 function user_role_label($role)
 {
     $labels = [
-        'admin'  => 'Administrator',
-        'editor' => 'Editor',
-        'pastor' => 'Pastor',
-        'leader' => 'Church leader',
-        'member' => 'Church member',
+        'admin'        => 'Administrator',
+        'church_admin' => 'Church Administrator',
+        'pastor'       => 'Pastor',
+        'elder'        => 'Elder',
+        'minister'     => 'Minister',
+        'editor'       => 'Editor',
+        'leader'       => 'Leader',
+        'member'       => 'Member',
     ];
 
     return $labels[$role] ?? 'Unknown';

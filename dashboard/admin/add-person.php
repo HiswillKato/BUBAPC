@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login_on = post_checkbox('login');
     $values['login'] = $login_on;
     $login_role = post_text('login_role');
-    if (!in_array($login_role, ['church_admin', 'admin', 'editor', 'pastor', 'leader', 'member'], true)) {
+    if (!in_array($login_role, ['church_admin', 'admin', 'editor', 'pastor', 'elder', 'minister', 'leader', 'member'], true)) {
         $login_role = 'member';
     }
     $values['login_role'] = $login_role;
@@ -97,6 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        the sign-in box on this page cannot end up disagreeing. */
     if ($login_role === 'church_admin') {
         $values['category'] = 'church_admin';
+    } elseif ($login_role === 'pastor') {
+        $values['category'] = 'pastor';
+    } elseif ($login_role === 'elder') {
+        $values['category'] = 'elder';
+    } elseif ($login_role === 'minister') {
+        $values['category'] = 'minister';
     }
 
     /* The row keeps an ordinary role even for a church admin, because the
@@ -171,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            password and role and is only switched off, so an admin can bring it
            back by ticking the box again. A row that never had one is left with
            none. A member signs in with the address they typed, so the sign-in
-           name follows it; a staff row keeps the username it already has. */
+           name follows it; an account row keeps the username it already has. */
         if ($can_manage_login && $login_on) {
             /* A row that already signs in keeps its name; a new account signs
                in with the email address, which is the same string, so the
@@ -320,18 +326,22 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
 
                             admin_select('login_role', 'Role of the person', [
                                 'church_admin' => 'Church admin - full access',
-                                'member'       => 'Member - can only edit their own details',
-                                'leader'       => 'Leader - can change all the content',
-                                'pastor'       => 'Pastor - can change all the content',
+                                'pastor'       => 'Pastor - full access',
+                                'elder'        => 'Elder - full access',
+                                'minister'     => 'Minister - full access',
                                 'editor'       => 'Editor - can change all the content',
-                                'admin'        => 'Website admin - content, users and settings',
+                                'leader'       => 'Leader - can manage the groups they lead',
+                                'admin'        => 'Website admin - full access',
+                                'member'       => 'Member - can only edit their own details',
                             ], $values['login_role'],
-                                'Give a role other than Member only to somebody who helps run the website.');
+                                'Select the role for this person.');
 
-                            if ($values['login_role'] === 'church_admin') {
-                                echo '<p class="small text-body-secondary">A church admin can do '
-                                    . 'everything a website administrator can. Choosing this also lists '
-                                    . 'them under <strong>Church Admins</strong>.</p>';
+                            if (in_array($values['login_role'], ['church_admin', 'pastor', 'elder', 'minister', 'admin'])) {
+                                echo '<p class="small text-body-secondary">This role has full access to all content and the website.</p>';
+                            } elseif ($values['login_role'] === 'editor') {
+                                echo '<p class="small text-body-secondary">Editors can access and manage all published content.</p>';
+                            } elseif ($values['login_role'] === 'leader') {
+                                echo '<p class="small text-body-secondary">Leaders can manage the groups they lead.</p>';
                             }
                             ?>
 

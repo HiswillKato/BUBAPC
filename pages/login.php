@@ -17,9 +17,7 @@ define('BUBAPC_SKIP_MAINTENANCE', true);
 
 require_once __DIR__ . '/../app/init.php';
 
-/* Someone who is already signed in has no business on the login page. Staff go
-   back to the panel and a church member to their own account, the same split
-   the menu link makes. */
+/* Someone who is already signed in has no business on the login page. */
 if (is_logged_in()) {
     redirect(is_staff() ? admin_url() : member_url());
 }
@@ -80,10 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', 'Welcome back, ' . $user['full_name'] . '.');
 
         /* Staff go to the admin panel and church members to their own account
-           page. A member has no business in /dashboard/admin/, so sending them there
-           would only bounce them straight back out again. is_staff() is the one
-           answer to who may open the panel, so a church admin, who is staff by
-           their directory group and not by a role, lands in the right place. */
+           page. */
         redirect(is_staff() ? admin_url() : member_url());
     }
 

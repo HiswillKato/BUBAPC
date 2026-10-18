@@ -7,7 +7,7 @@
  * because a student is a row here too and is pointed at their family and their
  * department from this form.
  *
- * A row here may also be a sign-in account: the same table holds the staff who
+ * A row here may also be a sign-in account: the same table holds those who
  * run the website, recognised by the password on the row. The Sign in column
  * says which rows can sign in and with what rights, so the whole church is read
  * from one list instead of two.
@@ -239,9 +239,9 @@ if ($category_filter !== '') {
     );
     ?>
 <?php else: ?>
-    <div class="card border-0 shadow-sm rounded-4">
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive">
-            <table class="table align-middle mb-0">
+            <table class="table align-middle mb-0 table-sm">
                 <thead>
                     <tr>
                         <th scope="col" class="ps-3">Name</th>
@@ -280,12 +280,14 @@ if ($category_filter !== '') {
                                         </span>
                                     <?php endif; ?>
                                     <div>
-                                        <a class="fw-semibold d-block text-decoration-none"
-                                           href="<?php echo admin_url('people/form.php?id=' . (int) $person['id']); ?>">
+                                        <a class="fw-semibold d-block text-decoration-none text-truncate"
+                                           href="<?php echo admin_url('people/form.php?id=' . (int) $person['id']); ?>"
+                                           style="max-width:14rem">
                                             <?php echo e($person['name']); ?>
                                         </a>
                                         <?php if ($person['position'] !== ''): ?>
-                                            <span class="small text-body-secondary"><?php echo e($person['position']); ?></span>
+                                            <span class="small text-body-secondary text-truncate d-block"
+                                                  style="max-width:14rem"><?php echo e($person['position']); ?></span>
                                         <?php endif; ?>
                                         <?php if (!empty($person['graduated_year'])): ?>
                                             <span class="small text-body-secondary d-block">Class of <?php echo (int) $person['graduated_year']; ?></span>
@@ -313,10 +315,10 @@ if ($category_filter !== '') {
                                     <span class="text-body-tertiary">&mdash;</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="small text-body-secondary">
+                            <td class="small text-body-secondary text-truncate" style="max-width:12rem">
                                 <?php echo $belongs_to ? e(implode(' &middot; ', $belongs_to)) : '<span class="text-body-tertiary">&mdash;</span>'; ?>
                             </td>
-                            <td><?php echo admin_order_field('people', $person['id'], $person['display_order']); ?></td>
+                            <td class="text-nowrap"><?php echo admin_order_field('people', $person['id'], $person['display_order']); ?></td>
                             <td>
                                 <span class="badge rounded-pill <?php echo (int) $person['status'] === 1 ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                     <?php echo (int) $person['status'] === 1 ? 'Shown' : 'Hidden'; ?>
