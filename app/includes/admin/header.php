@@ -115,7 +115,12 @@ $admin = current_user();
                 aria-label="Open the menu">
           <i class="fa-solid fa-bars" aria-hidden="true"></i>
         </button>
-        <a class="h4 mb-0 text-body text-decoration-none text-truncate" href="<?php echo admin_url(); ?>">
+        <a class="d-flex align-items-center gap-2 h4 mb-0 text-body text-decoration-none text-truncate" href="<?php echo admin_url(); ?>">
+          <span class="brand-mark bg-primary text-white rounded-3 d-inline-flex align-items-center justify-content-center" aria-hidden="true" style="width:32px;height:32px;">
+            <svg viewBox="0 0 48 48" focusable="false" width="20" height="20">
+              <path d="M24 8c2.4 3.6.6 6-1.2 7.8-1.8 1.8-3.6 3-3.6 6a4.8 4.8 0 0 0 9.6 0c0-1.8-.6-3-1.2-4.2 3.6 1.8 6 4.8 6 9A9.6 9.6 0 0 1 24 36a9.6 9.6 0 0 1-9.6-9.6c0-6.6 4.8-11.4 9.6-18.4z" fill="currentColor"/>
+            </svg>
+          </span>
           <?php echo e(SITE_NAME); ?>
         </a>
         <div class="ms-auto d-flex align-items-center gap-2">
