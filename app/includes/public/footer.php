@@ -71,6 +71,7 @@ $current_year = date('Y');
     <button class="btn btn-gold rounded-circle d-inline-flex align-items-center justify-content-center position-fixed bottom-0 end-0 m-3" type="button" id="back-to-top" aria-label="Back to top" hidden>
         <i class="fa-solid fa-arrow-up"></i>
     </button>
-    <?php require __DIR__ . '/../partials/js-links.php'; ?>
+    <script src="<?= asset('js/bootstrap.bundle.min.js') ?>"></script>
+    <script src="<?= asset('js/main.js') ?>"></script>
 </body>
 </html>

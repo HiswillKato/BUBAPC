@@ -306,8 +306,8 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                             'Pastor Ruth Nakato');
                         admin_select('category', 'Group', people_categories(), $values['category'],
                             'Decides which page of the website the person is listed on.');
-                        admin_text_field('position', 'Job title', $values['position'], '',
-                            'e.g. Bishop, Head Teacher');
+                        admin_text_field('position', 'Title', $values['position'], '',
+                            'e.g. Bishop, Pastor');
                         admin_text_field('email', 'Email', $values['email'], '', 'name@example.com');
                         admin_image_field('image', 'Photograph', $values['image'],
                             'Optional. Initials are shown when there is none.');
@@ -315,12 +315,10 @@ require_once __DIR__ . '/../../app/includes/admin/header.php';
                         ?>
 
                         <?php if ($can_manage_login): ?>
-                            <h2 class="h6 text-uppercase text-body-secondary mt-4 mb-3">Website login</h2>
                             <?php
-                            admin_checkbox('login', 'Let this person sign in', (int) $values['login'] === 1,
-                                'They sign in with the email above.');
+                            admin_checkbox('login', 'Let this person sign in', (int) $values['login'] === 1);
 
-                            admin_select('login_role', 'What they can do', [
+                            admin_select('login_role', 'Role of the person', [
                                 'church_admin' => 'Church admin - full access',
                                 'member'       => 'Member - can only edit their own details',
                                 'leader'       => 'Leader - can change all the content',

@@ -20,8 +20,19 @@ record_visit($conn, $canonical);
   <meta property="og:url" content="<?php echo url($canonical); ?>">
   <link rel="canonical" href="<?php echo url($canonical); ?>">
   <link rel="icon" href="<?php echo asset('images/favicon.svg'); ?>" type="image/svg+xml">
-  <?php require __DIR__ . '/../partials/theme-script.php'; ?>
-  <?php require __DIR__ . '/../partials/css-links.php'; ?>
+  <script>
+  (function(){
+    try {
+      var saved = localStorage.getItem('bubapc-theme');
+      var theme = saved === 'light' || saved === 'dark' ? saved : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-bs-theme', theme);
+    } catch(e){}
+  })();
+  </script>
+  <link href="<?= asset('css/bootstrap.min.css') ?>" rel="stylesheet">
+  <link href="<?= asset('css/all.min.css') ?>" rel="stylesheet">
+  <link href="<?= asset('css/style.css') ?>" rel="stylesheet">
 </head>
 <body class="<?php echo e($body_class); ?>">
 <a class="visually-hidden-focusable btn btn-primary position-absolute top-0 start-0 m-2 mt-lg-5 z-3" href="#main-content">Skip to the main content</a>

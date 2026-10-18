@@ -7,7 +7,7 @@
  * website. It holds the database details, the website address, the contact
  * details, the social links and the database connection.
  *
- * The web installer (installer.php) is also allowed to write to this file.
+ * The web installer (install.php) is also allowed to write to this file.
  */
 
 // The church keeps time in Uganda. PHP falls back to UTC when nobody says
@@ -108,7 +108,7 @@ define('BUBAPC_LOGS', true);
    4. CONTACT DETAILS
    ========================================================================= */
 define('SITE_EMAIL', 'bubapcministries@gmail.com');
-define('SITE_PHONE', '256 700 000 000');
+define('SITE_PHONE', '+256 700 000 000');
 define('SITE_LOCATION', 'Agape Palace (Main Hall)');
 
 /* =========================================================================
@@ -248,7 +248,7 @@ if (!defined('BUBAPC_INSTALLER')) {
         echo '<code>database.sql</code>.</p>';
         echo '<p>If the website has not been installed yet, please open ';
         echo '<a href="' . (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-        echo '/installer.php">installer.php</a> first.</p>';
+        echo '/install.php">install.php</a> first.</p>';
         echo '</div></body></html>';
         exit;
     }

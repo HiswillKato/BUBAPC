@@ -515,7 +515,7 @@ if (!$already_installed) {
  * which is how the screens know what to draw.
  *
  * THE ONE RULE OF THIS PART: nothing here may run on a GET request. A GET
- * only ever draws a form. That is what makes it safe to open installer.php in
+ * only ever draws a form. That is what makes it safe to open install.php in
  * a browser, click through the pages, and go back, without a single change
  * being made to the server.
  */
@@ -754,7 +754,7 @@ $checks = install_checks();
                     <h2 class="h4 mt-2 mb-1">This website is installed</h2>
                     <p class="text-body-secondary mb-0">
                         An administrator already exists in the database, so there is nothing left
-                        to set up and installer.php will keep saying this.
+                        to set up and install.php will keep saying this.
                     </p>
                 </div>
 
@@ -766,23 +766,6 @@ $checks = install_checks();
                         <i class="fa-solid fa-house" aria-hidden="true"></i> Go to the home page
                     </a>
                 </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm border-0 mt-3">
-            <div class="card-body p-4">
-                <h3 class="h6 text-uppercase text-body-secondary">If you have lost the administrator password</h3>
-                <p class="text-body-secondary small mb-2">
-                    The installer will not make a second administrator, on purpose. Set a new password
-                    from the command line on the server instead, where the password never travels over
-                    the web. Open the database, run the UPDATE below with a hash you generate first,
-                    then delete the rest of this page if you like.
-                </p>
-                <pre class="bg-body-secondary p-3 rounded small mb-0"><code>php -r 'echo password_hash("YourNewPassword1", PASSWORD_DEFAULT), "\n";'
-
-mysql bubapc -e "UPDATE people SET password = 'PASTE_THE_HASH_HERE' WHERE username = 'admin';"
-
-sudo rm /var/www/bubapc/installer.php</code></pre>
             </div>
         </div>
 
@@ -830,7 +813,7 @@ sudo rm /var/www/bubapc/installer.php</code></pre>
                     <h2 class="h4">The administrator is saved &mdash; the website is installed</h2>
                     <p class="text-body-secondary">
                         There is nothing left to press. Because an administrator now exists in the
-                        database, installer.php will show &ldquo;already installed&rdquo; from now on and
+                        database, install.php will show &ldquo;already installed&rdquo; from now on and
                         can be deleted from the server whenever you like.
                     </p>
                     <div class="d-flex flex-wrap gap-2 justify-content-center">
@@ -1049,9 +1032,6 @@ sudo rm /var/www/bubapc/installer.php</code></pre>
 
     <?php endif; ?>
 
-    <p class="text-center text-body-secondary small mt-4 mb-0">
-        BUBAPC installer &mdash; one screen at a time, nothing is saved until you press a button.
-    </p>
 </main>
 </body>
 </html>

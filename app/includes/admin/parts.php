@@ -73,7 +73,7 @@ function admin_menu()
         ['key' => 'visitors', 'label' => 'Visitors', 'icon' => 'fa-binoculars'],
     ];
     $system = [
-        ['key' => 'settings', 'label' => 'Settings', 'icon' => 'fa-gears', 'admin_only' => true],
+        ['key' => 'settings', 'label' => 'Settings', 'icon' => 'fa-cog', 'admin_only' => true],
         ['key' => 'logs', 'label' => 'Activity log', 'icon' => 'fa-clock-rotate-left'],
     ];
 

@@ -32,8 +32,19 @@ $admin = current_user();
   <title><?php echo e($page_title); ?> | <?php echo e(SITE_NAME); ?> Admin</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="<?php echo asset('images/favicon.svg'); ?>" type="image/svg+xml">
-  <?php require __DIR__ . '/../partials/theme-script.php'; ?>
-  <?php require __DIR__ . '/../partials/css-links.php'; ?>
+  <script>
+  (function(){
+    try {
+      var saved = localStorage.getItem('bubapc-theme');
+      var theme = saved === 'light' || saved === 'dark' ? saved : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-bs-theme', theme);
+    } catch(e){}
+  })();
+  </script>
+  <link href="<?= asset('css/bootstrap.min.css') ?>" rel="stylesheet">
+  <link href="<?= asset('css/all.min.css') ?>" rel="stylesheet">
+  <link href="<?= asset('css/style.css') ?>" rel="stylesheet">
 </head>
 <body>
 <div class="admin-shell d-flex">
@@ -56,7 +67,7 @@ $admin = current_user();
         </span>
         <span class="d-flex flex-column lh-1">
           <span class="brand-name"><?php echo e(SITE_NAME); ?></span>
-          <span class="brand-tagline">Admin panel</span>
+          <span class="brand-tagline">Dashboard</span>
         </span>
       </a>
 
@@ -119,7 +130,7 @@ $admin = current_user();
           <?php if (is_admin()): ?>
             <a class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
                href="<?php echo admin_url('settings'); ?>">
-              <i class="fa-solid fa-gears" aria-hidden="true"></i><span class="visually-hidden">Settings</span>
+              <i class="fa-solid fa-cog" aria-hidden="true"></i><span class="visually-hidden">Settings</span>
             </a>
           <?php endif; ?>
           <a class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"

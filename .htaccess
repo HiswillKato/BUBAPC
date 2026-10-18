@@ -34,7 +34,7 @@ RewriteBase /
 # block the router's own target and 403 every page on the site. Asking for
 # /pages/about.php directly renders the same page as /about, so the only cost
 # of leaving them open is a second address for each page.
-# installer.php at the root is deliberately NOT denied. It is the setup wizard's
+# install.php at the root is deliberately NOT denied. It is the setup wizard's
 # entry point, it is one file rather than a folder, and it refuses to run the
 # wizard again once an administrator exists in the database - so it is safe to
 # leave reachable, and denying it would leave no way to reinstall the site.
@@ -107,7 +107,7 @@ RewriteRule ^([a-z][a-z0-9-]*)/?$ pages/$1.php [L,QSA]
 # --------------------------------------------------------------------------
 # 4. REAL FILES AND FOLDERS WIN
 # --------------------------------------------------------------------------
-# assets/ and installer.php are all served exactly as they are. Without this rule
+# assets/ and install.php are all served exactly as they are. Without this rule
 # Apache would look for a folder called "about" and give up, because the rewrite
 # engine cannot tell a page from a missing file.
 #

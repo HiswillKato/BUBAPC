@@ -24,7 +24,7 @@
         <div class="card border-0 shadow rounded-4 text-center w-100" style="max-width:560px">
             <div class="card-body p-4 p-lg-5">
                 <i class="fa-solid fa-screwdriver-wrench fa-2x text-gold mb-3" aria-hidden="true"></i>
-                <h1 class="h3">We will be right back</h1>
+                <h1 class="h3">Website under maintenance</h1>
                 <p class="text-body-secondary mb-0"><?php echo e($maintenance_message); ?></p>
                 <p class="text-body-secondary small mb-0">You can still reach us
                     <?php if (SITE_PHONE !== ''): ?>
