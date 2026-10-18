@@ -48,7 +48,7 @@ $admin = current_user();
 </head>
 <body>
 <div class="admin-shell d-flex">
-  <aside class="offcanvas-lg offcanvas-start text-bg-dark border-0" tabindex="-1" id="adminSidebar" aria-label="Admin menu">
+  <aside class="offcanvas-lg offcanvas-start text-bg-dark border-0" tabindex="-1" id="adminSidebar" aria-label="Admin menu" data-bs-backdrop="true" data-bs-scroll="true">
     <div class="offcanvas-header pb-0">
       <button class="btn-close btn-close-white ms-auto" type="button" data-bs-dismiss="offcanvas" aria-label="Close the menu"></button>
     </div>
@@ -73,7 +73,7 @@ $admin = current_user();
 
       <nav class="nav nav-pills flex-column gap-1 mb-auto">
         <?php $admin_group = ''; foreach (admin_menu() as $item): ?>
-          <?php if (!empty($item['admin_only']) && !is_admin()) continue; ?>
+          <?php $role = current_user()['role'] ?? ''; if (!empty($item['admin_only'])) { if ($item['key'] === 'settings' && $role !== 'admin') continue; if ($role !== 'admin' && !has_full_access()) continue; } ?>
           <?php $item_group = $item['group'] ?? ''; if ($item_group !== $admin_group): if ($item_group !== ''): ?><p class="text-uppercase small text-white-50 mt-3 mb-1 px-2"><?php echo e($item_group); ?></p><?php endif; $admin_group = $item_group; endif; ?>
           <a class="nav-link <?= $active_module === $item['key'] ? 'active bg-primary text-white' : 'text-white-50' ?>" href="<?php echo $item['url']; ?>">
             <i class="fa-solid <?php echo e($item['icon']); ?> me-2"></i><?php echo e($item['label']); ?>
@@ -127,7 +127,7 @@ $admin = current_user();
           <?php /* Settings is the one row of the menu an editor may not open -
                  the screen behind it calls require_admin() - so the icon goes
                  to exactly the people that row goes to, and no further. */ ?>
-          <?php if (is_admin()): ?>
+          <?php $role = current_user()['role'] ?? ''; if ($role === 'admin'): ?>
             <a class="btn btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
                href="<?php echo admin_url('settings'); ?>">
               <i class="fa-solid fa-cog" aria-hidden="true"></i><span class="visually-hidden">Settings</span>
@@ -141,7 +141,7 @@ $admin = current_user();
       </div>
     </header>
     <?php if (is_maintenance_mode($conn)): ?><div class="alert alert-warning rounded-0 mb-0"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>Maintenance mode is ON.</div><?php endif; ?>
-    <div class="flex-grow-1 p-3 p-lg-4">
+    <div class="flex-grow-1 p-3 p-lg-4 overflow-x-hidden">
       <?php /* The page's heading and its one action, at the top of the content
              where they have a whole row to themselves at every width - which is
              the whole reason the bar above could become a single line. The
