@@ -118,7 +118,10 @@ if ($slug !== '') {
                                                 <?php echo initials($member['name']); ?>
                                             </span>
                                         <?php endif; ?>
-                                        <span class="text-body"><?php echo e($member['name']); ?></span>
+                                        <span class="text-body">
+                                            <?php echo e($member['name']); ?>
+                                            <?php echo birthday_cake($member['born']); ?>
+                                        </span>
                                     </a>
                                 </div>
                             <?php endforeach; ?>

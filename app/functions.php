@@ -554,6 +554,77 @@ function ago($datetime)
 }
 
 /**
+ * A birthday the way everybody else is allowed to see it, "19 October".
+ *
+ * The year never leaves the person who told it, so this takes the date
+ * apart rather than formatting it: birthday_label() is the one place that
+ * decides what every page, list and screen prints, and no caller ever
+ * formats the born column itself.
+ */
+function birthday_label($born)
+{
+    if (empty($born)) {
+        return '';
+    }
+    $timestamp = strtotime($born);
+    return $timestamp ? e(date('j F', $timestamp)) : '';
+}
+
+/**
+ * Is today this person's birthday? The month and the day are compared
+ * without the year, so the age never enters into it.
+ */
+function birthday_today($born)
+{
+    return !empty($born) && date('m-d', strtotime($born)) === date('m-d');
+}
+
+/**
+ * Does this birthday fall in the given month, 1 to 12?
+ *
+ * This is what keeps somebody marked for the whole month rather than for
+ * one day only, which is how the church gets to see who to greet on the
+ * Sunday and how the office reads a finished month back.
+ */
+function birthday_month($born, $month)
+{
+    return !empty($born) && (int) date('n', strtotime($born)) === (int) $month;
+}
+
+/**
+ * A birthday from a form box, checked and ready for the born column.
+ *
+ * Returns 'Y-m-d' for a real date, '' for a box left empty, and null for
+ * anything else - a day that does not exist, a year before 1900, or a day
+ * still to come. Both forms that ask for a birthday call this one helper,
+ * so the two can never disagree about what a real answer looks like.
+ */
+function birthday_from_form($value)
+{
+    $value = trim((string) $value);
+
+    if ($value === '') {
+        return '';
+    }
+
+    $birthday = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
+
+    /* A day like 31 February rolls over into March instead of failing, so
+       the date is formatted back and compared with what was typed. That
+       comparison, and not a warnings array, is what catches a date that
+       never existed. */
+    if (!$birthday || $birthday->format('Y-m-d') !== $value) {
+        return null;
+    }
+
+    if ($birthday->getTimestamp() > time() || (int) $birthday->format('Y') < 1900) {
+        return null;
+    }
+
+    return $value;
+}
+
+/**
  * The seven day names, matching the day_of_week numbers in the programs
  * table (0 = Sunday ... 6 = Saturday).
  */
@@ -1611,6 +1682,41 @@ function people_in_group($conn, $group, $group_id, $limit = 0, $except_person_id
 }
 
 /**
+ * Everybody on the website whose birthday falls in the given month, 1 to
+ * 12, earliest day first - the month read straight down the page.
+ *
+ * Only MONTH() and DAY() are read out of the born column, and the year is
+ * neither matched nor returned, which is the arrangement the birthday is
+ * kept under: the church counts the day and the month, and the year stays
+ * with the person who typed it. The family and department names are
+ * joined in for the same reason the admin people list joins them, so the
+ * office can see where somebody sits without opening each page.
+ */
+function birthdays_in_month($conn, $month)
+{
+    $month = max(1, min(12, (int) $month));
+
+    $statement = $conn->prepare(
+        "SELECT people.*, families.name AS family_name, departments.name AS department_name
+         FROM people
+         LEFT JOIN families ON families.id = people.family
+         LEFT JOIN departments ON departments.id = people.department
+         WHERE MONTH(people.born) = ?
+         ORDER BY DAY(people.born) ASC, people.name ASC"
+    );
+    $statement->bind_param('i', $month);
+    $statement->execute();
+    $result = $statement->get_result();
+
+    $birthdays = [];
+    while ($row = $result->fetch_assoc()) {
+        $birthdays[] = $row;
+    }
+    $statement->close();
+    return $birthdays;
+}
+
+/**
  * The name shown for the person who leads a department or a family.
  *
  * A group may either point at a person in the people table or carry a name
@@ -2132,6 +2238,45 @@ function render_devotional($devotional, $link = '')
         <?php endif; ?>
     </article>
     <?php
+}
+
+/**
+ * The small cake that sits beside a name in a line of people, on the
+ * family and department pages. It marks the month and carries the date
+ * in its tooltip; the badge with the words on it is birthday_badge().
+ * Empty for a person who has not told their birthday, so nobody is
+ * marked by accident.
+ */
+function birthday_cake($born)
+{
+    if (empty($born)) {
+        return '';
+    }
+
+    return '<i class="fa-solid fa-cake-candles text-gold-dark" aria-hidden="true" title="'
+        . e('Birthday ' . strip_tags(birthday_label($born))) . '"></i>';
+}
+
+/**
+ * The pill that celebrates a birthday on a card or a table row:
+ * "Happy birthday!" on the day itself, the date for the rest of the
+ * month, and nothing at all the other eleven months. Every list prints
+ * this rather than writing the badge out again, so a birthday looks the
+ * same on the people page, the leadership page and the admin panel.
+ */
+function birthday_badge($born)
+{
+    if (!birthday_month($born, (int) date('n'))) {
+        return '';
+    }
+
+    $words = birthday_today($born)
+        ? 'Happy birthday!'
+        : 'Birthday ' . strip_tags(birthday_label($born));
+
+    return '<span class="badge rounded-pill text-bg-warning">'
+        . birthday_cake($born)
+        . '<span class="ms-1">' . e($words) . '</span></span>';
 }
 
 /**

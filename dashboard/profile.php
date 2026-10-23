@@ -2,9 +2,15 @@
 /**
  * BUBAPC - Changing your own details
  *
- * A member may change their name, email and phone number, and their password.
- * Nothing else: the role column is not on this form, so there is no way for a
- * member to promote themselves to a website admin by editing their own page.
+ * A member may change their name, email, phone number and birthday, and their
+ * password. Nothing else: the role column is not on this form, so there is no
+ * way for a member to promote themselves to a website admin by editing their
+ * own page.
+ *
+ * The birthday is asked for here as well as on the church profile, because a
+ * member who signed themselves up has no directory page to edit - but their
+ * row is in the same table, so their birthday counts in the church's month
+ * just like everybody else's. The year is shown to nobody.
  *
  * The email is checked against the other accounts, and the row that is updated
  * is always the one belonging to the signed in person, taken from the session.
@@ -27,6 +33,7 @@ $person = current_person($conn);
 $full_name = $member['full_name'];
 $email = $member['email'];
 $phone = $member['phone'];
+$born = (string) $member['born'];
 
 /* Which of the two forms on the page was filled in. A password change is its
    own POST so that a mistake in one does not throw away the other's typing. */
@@ -95,6 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $full_name = post_text('full_name');
         $email = post_text('email');
         $phone = post_text('phone');
+        $born_typed = post_text('born');
 
         if (is_empty_value($full_name)) {
             $errors[] = 'Please tell us your name.';
@@ -122,20 +130,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        /* One helper checks the birthday for both forms that ask for one,
+           so this page and the church profile can never disagree. It
+           answers with the value for the column, an empty string for an
+           empty box, or null for something that is not a birthday. */
+        $birthday = birthday_from_form($born_typed);
+        if ($birthday === null) {
+            $errors[] = 'Please type your birthday as a real day, or leave the box empty.';
+        }
+        $born = $birthday ?? $born_typed;
+
         if (!$errors) {
             /* The name, the email and the sign-in name are on the one row now,
                so they are written together. The sign-in name follows the
-               address, because a member signs in with the address they typed. */
+               address, because a member signs in with the address they typed.
+               An empty birthday box is a NULL in the column, not an empty
+               date, so a PHP null is sent for it. */
+            $born_value = $birthday !== '' ? $birthday : null;
             $statement = $conn->prepare(
-                "UPDATE people SET name = ?, email = ?, username = ?, phone = ? WHERE id = ?"
+                "UPDATE people SET name = ?, email = ?, username = ?, phone = ?, born = ? WHERE id = ?"
             );
             $member_id = (int) $member['id'];
             $statement->bind_param(
-                'ssssi',
+                'sssssi',
                 mb_substr($full_name, 0, 160),
                 mb_substr($email, 0, 190),
                 mb_substr($email, 0, 190),
                 mb_substr($phone, 0, 40),
+                $born_value,
                 $member_id
             );
             $saved = $statement->execute();
@@ -213,12 +235,24 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                                         <div class="form-text">You sign in with this address.</div>
                                     </div>
 
-                                    <div class="mb-4">
+                                    <div class="mb-3">
                                         <label class="form-label" for="phone">Phone</label>
                                         <input type="tel" class="form-control" id="phone" name="phone"
                                                value="<?php echo e($phone); ?>"
                                                maxlength="40" autocomplete="tel">
                                         <div class="form-text">Optional.</div>
+                                    </div>
+
+                                    <div class="mb-4">
+                                        <label class="form-label" for="born">Birthday</label>
+                                        <input type="date" class="form-control" id="born" name="born"
+                                               value="<?php echo e($born); ?>"
+                                               max="<?php echo date('Y-m-d'); ?>">
+                                        <div class="form-text">
+                                            Only the day and the month are ever shown - the church
+                                            greets everybody who celebrates in the month. The year
+                                            stays with you.
+                                        </div>
                                     </div>
 
                                     <button type="submit" class="btn btn-primary">

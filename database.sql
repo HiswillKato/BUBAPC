@@ -513,6 +513,7 @@ CREATE TABLE `people` (
   `department` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT 'A row in departments, or 0',
   `joined_year` SMALLINT DEFAULT NULL COMMENT 'The year the person started, for example 2019',
   `graduated_year` SMALLINT DEFAULT NULL COMMENT 'Extra detail only. The category decides the group',
+  `born` DATE DEFAULT NULL COMMENT 'The birthday. Only the day and month are ever shown; the year belongs to the person',
   `bio` TEXT,
   `testimony` TEXT COMMENT 'Only shown on the alumni pages',
   `image` VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'Relative to uploads/. Empty means show their initials',

@@ -292,6 +292,13 @@ if ($category_filter !== '') {
                                         <?php if (!empty($person['graduated_year'])): ?>
                                             <span class="small text-body-secondary d-block">Class of <?php echo (int) $person['graduated_year']; ?></span>
                                         <?php endif; ?>
+                                        <?php /* Somebody who celebrates this month is
+                                                 marked here too, so the office sees it
+                                                 while keeping the list tidy. */ ?>
+                                        <?php $cake = birthday_badge($person['born']);
+                                        if ($cake !== ''): ?>
+                                            <div class="mt-1"><?php echo $cake; ?></div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </td>

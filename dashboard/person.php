@@ -4,11 +4,16 @@
  *
  * A directory person - a student, a leader, a pastor - may change the parts of
  * their entry that are theirs to tell: their name, how the church reaches them,
- * the short life story and the testimony, and the photograph. Everything that
- * says where they stand in the church is left to the office: the group, the
- * office they hold, their family, their department, the slot they sit in and
- * whether the page shows at all. Those are decisions about the church, not
- * about the person, so they are not on this form.
+ * their birthday, the short life story and the testimony, and the photograph.
+ * Everything that says where they stand in the church is left to the office:
+ * the group, the office they hold, their family, their department, the slot
+ * they sit in and whether the page shows at all. Those are decisions about the
+ * church, not about the person, so they are not on this form.
+ *
+ * The birthday is told by the person and nobody else - not even the office has
+ * a box for it - because it is the one detail that is theirs alone. The year
+ * stays on this page and this page only; every other screen reads the day and
+ * the month out of the column and never the year.
  *
  * The row that changes is always the one linked to the signed in account,
  * read from the session. The id is never taken from the form.
@@ -32,6 +37,7 @@ $values = [
     'name' => $person['name'],
     'email' => $person['email'],
     'phone' => $person['phone'],
+    'born' => (string) $person['born'],
     'bio' => (string) $person['bio'],
     'testimony' => (string) $person['testimony'],
 ];
@@ -42,8 +48,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values['name'] = post_text('name');
     $values['email'] = post_text('email');
     $values['phone'] = post_text('phone');
+    $values['born'] = post_text('born');
     $values['bio'] = post_text('bio');
     $values['testimony'] = post_text('testimony');
+
+    /* One helper decides what a real birthday looks like for both forms
+       that ask for one, so this page and the account page can never
+       disagree. It answers with the value for the column, an empty
+       string for an empty box, or null for something that is not a
+       birthday at all. */
+    $birthday = birthday_from_form($values['born']);
+    if ($birthday === null) {
+        $errors[] = 'Please type your birthday as a real day, or leave the box empty.';
+    }
 
     if (is_empty_value($values['name'])) {
         $errors[] = 'Please tell us your name.';
@@ -79,9 +96,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         );
 
         $statement = $conn->prepare(
-            "UPDATE people SET name = ?, email = ?, username = ?, phone = ?, bio = ?, testimony = ?, image = ?
+            "UPDATE people SET name = ?, email = ?, username = ?, phone = ?, born = ?, bio = ?, testimony = ?, image = ?
              WHERE id = ?"
         );
+        /* An empty box is a NULL in the column, not an empty date: mysqli
+           sends a PHP null as SQL NULL, while an empty string would be
+           refused by a DATE column. */
+        $born = $birthday !== '' ? $birthday : null;
         /* The row is both the person and the sign-in, so the name, the email,
            the phone and the sign-in name are written together. A member signs
            in with the address they typed, so the username follows it; an account
@@ -91,11 +112,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? mb_substr($values['email'], 0, 190)
             : $person['username'];
         $statement->bind_param(
-            'sssssssi',
+            'ssssssssi',
             mb_substr($values['name'], 0, 160),
             mb_substr($values['email'], 0, 190),
             $sign_in_name,
             mb_substr($values['phone'], 0, 40),
+            $born,
             $values['bio'],
             $values['testimony'],
             $image['path'],
@@ -192,6 +214,17 @@ require_once __DIR__ . '/../app/includes/public/header.php';
                                                    maxlength="40" autocomplete="tel">
                                             <div class="form-text">How the church reaches you.</div>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label" for="born">Your birthday</label>
+                                    <input type="date" class="form-control" id="born" name="born"
+                                           value="<?php echo e($values['born']); ?>"
+                                           max="<?php echo date('Y-m-d'); ?>">
+                                    <div class="form-text">
+                                        Only the day and the month are ever shown - the church greets
+                                        everybody who celebrates in the month. The year stays with you.
                                     </div>
                                 </div>
 

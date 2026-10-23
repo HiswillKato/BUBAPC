@@ -119,7 +119,10 @@ if ($slug !== '') {
                                             </span>
                                         <?php endif; ?>
                                         <span>
-                                            <span class="d-block fw-semibold text-body"><?php echo e($member['name']); ?></span>
+                                            <span class="d-block fw-semibold text-body">
+                                                <?php echo e($member['name']); ?>
+                                                <?php echo birthday_cake($member['born']); ?>
+                                            </span>
                                             <?php if ($member['position'] !== ''): ?>
                                                 <span class="small text-body-secondary"><?php echo e($member['position']); ?></span>
                                             <?php endif; ?>

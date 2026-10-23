@@ -64,6 +64,7 @@ function admin_menu()
     ];
     $church = [
         ['key' => 'people', 'label' => 'People', 'icon' => 'fa-users'],
+        ['key' => 'birthdays', 'label' => 'Birthdays', 'icon' => 'fa-cake-candles'],
         ['key' => 'departments', 'label' => 'Departments', 'icon' => 'fa-sitemap'],
         ['key' => 'families', 'label' => 'Families', 'icon' => 'fa-people-roof'],
     ];

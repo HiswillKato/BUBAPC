@@ -92,6 +92,11 @@ $statement->close();
                                             </p>
                                         <?php endif; ?>
 
+                                        <?php $cake = birthday_badge($leader['born']);
+                                        if ($cake !== ''): ?>
+                                            <p class="mb-2"><?php echo $cake; ?></p>
+                                        <?php endif; ?>
+
                                         <?php if (!empty($leader['bio'])): ?>
                                             <p class="text-body-secondary small mb-0">
                                                 <?php echo e(excerpt($leader['bio'], 180)); ?>

@@ -156,6 +156,22 @@ if ($slug !== '') {
                                     </div>
                                 <?php endif; ?>
 
+                                <?php /* The day and the month only - the year is
+                                         on this person's own page and nowhere else. */ ?>
+                                <?php if (!empty($person['born'])): ?>
+                                    <div class="d-flex justify-content-between gap-3">
+                                        <dt class="text-body-secondary fw-normal">Birthday</dt>
+                                        <dd class="mb-0 fw-semibold text-end">
+                                            <?php echo birthday_label($person['born']); ?>
+                                            <?php if (birthday_today($person['born'])): ?>
+                                                <span class="badge rounded-pill text-bg-warning ms-1">
+                                                    <i class="fa-solid fa-cake-candles me-1" aria-hidden="true"></i>Today!
+                                                </span>
+                                            <?php endif; ?>
+                                        </dd>
+                                    </div>
+                                <?php endif; ?>
+
                                 <?php if ($family): ?>
                                     <div class="d-flex justify-content-between gap-3">
                                         <dt class="text-body-secondary fw-normal">Family</dt>
@@ -427,6 +443,13 @@ $statement->close();
                                         <p class="small text-body-secondary mb-2">
                                             <?php echo e($categories[$person['category']] ?? ''); ?>
                                         </p>
+                                    <?php endif; ?>
+
+                                    <?php /* Somebody who celebrates this month wears the cake on
+                                           their card for the whole month, not for one day. */ ?>
+                                    <?php $cake = birthday_badge($person['born']);
+                                    if ($cake !== ''): ?>
+                                        <p class="mb-2"><?php echo $cake; ?></p>
                                     <?php endif; ?>
 
                                     <?php if (!empty($person['graduated_year'])): ?>
