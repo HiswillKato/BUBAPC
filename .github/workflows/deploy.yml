@@ -1,0 +1,67 @@
+name: Deploy BUBAPC to Oracle Cloud
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-bubapc
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy over SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/id_deploy \
+            -p "$SSH_PORT" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            "$SSH_USER@$SSH_HOST"
+
+      - name: Health check
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DOMAIN: bubapc.us.ci
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 12); do
+            code=$(curl -sS --resolve "$DOMAIN:443:$SSH_HOST" -o /dev/null -w '%{http_code}' "https://$DOMAIN/" || true)
+            echo "attempt $i: HTTP $code"
+            if [ "$code" = "200" ]; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Health check failed; triggering rollback"
+          SSH_USER="${{ secrets.SSH_USER }}"; SSH_PORT="${{ secrets.SSH_PORT }}"
+          ssh -i ~/.ssh/id_deploy -p "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "$SSH_USER@$SSH_HOST" 'rollback' || true
+          exit 1
+
+      - name: Report
+        if: always()
+        run: |
+          echo "Deployment finished. Server-side log: /var/log/deploy-bubapc.log"
+          echo "Rollback manually with: ssh (deploy key) ubuntu@${{ secrets.SSH_HOST }} rollback"
