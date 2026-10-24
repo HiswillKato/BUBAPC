@@ -6,10 +6,18 @@ namespace Composer\Autoload;
 
 class ComposerStaticInitc3fb71d4cdcf8a54319d9201df43a8e1
 {
+    public static $files = array (
+        'c51fd20855431bb1e2f47a40bea6d58a' => __DIR__ . '/../..' . '/app/helpers/functions.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'P' =>
         array (
             'PHPMailer\\PHPMailer\\' => 20,
+        ),
+        'M' =>
+        array (
+            'Martazi\\' => 8,
         ),
     );
 
@@ -18,10 +26,17 @@ class ComposerStaticInitc3fb71d4cdcf8a54319d9201df43a8e1
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
         ),
+        'Martazi\\' =>
+        array (
+            0 => __DIR__ . '/../..' . '/app',
+        ),
     );
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'Martazi\\core\\Database' => __DIR__ . '/../..' . '/app/core/Database.php',
+        'Martazi\\core\\Response' => __DIR__ . '/../..' . '/app/core/Response.php',
+        'Martazi\\core\\Router' => __DIR__ . '/../..' . '/app/core/Router.php',
         'PHPMailer\\PHPMailer\\DSNConfigurator' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/DSNConfigurator.php',
         'PHPMailer\\PHPMailer\\Exception' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/Exception.php',
         'PHPMailer\\PHPMailer\\OAuth' => __DIR__ . '/..' . '/phpmailer/phpmailer/src/OAuth.php',

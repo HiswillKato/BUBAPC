@@ -36,7 +36,7 @@
 
 define('BUBAPC_INSTALLER', true);
 
-require_once __DIR__ . '/app/init.php';
+require_once dirname(__DIR__) . '/app/init.php';
 
 /* Is the website already installed? This is asked ONCE, here, and the answer
    is then remembered, because the answer changes in the middle of the request
@@ -77,9 +77,9 @@ $step = 1;
  * POST handlers in part 3 call.
  */
 
-define('BUBAPC_ROOT', __DIR__);
+define('BUBAPC_ROOT', dirname(__DIR__));
 define('BUBAPC_SCHEMA_FILE', BUBAPC_ROOT . '/database.sql');
-define('BUBAPC_CONFIG_FILE', BUBAPC_ROOT . '/app/config.php');
+define('BUBAPC_CONFIG_FILE', BUBAPC_ROOT . '/config/config.php');
 
 /**
  * Has the website already been installed?
