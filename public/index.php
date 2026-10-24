@@ -15,7 +15,7 @@ if (is_file(APP_ROOT . '/routes/api.php')) {
 }
 
 $router->setNotFound(function () {
-    global $conn; require APP_ROOT . '/pages/404.php';
+    global $conn; require APP_ROOT . '/resources/views/public/404.php';
 });
 
 $router->dispatch();

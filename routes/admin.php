@@ -2,7 +2,7 @@
 // Dashboard (member area) + admin panel migrated to the martazi router.
 
 $dashDir = APP_ROOT . '/dashboard';
-$adminDir = APP_ROOT . '/dashboard/admin';
+$adminDir = APP_ROOT . '/resources/views/dashboard/admin';
 
 $registerPage = function (string $path, string $file) use ($router) {
     $handler = function () use ($file) {
@@ -13,9 +13,9 @@ $registerPage = function (string $path, string $file) use ($router) {
 };
 
 // /dashboard and named pages
-$registerPage('/dashboard', APP_ROOT . '/dashboard/index.php');
-$registerPage('/dashboard/profile', APP_ROOT . '/dashboard/profile.php');
-$registerPage('/dashboard/person', APP_ROOT . '/dashboard/person.php');
+$registerPage('/dashboard', APP_ROOT . '/resources/views/dashboard/index.php');
+$registerPage('/dashboard/profile', APP_ROOT . '/resources/views/dashboard/profile.php');
+$registerPage('/dashboard/person', APP_ROOT . '/resources/views/dashboard/person.php');
 
 foreach (glob($dashDir . '/*.php') as $file) {
     $name = basename($file, '.php');
@@ -26,9 +26,9 @@ foreach (glob($dashDir . '/*.php') as $file) {
 }
 
 // /dashboard/admin and named pages
-$registerPage('/dashboard/admin', APP_ROOT . '/dashboard/admin/index.php');
-$registerPage('/dashboard/admin/index', APP_ROOT . '/dashboard/admin/index.php');
-$registerPage('/dashboard/index', APP_ROOT . '/dashboard/index.php');
+$registerPage('/dashboard/admin', APP_ROOT . '/resources/views/dashboard/admin/index.php');
+$registerPage('/dashboard/admin/index', APP_ROOT . '/resources/views/dashboard/admin/index.php');
+$registerPage('/dashboard/index', APP_ROOT . '/resources/views/dashboard/index.php');
 
 foreach (glob($adminDir . '/*.php') as $file) {
     $name = basename($file, '.php');

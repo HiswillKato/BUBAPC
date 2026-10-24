@@ -1,7 +1,7 @@
 <?php
 // Public pages migrated to the martazi router.
 
-$pagesDir = APP_ROOT . '/pages';
+$pagesDir = APP_ROOT . '/resources/views/public';
 
 $registerPage = function (string $path, string $file) use ($router) {
     $handler = function () use ($file) {
@@ -36,5 +36,5 @@ foreach (glob($pagesDir . '/*.php') as $file) {
 }
 
 // Home
-$registerPage('/', APP_ROOT . '/pages/index.php');
-$registerPage('/index', APP_ROOT . '/pages/index.php');
+$registerPage('/', APP_ROOT . '/resources/views/public/index.php');
+$registerPage('/index', APP_ROOT . '/resources/views/public/index.php');
