@@ -52,9 +52,6 @@ Thumbs.db
 /*.jar
 /*.orig-backup
 
-# vendor/ is deliberately NOT ignored. There is no build step on this site:
-# the server runs the PHP exactly as it is committed, so the libraries have to
-# be in the repository for a fresh clone to work. Run `composer install` to put
-# them back if you ever delete this folder.
-AGENTS.md
+# Composer dependencies are installed via `composer install`; not committed.
+/vendor/
 AGENTS.md
