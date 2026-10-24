@@ -14,11 +14,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'messages';
 
 $message_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$message = admin_row($conn, 'messages', $message_id);
+$message = adminrow($conn, 'messages', $message_id);
 
 if (!$message) {
     flash('error', 'That message is no longer here. It may already have been deleted.');
-    redirect(admin_url('messages'));
+    redirect(adminurl('messages'));
 }
 
 if ((int) $message['seen'] === 0) {
@@ -30,7 +30,7 @@ if ((int) $message['seen'] === 0) {
 
 $page_title = 'Message';
 $page_heading = 'Message';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('messages') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('messages') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>All messages</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -58,7 +58,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         </p>
                     <?php endif; ?>
                     <p class="text-body-secondary small mb-4">
-                        Sent <?php echo format_date($message['created'], 'j F Y \a\t g:ia'); ?>
+                        Sent <?php echo formatdate($message['created'], 'j F Y \a\t g:ia'); ?>
                         (<?php echo e(ago($message['created'])); ?>)
                     </p>
 

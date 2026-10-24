@@ -24,24 +24,24 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'people';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $action = post_text('action');
+    $action = posttext('action');
     $person_id = (int) ($_POST['id'] ?? 0);
-    $person = admin_row($conn, 'people', $person_id);
+    $person = adminrow($conn, 'people', $person_id);
 
     if (!$person) {
         flash('error', 'That person is no longer here. They may already have been removed.');
-        redirect(admin_url('people'));
+        redirect(adminurl('people'));
     }
 
     if ($action === 'delete') {
         /* A row that can sign in is also an account, and only an administrator
            may throw an account away. An editor keeps the directory tidy and
            must not be able to delete the people who run the website. */
-        if (person_can_sign_in($person) && !is_admin()) {
+        if (personcansignin($person) && !isadmin()) {
             flash('error', 'Only an administrator can remove a sign-in account.');
-            redirect(admin_url('people'));
+            redirect(adminurl('people'));
         }
 
         /* Before the row goes, anything that points at it has to be let go,
@@ -74,14 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         /* The file is taken from the row that was just read out of the database
            and never from the posted form, so a hand-made request cannot make
            this delete some other file on the server. */
-        delete_uploaded_image($person['image']);
+        deleteuploadedimage($person['image']);
 
         $statement = $conn->prepare("DELETE FROM people WHERE id = ?");
         $statement->bind_param('i', $person_id);
         $statement->execute();
         $statement->close();
 
-        log_action($conn, 'person_deleted', $person['name']);
+        logaction($conn, 'person_deleted', $person['name']);
         flash('success', $person['name'] . ' has been removed from the website.');
     } elseif ($action === 'toggle') {
         $new_status = (int) $person['status'] === 1 ? 0 : 1;
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', 'The order for ' . $person['name'] . ' has been saved.');
     }
 
-    redirect(admin_url('people'));
+    redirect(adminurl('people'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -113,7 +113,7 @@ $category_filter = isset($_GET['category']) ? (string) $_GET['category'] : '';
 
 /* An unknown category is treated as no filter rather than as a search term,
    so a stale bookmark shows the whole list instead of an error. */
-if ($category_filter !== '' && !array_key_exists($category_filter, people_categories())) {
+if ($category_filter !== '' && !array_key_exists($category_filter, peoplecategories())) {
     $category_filter = '';
 }
 
@@ -144,11 +144,11 @@ if ($bind_values) {
     $total_people = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_people = db_count($conn, "SELECT COUNT(*) FROM people" . $where_sql);
+    $total_people = dbcount($conn, "SELECT COUNT(*) FROM people" . $where_sql);
 }
 
 $per_page = 25;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_people, $per_page, $current_page);
 
 /* The family and the department names are joined in so the list can say where
@@ -174,13 +174,13 @@ $statement->close();
 
 /* The groups, in the order the church thinks of them, for the filter box. */
 $category_options = ['' => 'All groups'];
-foreach (people_categories() as $key => $label) {
+foreach (peoplecategories() as $key => $label) {
     $category_options[$key] = $label;
 }
 
 $page_title = 'People';
 $page_heading = 'People';
-$page_actions = '<a class="btn btn-primary" href="' . admin_url('people/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminurl('people/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add a person</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -188,13 +188,13 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
 <?php
 /* The filter bar here has a group box instead of a status box, so it is
-   written out rather than using admin_filter_bar(). */
+   written out rather than using adminfilterbar(). */
 $filter_query = ['q' => $search];
 if ($category_filter !== '') {
     $filter_query['category'] = $category_filter;
 }
 ?>
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('people'); ?>" role="search">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminurl('people'); ?>" role="search">
     <div class="col-12 col-md">
         <label class="visually-hidden" for="filter-search">Search</label>
         <div class="input-group">
@@ -216,16 +216,16 @@ if ($category_filter !== '') {
     <div class="col-12 col-md-auto d-flex gap-2">
         <button type="submit" class="btn btn-primary">Filter</button>
         <?php if ($search !== '' || $category_filter !== ''): ?>
-            <a class="btn btn-outline-secondary" href="<?php echo admin_url('people'); ?>">Clear</a>
+            <a class="btn btn-outline-secondary" href="<?php echo adminurl('people'); ?>">Clear</a>
         <?php endif; ?>
     </div>
 </form>
 
-<?php admin_result_bar($pagination, $filter_query, 'people'); ?>
+<?php adminresultbar($pagination, $filter_query, 'people'); ?>
 
 <?php if (!$people): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-users',
         $search !== '' || $category_filter !== '' ? 'Nobody matches that' : 'Nobody added yet',
         $search !== '' || $category_filter !== ''
@@ -233,7 +233,7 @@ if ($category_filter !== '') {
             : 'This is the one screen for everybody the church lists: the pastors, the students, '
                 . 'the alumni, and the people who lead a department or a family. Add them here and '
                 . 'they appear on the right page straight away.',
-        '<a class="btn btn-primary" href="' . admin_url('people/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminurl('people/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add the first person</a>',
         'admin'
     );
@@ -255,7 +255,7 @@ if ($category_filter !== '') {
                 </thead>
                 <tbody>
                     <?php
-                    $categories = people_categories();
+                    $categories = peoplecategories();
                     foreach ($people as $person):
                         $belongs_to = array_filter([
                             !empty($person['family_name']) ? $person['family_name'] : '',
@@ -271,7 +271,7 @@ if ($category_filter !== '') {
                                              where somebody notices who is
                                              still missing a photograph. */
                                     if (!empty($person['image'])): ?>
-                                        <img src="<?php echo upload_url($person['image']); ?>" alt=""
+                                        <img src="<?php echo uploadurl($person['image']); ?>" alt=""
                                              width="44" height="44" class="rounded-circle object-fit-cover flex-shrink-0">
                                     <?php else: ?>
                                         <span class="brand-mark bg-brand-soft text-brand rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"
@@ -281,7 +281,7 @@ if ($category_filter !== '') {
                                     <?php endif; ?>
                                     <div>
                                         <a class="fw-semibold d-block text-decoration-none text-truncate"
-                                           href="<?php echo admin_url('people/form.php?id=' . (int) $person['id']); ?>"
+                                           href="<?php echo adminurl('people/form.php?id=' . (int) $person['id']); ?>"
                                            style="max-width:14rem">
                                             <?php echo e($person['name']); ?>
                                         </a>
@@ -295,7 +295,7 @@ if ($category_filter !== '') {
                                         <?php /* Somebody who celebrates this month is
                                                  marked here too, so the office sees it
                                                  while keeping the list tidy. */ ?>
-                                        <?php $cake = birthday_badge($person['born']);
+                                        <?php $cake = birthdaybadge($person['born']);
                                         if ($cake !== ''): ?>
                                             <div class="mt-1"><?php echo $cake; ?></div>
                                         <?php endif; ?>
@@ -311,9 +311,9 @@ if ($category_filter !== '') {
                                 <?php /* A password on the row makes it an account;
                                          the rights come from its role. An account
                                          that is switched off says so. */ ?>
-                                <?php if (person_can_sign_in($person)): ?>
+                                <?php if (personcansignin($person)): ?>
                                     <span class="badge rounded-pill text-bg-primary">
-                                        <?php echo e(user_role_label($person['role'])); ?>
+                                        <?php echo e(userrolelabel($person['role'])); ?>
                                     </span>
                                     <?php if ((int) $person['active'] !== 1): ?>
                                         <span class="badge rounded-pill text-bg-secondary ms-1">Off</span>
@@ -325,7 +325,7 @@ if ($category_filter !== '') {
                             <td class="small text-body-secondary text-truncate" style="max-width:12rem">
                                 <?php echo $belongs_to ? e(implode(' &middot; ', $belongs_to)) : '<span class="text-body-tertiary">&mdash;</span>'; ?>
                             </td>
-                            <td class="text-nowrap"><?php echo admin_order_field('people', $person['id'], $person['display_order']); ?></td>
+                            <td class="text-nowrap"><?php echo adminorderfield('people', $person['id'], $person['display_order']); ?></td>
                             <td>
                                 <span class="badge rounded-pill <?php echo (int) $person['status'] === 1 ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                     <?php echo (int) $person['status'] === 1 ? 'Shown' : 'Hidden'; ?>
@@ -333,7 +333,7 @@ if ($category_filter !== '') {
                             </td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo admin_row_actions('people', $person['id'], [
+                                echo adminrowactions('people', $person['id'], [
                                     'active' => $person['status'],
                                     'label' => $person['name'],
                                 ]);

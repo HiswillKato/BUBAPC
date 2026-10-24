@@ -18,7 +18,7 @@ $canonical = 'about';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     'About ' . SITE_NAME,
     SITE_FULL_NAME . ' is a student church on the Busitema University campus. '
     . 'This is who we are, and this is what you will find when you visit.',
@@ -27,8 +27,8 @@ page_header(
 
 /* The two quick facts under the band, so a visitor knows straight away how
    big the church is and when it meets. */
-$program_days = count(weekly_program_by_day($conn));
-$leader_total = db_count($conn, "SELECT COUNT(*) FROM people
+$program_days = count(weeklyprogrambyday($conn));
+$leader_total = dbcount($conn, "SELECT COUNT(*) FROM people
                                 WHERE status = 1 AND category <> 'student' AND category <> 'alumnus'");
 ?>
 

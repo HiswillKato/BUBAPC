@@ -19,19 +19,19 @@ $page_title = 'Forgot your password';
 $page_description = 'Send yourself a link to choose a new ' . SITE_NAME . ' password.';
 
 $sent = false;
-$form_errors = [];
+$formerrors = [];
 $email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $email = post_text('email');
+    $email = posttext('email');
 
-    if (!is_valid_email($email)) {
-        $form_errors['email'] = 'Please type the email address you signed in with.';
+    if (!isvalidemail($email)) {
+        $formerrors['email'] = 'Please type the email address you signed in with.';
     }
 
-    if (!$form_errors) {
+    if (!$formerrors) {
         $statement = $conn->prepare("SELECT id, username, email, name AS full_name FROM people
                                      WHERE password IS NOT NULL AND email = ? AND active = 1 LIMIT 1");
         $statement->bind_param('s', $email);
@@ -41,13 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($user) {
             /* Any account may reset its password. The link is sent to the address on the account. */
-            $raw = token_issue($conn, $user['id']);
+            $raw = tokenissue($conn, $user['id']);
 
             if ($raw !== '') {
-                mail_password_reset($user, $raw);
+                mailpasswordreset($user, $raw);
             }
 
-            log_action($conn, 'password_reset', 'A reset link was sent to ' . $email);
+            logaction($conn, 'password_reset', 'A reset link was sent to ' . $email);
         }
 
         /* The answer is the same either way, and that is the whole point: the
@@ -91,15 +91,15 @@ require_once __DIR__ . '/../partials/public/header.php';
                         </p>
 
                         <form method="post" action="<?php echo url('forgot'); ?>" novalidate>
-                            <?php echo csrf_field(); ?>
+                            <?php echo csrffield(); ?>
 
                             <div class="mb-3">
                                 <label class="form-label" for="email">Email address</label>
-                                <input type="email" class="form-control<?php echo isset($form_errors['email']) ? ' is-invalid' : ''; ?>"
+                                <input type="email" class="form-control<?php echo isset($formerrors['email']) ? ' is-invalid' : ''; ?>"
                                        id="email" name="email" value="<?php echo e($email); ?>"
                                        autocomplete="email" required autofocus>
-                                <?php if (isset($form_errors['email'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($form_errors['email']); ?></div>
+                                <?php if (isset($formerrors['email'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formerrors['email']); ?></div>
                                 <?php endif; ?>
                             </div>
 

@@ -15,11 +15,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'devotionals';
 
 $devotional_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$devotional = $devotional_id ? admin_row($conn, 'devotionals', $devotional_id) : [];
+$devotional = $devotional_id ? adminrow($conn, 'devotionals', $devotional_id) : [];
 
 if ($devotional_id && !$devotional) {
     flash('error', 'That devotional is no longer here.');
-    redirect(admin_url('devotionals'));
+    redirect(adminurl('devotionals'));
 }
 
 $is_new = $devotional_id === 0;
@@ -38,18 +38,18 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $values['title'] = post_text('title');
-    $values['message'] = post_text('message');
-    $values['scripture_reference'] = post_text('scripture_reference');
-    $values['scripture_text'] = post_text('scripture_text');
-    $values['further_study'] = post_text('further_study');
+    $values['title'] = posttext('title');
+    $values['message'] = posttext('message');
+    $values['scripture_reference'] = posttext('scripture_reference');
+    $values['scripture_text'] = posttext('scripture_text');
+    $values['further_study'] = posttext('further_study');
     $values['status'] = ($_POST['status'] ?? '') === 'published' ? 'published' : 'draft';
 
-    admin_check_required($values['title'], 'The title', $errors);
-    admin_check_required($values['message'], 'The message', $errors);
-    $values['devotional_date'] = admin_check_moment($_POST['devotional_date'] ?? '', 'The date it is for', $errors);
+    admincheckrequired($values['title'], 'The title', $errors);
+    admincheckrequired($values['message'], 'The message', $errors);
+    $values['devotional_date'] = admincheckmoment($_POST['devotional_date'] ?? '', 'The date it is for', $errors);
 
     if (!$errors) {
         /* The address is made from the title and never typed, so it cannot arrive
@@ -79,10 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['status']
             );
             $statement->execute();
-            $devotional_id = (int) db_last_id($conn);
+            $devotional_id = (int) dblastid($conn);
             $statement->close();
 
-            log_action($conn, 'devotional_created', 'The devotional "' . $values['title'] . '"');
+            logaction($conn, 'devotional_created', 'The devotional "' . $values['title'] . '"');
             flash('success', 'The devotional "' . $values['title'] . '" has been added.');
         } else {
             $statement = $conn->prepare(
@@ -106,17 +106,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            log_action($conn, 'devotional_updated', 'The devotional "' . $values['title'] . '"');
+            logaction($conn, 'devotional_updated', 'The devotional "' . $values['title'] . '"');
             flash('success', 'The devotional "' . $values['title'] . '" has been saved.');
         }
 
-        redirect(admin_url('devotionals'));
+        redirect(adminurl('devotionals'));
     }
 }
 
 $page_title = $is_new ? 'Add devotional' : 'Edit devotional';
 $page_heading = $is_new ? 'Add a devotional' : 'Edit devotional';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('devotionals') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('devotionals') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -125,18 +125,18 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php admin_errors($errors); ?>
+            <?php adminerrors($errors); ?>
 
             <form method="post" novalidate>
-                <?php echo csrf_field(); ?>
+                <?php echo csrffield(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admin_text_field('title', 'Title', $values['title'], '', 'The Loudest Silence');
-                        admin_date_field('devotional_date', 'The day this is for', $values['devotional_date'],
+                        admintextfield('title', 'Title', $values['title'], '', 'The Loudest Silence');
+                        admindatefield('devotional_date', 'The day this is for', $values['devotional_date'],
                             'Not the day you are typing it. A devotional for tomorrow can be written today.');
-                        admin_textarea('message', 'The message', $values['message'],
+                        admintextarea('message', 'The message', $values['message'],
                             'Leave an empty line between paragraphs. It is read on its own page on the website.', 18);
                         ?>
 
@@ -144,26 +144,26 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <div class="row">
                             <div class="col-md-5">
                                 <?php
-                                admin_text_field('scripture_reference', 'Reference', $values['scripture_reference'],
+                                admintextfield('scripture_reference', 'Reference', $values['scripture_reference'],
                                     'For example Psalm 46:10', 'Psalm 46:10');
                                 ?>
                             </div>
                             <div class="col-md-7">
                                 <?php
-                                admin_textarea('scripture_text', 'The words of the verse', $values['scripture_text'], '', 3);
+                                admintextarea('scripture_text', 'The words of the verse', $values['scripture_text'], '', 3);
                                 ?>
                             </div>
                             <div class="col-12">
                                 <?php
-                                admin_textarea('further_study', 'Further study', $values['further_study'],
+                                admintextarea('further_study', 'Further study', $values['further_study'],
                                     'One reference per line. These are printed as a small list under the message.', 4);
                                 ?>
                             </div>
                         </div>
 
                         <?php
-                        admin_status_field($values['status']);
-                        admin_form_buttons(admin_url('devotionals'), $is_new ? 'Add devotional' : 'Save changes');
+                        adminstatusfield($values['status']);
+                        adminformbuttons(adminurl('devotionals'), $is_new ? 'Add devotional' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -176,7 +176,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <p class="small text-body-secondary mb-3">
                             It comes off the website at once. This cannot be undone.
                         </p>
-                        <?php echo admin_delete_button('devotionals', $devotional_id, 'the devotional "' . $devotional['title'] . '"'); ?>
+                        <?php echo admindeletebutton('devotionals', $devotional_id, 'the devotional "' . $devotional['title'] . '"'); ?>
                     </div>
                 </div>
             <?php endif; ?>

@@ -17,15 +17,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'messages';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $action = post_text('action');
+    $action = posttext('action');
     $message_id = (int) ($_POST['id'] ?? 0);
-    $message = admin_row($conn, 'messages', $message_id);
+    $message = adminrow($conn, 'messages', $message_id);
 
     if (!$message) {
         flash('error', 'That message is no longer here. It may already have been deleted.');
-        redirect(admin_url('messages'));
+        redirect(adminurl('messages'));
     }
 
     if ($action === 'delete') {
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', $changed === 1 ? 'One message marked as read.' : $changed . ' messages marked as read.');
     }
 
-    redirect(admin_url('messages'));
+    redirect(adminurl('messages'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -91,13 +91,13 @@ if ($bind_values) {
     $total_messages = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_messages = db_count($conn, "SELECT COUNT(*) FROM messages" . $where_sql);
+    $total_messages = dbcount($conn, "SELECT COUNT(*) FROM messages" . $where_sql);
 }
 
-$unread_count = db_count($conn, "SELECT COUNT(*) FROM messages WHERE seen = 0");
+$unread_count = dbcount($conn, "SELECT COUNT(*) FROM messages WHERE seen = 0");
 
 $per_page = 20;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_messages, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -117,8 +117,8 @@ $statement->close();
 $page_title = 'Messages';
 $page_heading = 'Messages';
 $page_actions = $unread_count > 0
-    ? '<form method="post" action="' . admin_url('messages') . '" class="d-inline">'
-        . csrf_field()
+    ? '<form method="post" action="' . adminurl('messages') . '" class="d-inline">'
+        . csrffield()
         . '<input type="hidden" name="action" value="read_all">'
         . '<button type="submit" class="btn btn-outline-secondary">'
         . '<i class="fa-solid fa-envelope-open me-1" aria-hidden="true"></i>Mark all as read</button>'
@@ -134,7 +134,7 @@ if ($filter !== '') {
     $filter_query['filter'] = $filter;
 }
 ?>
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('messages'); ?>" role="search">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminurl('messages'); ?>" role="search">
     <div class="col-12 col-md">
         <label class="visually-hidden" for="filter-search">Search</label>
         <div class="input-group">
@@ -154,7 +154,7 @@ if ($filter !== '') {
     <div class="col-12 col-md-auto d-flex gap-2">
         <button type="submit" class="btn btn-primary">Filter</button>
         <?php if ($search !== '' || $filter !== ''): ?>
-            <a class="btn btn-outline-secondary" href="<?php echo admin_url('messages'); ?>">Clear</a>
+            <a class="btn btn-outline-secondary" href="<?php echo adminurl('messages'); ?>">Clear</a>
         <?php endif; ?>
     </div>
 </form>
@@ -166,11 +166,11 @@ if ($filter !== '') {
     </p>
 <?php endif; ?>
 
-<?php admin_result_bar($pagination, $filter_query, 'messages'); ?>
+<?php adminresultbar($pagination, $filter_query, 'messages'); ?>
 
 <?php if (!$messages): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-envelope-open-text',
         $search !== '' || $filter !== '' ? 'No messages match that' : 'No messages yet',
         $search !== '' || $filter !== ''
@@ -219,13 +219,13 @@ if ($filter !== '') {
                             </td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo admin_action_group(
+                                echo adminactiongroup(
                                     '<a class="btn btn-sm btn-soft" href="'
-                                    . admin_url('messages/view.php?id=' . (int) $message['id']) . '">'
+                                    . adminurl('messages/view.php?id=' . (int) $message['id']) . '">'
                                     . '<i class="fa-solid fa-envelope-open" aria-hidden="true"></i>'
                                     . '<span class="visually-hidden">Read in full</span></a>'
-                                    . admin_toggle_button('messages', $message['id'], $message['seen'], 'Mark as read', 'Mark as unread')
-                                    . admin_delete_button('messages', $message['id'], 'the message from ' . $message['name'])
+                                    . admintogglebutton('messages', $message['id'], $message['seen'], 'Mark as read', 'Mark as unread')
+                                    . admindeletebutton('messages', $message['id'], 'the message from ' . $message['name'])
                                 );
                                 ?>
                             </td>

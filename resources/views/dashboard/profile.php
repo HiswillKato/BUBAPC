@@ -20,15 +20,15 @@
 
 require_once __DIR__ . '/../../../app/init.php';
 
-require_login();
+requirelogin();
 
-$member = current_user();
+$member = currentuser();
 $errors = [];
 
 /* A linked person's name, email and phone are kept on their church profile,
    where they also appear on the site. Editing them here as well would let the
    two drift apart, so this page only holds the password for those people. */
-$person = current_person($conn);
+$person = currentperson($conn);
 
 $full_name = $member['full_name'];
 $email = $member['email'];
@@ -38,9 +38,9 @@ $born = (string) $member['born'];
 /* Which of the two forms on the page was filled in. A password change is its
    own POST so that a mistake in one does not throw away the other's typing. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    if (post_text('form') === 'password') {
+    if (posttext('form') === 'password') {
         $current_password = (string) ($_POST['current_password'] ?? '');
         $new_password = (string) ($_POST['new_password'] ?? '');
         $new_confirm = (string) ($_POST['new_password_confirm'] ?? '');
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $errors[] = 'That is not your current password.';
         }
 
-        $password_error = password_problem($new_password);
+        $password_error = passwordproblem($new_password);
         if ($password_error !== '') {
             $errors[] = $password_error;
         } elseif ($new_password !== $new_confirm) {
@@ -99,18 +99,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             redirect('dashboard/person');
         }
 
-        $full_name = post_text('full_name');
-        $email = post_text('email');
-        $phone = post_text('phone');
-        $born_typed = post_text('born');
+        $full_name = posttext('full_name');
+        $email = posttext('email');
+        $phone = posttext('phone');
+        $born_typed = posttext('born');
 
-        if (is_empty_value($full_name)) {
+        if (isemptyvalue($full_name)) {
             $errors[] = 'Please tell us your name.';
         } elseif (mb_strlen($full_name) > 160) {
             $errors[] = 'That name is too long. Please use 160 characters or fewer.';
         }
 
-        if (!is_valid_email($email)) {
+        if (!isvalidemail($email)) {
             $errors[] = 'Please type a real email address, for example name@example.com.';
         } elseif ($email !== $member['email']) {
             /* The address is the sign-in name, so no other account may use it.
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            so this page and the church profile can never disagree. It
            answers with the value for the column, an empty string for an
            empty box, or null for something that is not a birthday. */
-        $birthday = birthday_from_form($born_typed);
+        $birthday = birthdayfromform($born_typed);
         if ($birthday === null) {
             $errors[] = 'Please type your birthday as a real day, or leave the box empty.';
         }
@@ -170,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 unset($_SESSION['user_data']);
 
                 flash('success', 'Your details have been saved.');
-                redirect(member_url());
+                redirect(memberurl());
             }
 
             $errors[] = 'Your details could not be saved'
@@ -185,14 +185,14 @@ require_once __DIR__ . '/../partials/public/header.php';
 
     <section class="py-4 py-lg-5">
         <div class="container">
-            <?php page_header(
+            <?php pageheader(
                 'My details',
                 '',
-                [['Home', url('')], ['My account', member_url()], ['My details', null]]
+                [['Home', url('')], ['My account', memberurl()], ['My details', null]]
             ); ?>
 
-            <?php form_errors($errors); ?>
-            <?php show_flashes(); ?>
+            <?php formerrors($errors); ?>
+            <?php showflashes(); ?>
 
             <?php /* One card holds both. They are two separate submissions, so
                    each keeps its own form and its own button, and a heading -
@@ -216,7 +216,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                                 <h2 class="h5 mb-3">Your details</h2>
 
                                 <form method="post" action="<?php echo url('dashboard/profile'); ?>" novalidate>
-                                    <?php echo csrf_field(); ?>
+                                    <?php echo csrffield(); ?>
                                     <input type="hidden" name="form" value="details">
 
                                     <div class="mb-3">
@@ -265,7 +265,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                             <h2 class="h5 mt-4 mb-3">Change your password</h2>
 
                             <form method="post" action="<?php echo url('dashboard/profile'); ?>" novalidate>
-                                <?php echo csrf_field(); ?>
+                                <?php echo csrffield(); ?>
                                 <input type="hidden" name="form" value="password">
 
                                 <div class="mb-3">
@@ -301,7 +301,7 @@ require_once __DIR__ . '/../partials/public/header.php';
             </div>
 
             <p class="mt-4 mb-0">
-                <a href="<?php echo member_url(); ?>">
+                <a href="<?php echo memberurl(); ?>">
                     <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
                     Back to my account
                 </a>

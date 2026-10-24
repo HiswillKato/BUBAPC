@@ -17,7 +17,7 @@
  * decides which page they appear on. One thing sits on top of the roles: a
  * person filed under "Church Admins" is an administrator through that group
  * alone, whatever the role says, because the group is the church's own senior
- * list. is_admin() is the one place that reads it, so a church admin and a
+ * list. isadmin() is the one place that reads it, so a church admin and a
  * website admin share one kind of power.
  */
 
@@ -34,7 +34,7 @@ if (session_status() === PHP_SESSION_NONE) {
 /**
  * Is somebody logged into the website admin area?
  */
-function is_logged_in()
+function isloggedin()
 {
     return !empty($_SESSION['user_id']);
 }
@@ -46,11 +46,11 @@ function is_logged_in()
  * An account is a row in people with a password, so this is simply that row.
  * Two aliases: full_name is the person's name, and person_category is their group.
  */
-function current_user()
+function currentuser()
 {
     global $conn;
 
-    if (!is_logged_in()) {
+    if (!isloggedin()) {
         return [];
     }
 
@@ -74,7 +74,7 @@ function current_user()
        so they are signed out on the next thing they do. A switched off account
        is one with active at 0. */
     if (!$person || (int) $person['active'] !== 1) {
-        logout_user();
+        logoutuser();
         return [];
     }
 
@@ -90,9 +90,9 @@ function current_user()
  * to no page. Those two have nothing on the public site to edit, so they are
  * handed back an empty array, exactly as a person with no page always was.
  */
-function current_person($conn)
+function currentperson($conn)
 {
-    $person = current_user();
+    $person = currentuser();
 
     if ($person === [] || in_array($person['category'], ['member'], true)) {
         return [];
@@ -106,7 +106,7 @@ function current_person($conn)
  * is what separates a sign-in from a plain directory page. Used by the lists to
  * put an "Account" badge on the right rows.
  */
-function person_can_sign_in($person)
+function personcansignin($person)
 {
     return !empty($person['password']);
 }
@@ -118,9 +118,9 @@ function person_can_sign_in($person)
  * a website admin and a church admin both run the place. A church leader with
  * an ordinary account may not: the website is not theirs to close.
  */
-function may_bypass_maintenance()
+function maybypassmaintenance()
 {
-    return is_admin();
+    return isadmin();
 }
 
 /**
@@ -136,7 +136,7 @@ function may_bypass_maintenance()
  *
  * Roles that can access the admin panel.
  */
-function staff_roles()
+function staffroles()
 {
     return ['admin', 'church_admin', 'pastor', 'elder', 'minister', 'editor', 'leader'];
 }
@@ -152,9 +152,9 @@ function staff_roles()
  * is the church's own senior list, so reading it here is what folds the two
  * kinds of admin into one kind of power.
  */
-function is_admin()
+function isadmin()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
@@ -168,71 +168,71 @@ function is_admin()
  * from the cached user row, so this costs nothing after the first check on a
  * page.
  */
-function is_church_admin()
+function ischurchadmin()
 {
-    return (current_user()['person_category'] ?? '') === 'church_admin';
+    return (currentuser()['person_category'] ?? '') === 'church_admin';
 }
 
 /**
  * Is this person authorised to open the admin panel?
  */
-function is_leader()
+function isleader()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'leader';
 }
 
-function is_editor()
+function iseditor()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'editor';
 }
 
-function is_pastor()
+function ispastor()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'pastor';
 }
 
-function is_elder()
+function iselder()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'elder';
 }
 
-function is_minister()
+function isminister()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'minister';
 }
 
-function is_church_admin_role()
+function ischurchadminrole()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
     return $user['role'] === 'church_admin';
 }
 
-function has_full_access()
+function hasfullaccess()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
@@ -240,32 +240,32 @@ function has_full_access()
     return in_array($role, ['admin', 'church_admin', 'pastor', 'elder', 'minister'], true);
 }
 
-function can_manage_all_content()
+function canmanageallcontent()
 {
-    $role = current_user()['role'] ?? '';
-    return has_full_access() || in_array($role, ['editor'], true);
+    $role = currentuser()['role'] ?? '';
+    return hasfullaccess() || in_array($role, ['editor'], true);
 }
 
-function can_manage_users()
+function canmanageusers()
 {
-    $role = current_user()['role'] ?? '';
+    $role = currentuser()['role'] ?? '';
     return $role === 'admin';
 }
 
-function can_manage_settings()
+function canmanagesettings()
 {
-    $role = current_user()['role'] ?? '';
+    $role = currentuser()['role'] ?? '';
     return $role === 'admin';
 }
 
-function is_staff()
+function isstaff()
 {
-    $user = current_user();
+    $user = currentuser();
     if (!isset($user['role'])) {
         return false;
     }
 
-    return in_array($user['role'], staff_roles(), true);
+    return in_array($user['role'], staffroles(), true);
 }
 
 /**
@@ -279,7 +279,7 @@ function is_staff()
  * which reads worse in the bar and in emails and saves nothing, since the
  * redirect happens after the sign-in POST has already been saved.
  */
-function member_url()
+function memberurl()
 {
     return url('dashboard');
 }
@@ -298,9 +298,9 @@ function member_url()
  * Nobody signed in gets the login page. A member is sent to their own account page
  * and those who may access the admin panel to the admin panel.
  */
-function account_link()
+function accountlink()
 {
-    if (!is_logged_in()) {
+    if (!isloggedin()) {
         return [
             'url'   => url('login'),
             'label' => 'Login',
@@ -308,16 +308,16 @@ function account_link()
         ];
     }
 
-    if (is_staff()) {
+    if (isstaff()) {
         return [
-            'url'   => admin_url(),
+            'url'   => adminurl(),
             'label' => 'Admin',
             'icon'  => 'fa-shield-halved',
         ];
     }
 
     return [
-        'url'   => member_url(),
+        'url'   => memberurl(),
         'label' => 'My account',
         'icon'  => 'fa-user',
     ];
@@ -326,12 +326,12 @@ function account_link()
 /**
  * Send a visitor who is not logged in to the login page.
  */
-function require_login()
+function requirelogin()
 {
-    if (is_logged_in()) {
+    if (isloggedin()) {
         return;
     }
-    $_SESSION['login_redirect'] = current_page_path();
+    $_SESSION['login_redirect'] = currentpagepath();
     flash('info', 'Please log in to continue.');
     redirect('login');
 }
@@ -339,24 +339,24 @@ function require_login()
 /**
  * Only an administrator - a website or a church admin - may open this page.
  */
-function require_admin()
+function requireadmin()
 {
-    require_login();
-    if (!is_admin()) {
+    requirelogin();
+    if (!isadmin()) {
         flash('error', 'Only somebody with administrator access can open that page.');
-        redirect(admin_url());
+        redirect(adminurl());
     }
 }
 
 /**
  * Only authorised members may open the admin panel.
  */
-function require_staff()
+function requirestaff()
 {
-    require_login();
-    if (!is_staff()) {
+    requirelogin();
+    if (!isstaff()) {
         flash('error', 'The admin panel is for authorised members only.');
-        redirect(member_url());
+        redirect(memberurl());
     }
 }
 
@@ -371,16 +371,16 @@ function require_staff()
  *
  * $user is a row from the people table, not a list of typed-in values.
  */
-function sign_user_in($user)
+function signuserin($user)
 {
     global $conn;
 
     session_regenerate_id(true);
 
     $_SESSION['user_id'] = (int) $user['id'];
-    /* One row is what the session carries, and it is the row current_user()
+    /* One row is what the session carries, and it is the row currentuser()
        builds, not the raw login row handed in here. That row is the one that
-       knows the person's directory group, which is_admin() and is_staff() read. */
+       knows the person's directory group, which isadmin() and isstaff() read. */
     unset($_SESSION['user_data']);
     $_SESSION['logged_in_at'] = time();
 
@@ -390,26 +390,26 @@ function sign_user_in($user)
     $statement->execute();
     $statement->close();
 
-    /* The session is written first so that log_action() reads this person as
+    /* The session is written first so that logaction() reads this person as
        the account that signed in, rather than as the person who was signed in
        before. The line is written here rather than in login.php because a
        member registering and signing in arrives the same way. */
-    log_action($conn, 'user_signed_in', ($user['full_name'] ?? $user['name']) . ' signed in');
+    logaction($conn, 'user_signed_in', ($user['full_name'] ?? $user['name']) . ' signed in');
 }
 
 /**
  * Log the user out and destroy the session completely.
  */
-function logout_user()
+function logoutuser()
 {
     /* Written before the session is emptied, or there would be nobody left to
-       name. current_user() is safe to ask here: it is the same question the
+       name. currentuser() is safe to ask here: it is the same question the
        page asked a moment ago. */
     global $conn;
 
-    $user = current_user();
+    $user = currentuser();
     if ($user) {
-        log_action($conn, 'user_signed_out', $user['full_name'] . ' signed out');
+        logaction($conn, 'user_signed_out', $user['full_name'] . ' signed out');
     }
 
     $_SESSION = [];
@@ -430,7 +430,7 @@ function logout_user()
  * How many minutes are left before this name or IP can try again.
  * Returns 0 when the account is not locked.
  */
-function login_lockout_minutes($conn, $username)
+function loginlockoutminutes($conn, $username)
 {
     $minutes_ago = date('Y-m-d H:i:s', time() - (LOGIN_LOCK_MINUTES * 60));
 
@@ -457,7 +457,7 @@ function login_lockout_minutes($conn, $username)
 /**
  * Remember one login try, good or bad.
  */
-function login_record_attempt($conn, $username, $success)
+function loginrecordattempt($conn, $username, $success)
 {
     $now = date('Y-m-d H:i:s');
     $name = substr((string) $username, 0, 191);
@@ -471,17 +471,17 @@ function login_record_attempt($conn, $username, $success)
     $statement->close();
 
     /* Only the failures are written to the activity log. A successful sign in
-       is already recorded by sign_user_in(), which knows the real name, so
+       is already recorded by signuserin(), which knows the real name, so
        logging both would double-count every honest sign-in on the screen. */
     if (!$success) {
-        log_action($conn, 'login_refused', 'Wrong password for "' . $name . '"');
+        logaction($conn, 'login_refused', 'Wrong password for "' . $name . '"');
     }
 }
 
 /**
  * Clear the wrong tries for a name after a correct login.
  */
-function login_clear_attempts($conn, $username)
+function loginclearattempts($conn, $username)
 {
     $name = (string) $username;
     $statement = $conn->prepare("DELETE FROM login_attempts WHERE username = ?");
@@ -502,7 +502,7 @@ function login_clear_attempts($conn, $username)
  * needs the bare token, and every form needs the box. Keeping them apart would
  * only invite a form that forgets one half of it.
  */
-function csrf_field()
+function csrffield()
 {
     if (empty($_SESSION['csrf_token'])) {
         $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -515,7 +515,7 @@ function csrf_field()
  * Check the token that came back with a POST request.
  * If it does not match, the request is stopped.
  */
-function verify_csrf()
+function verifycsrf()
 {
     $token_from_form = $_POST['csrf_token'] ?? '';
     $token_from_session = $_SESSION['csrf_token'] ?? '';
@@ -541,7 +541,7 @@ function verify_csrf()
  * Read a text field from $_POST and remove any extra spaces.
  * Anything printed later still goes through e().
  */
-function post_text($field_name)
+function posttext($field_name)
 {
     return isset($_POST[$field_name]) ? trim((string) $_POST[$field_name]) : '';
 }
@@ -549,7 +549,7 @@ function post_text($field_name)
 /**
  * Read a checkbox. Returns 1 when it is ticked and 0 when it is not.
  */
-function post_checkbox($field_name)
+function postcheckbox($field_name)
 {
     return isset($_POST[$field_name]) ? 1 : 0;
 }
@@ -557,7 +557,7 @@ function post_checkbox($field_name)
 /**
  * Is a value empty? Used when checking a form before saving.
  */
-function is_empty_value($value)
+function isemptyvalue($value)
 {
     return trim((string) $value) === '';
 }
@@ -565,7 +565,7 @@ function is_empty_value($value)
 /**
  * Is this a real looking email address?
  */
-function is_valid_email($email)
+function isvalidemail($email)
 {
     return filter_var((string) $email, FILTER_VALIDATE_EMAIL) !== false;
 }
@@ -583,11 +583,11 @@ if (!defined('BUBAPC_INSTALLER') && !defined('BUBAPC_SKIP_MAINTENANCE')) {
     // A table check keeps a half installed website working.
     $tables_result = $conn->query("SHOW TABLES LIKE 'settings'");
     if ($tables_result && $tables_result->num_rows > 0) {
-        $maintenance_on = is_maintenance_mode($conn);
+        $maintenance_on = ismaintenancemode($conn);
     }
 
-    if ($maintenance_on && !may_bypass_maintenance()) {
-        $maintenance_message = setting_get($conn, 'maintenance_message', '');
+    if ($maintenance_on && !maybypassmaintenance()) {
+        $maintenance_message = settingget($conn, 'maintenance_message', '');
         if (trim($maintenance_message) === '') {
             $maintenance_message = 'We are carrying out some work on the website. Please check back shortly.';
         }
@@ -616,13 +616,13 @@ if (!defined('BUBAPC_INSTALLER') && !defined('BUBAPC_SKIP_MAINTENANCE')) {
  * TOKEN_RESET_HOURS; a token that sits around unused past that becomes a row
  * that can never match again, which is harmless - tokens is safe to empty.
  */
-function token_issue($conn, $user_id)
+function tokenissue($conn, $user_id)
 {
     $raw = bin2hex(random_bytes(32));
     $hash = hash('sha256', $raw);
 
     /* The expiry is worked out by the DATABASE, not by PHP, on purpose.
-       token_row() compares it with the database's own NOW(), and on this
+       tokenrow() compares it with the database's own NOW(), and on this
        machine those two clocks are three hours apart: PHP runs in UTC while
        MariaDB answers in local time. An expiry calculated in PHP would
        therefore be written as a time already in the past, and every link
@@ -654,7 +654,7 @@ function token_issue($conn, $user_id)
  * Returns the tokens row (with user, id, ...) or null. The caller decides
  * what an invalid token means; this function only decides validity.
  */
-function token_row($conn, $raw_token)
+function tokenrow($conn, $raw_token)
 {
     $hash = hash('sha256', (string) $raw_token);
 
@@ -672,7 +672,7 @@ function token_row($conn, $raw_token)
 /**
  * Mark a token as spent, so it can never be used again.
  */
-function token_use($conn, $token_id)
+function tokenuse($conn, $token_id)
 {
     $statement = $conn->prepare("UPDATE tokens SET used = NOW() WHERE id = ? AND used IS NULL");
     $token_id = (int) $token_id;

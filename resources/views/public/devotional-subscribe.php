@@ -19,7 +19,7 @@ $wants_json = isset($_SERVER['HTTP_X_REQUESTED_WITH'])
 /**
  * Finish the request, as JSON or as a page.
  */
-function devotional_finish($wants_json, $ok, $message)
+function devotionalfinish($wants_json, $ok, $message)
 {
     if ($wants_json) {
         header('Content-Type: application/json; charset=utf-8');
@@ -32,15 +32,15 @@ function devotional_finish($wants_json, $ok, $message)
 }
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    devotional_finish($wants_json, false, 'The devotional form has to be submitted from a page.');
+    devotionalfinish($wants_json, false, 'The devotional form has to be submitted from a page.');
 }
 
-verify_csrf();
+verifycsrf();
 
-$email = post_text('email');
+$email = posttext('email');
 
-if (!is_valid_email($email)) {
-    devotional_finish($wants_json, false, 'Please type a real email address, for example name@example.com.');
+if (!isvalidemail($email)) {
+    devotionalfinish($wants_json, false, 'Please type a real email address, for example name@example.com.');
 }
 
 $email = mb_substr($email, 0, 190);
@@ -56,7 +56,7 @@ $existing = $result->fetch_assoc();
 $statement->close();
 
 if ($existing) {
-    devotional_finish(
+    devotionalfinish(
         $wants_json,
         true,
         (int) $existing['status'] === 1
@@ -70,7 +70,7 @@ $statement->bind_param('s', $email);
 
 if (!$statement->execute()) {
     $statement->close();
-    devotional_finish($wants_json, false, 'Something went wrong. Please try again in a moment.');
+    devotionalfinish($wants_json, false, 'Something went wrong. Please try again in a moment.');
 }
 
 $statement->close();
@@ -78,8 +78,8 @@ $statement->close();
 /* Not the whole address, only enough to recognise it: an activity log that
    printed every subscriber's address would be a second copy of the list in a
    table nobody thinks about as personal. */
-log_action($conn, 'devotional_added', 'An address joined the devotional list: '
+logaction($conn, 'devotional_added', 'An address joined the devotional list: '
     . substr($email, 0, 3) . str_repeat('*', max(0, min(6, mb_strlen($email) - 3)))
     . substr($email, -2));
 
-devotional_finish($wants_json, true, 'Thank you. The daily devotional will find you.');
+devotionalfinish($wants_json, true, 'Thank you. The daily devotional will find you.');

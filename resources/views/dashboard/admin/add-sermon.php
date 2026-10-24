@@ -15,11 +15,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'sermons';
 
 $sermon_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$sermon = $sermon_id ? admin_row($conn, 'sermons', $sermon_id) : [];
+$sermon = $sermon_id ? adminrow($conn, 'sermons', $sermon_id) : [];
 
 if ($sermon_id && !$sermon) {
     flash('error', 'That sermon is no longer here.');
-    redirect(admin_url('sermons'));
+    redirect(adminurl('sermons'));
 }
 
 $is_new = $sermon_id === 0;
@@ -38,24 +38,24 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $values['title'] = post_text('title');
-    $values['preacher'] = post_text('preacher');
-    $values['description'] = post_text('description');
-    $values['scripture'] = post_text('scripture');
-    $values['video_url'] = post_text('video_url');
+    $values['title'] = posttext('title');
+    $values['preacher'] = posttext('preacher');
+    $values['description'] = posttext('description');
+    $values['scripture'] = posttext('scripture');
+    $values['video_url'] = posttext('video_url');
     $values['status'] = ($_POST['status'] ?? '') === 'published' ? 'published' : 'draft';
 
-    admin_check_required($values['title'], 'The title', $errors);
-    admin_check_required($values['preacher'], 'The preacher', $errors);
-    $values['sermon_date'] = admin_check_moment($_POST['sermon_date'] ?? '', 'The date', $errors);
+    admincheckrequired($values['title'], 'The title', $errors);
+    admincheckrequired($values['preacher'], 'The preacher', $errors);
+    $values['sermon_date'] = admincheckmoment($_POST['sermon_date'] ?? '', 'The date', $errors);
 
     /* A pasted YouTube address is checked here rather than in the browser, so
        a bad address is caught while the editor is still on the form. Asking
        for the embed address and being handed nothing back means it was not a
        YouTube link at all. */
-    if ($values['video_url'] !== '' && youtube_embed_url($values['video_url']) === '') {
+    if ($values['video_url'] !== '' && youtubeembedurl($values['video_url']) === '') {
         $errors[] = 'The video address does not look like a YouTube link. It should look like '
             . 'https://www.youtube.com/watch?v=... and nothing else.';
     }
@@ -88,10 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['status']
             );
             $statement->execute();
-            $sermon_id = (int) db_last_id($conn);
+            $sermon_id = (int) dblastid($conn);
             $statement->close();
 
-            log_action($conn, 'sermon_created', 'The sermon "' . $values['title'] . '"');
+            logaction($conn, 'sermon_created', 'The sermon "' . $values['title'] . '"');
             flash('success', 'The sermon "' . $values['title'] . '" has been added.');
         } else {
             $statement = $conn->prepare(
@@ -115,17 +115,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            log_action($conn, 'sermon_updated', 'The sermon "' . $values['title'] . '"');
+            logaction($conn, 'sermon_updated', 'The sermon "' . $values['title'] . '"');
             flash('success', 'The sermon "' . $values['title'] . '" has been saved.');
         }
 
-        redirect(admin_url('sermons'));
+        redirect(adminurl('sermons'));
     }
 }
 
 $page_title = $is_new ? 'Add sermon' : 'Edit sermon';
 $page_heading = $is_new ? 'Add a sermon' : 'Edit sermon';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('sermons') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('sermons') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -134,29 +134,29 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php admin_errors($errors); ?>
+            <?php adminerrors($errors); ?>
 
             <form method="post" novalidate>
-                <?php echo csrf_field(); ?>
+                <?php echo csrffield(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admin_text_field('title', 'Title', $values['title'], '', 'A Voice, Not a Volume');
-                        admin_text_field('preacher', 'Preacher', $values['preacher'], '', 'Bishop Samuel Okello');
-                        admin_date_field('sermon_date', 'Date preached', $values['sermon_date']);
-                        admin_text_field('scripture', 'Scripture', $values['scripture'], 'For example Isaiah 40:1-5', 'Isaiah 40:1-5');
-                        admin_textarea('description', 'Notes about this message', $values['description'],
+                        admintextfield('title', 'Title', $values['title'], '', 'A Voice, Not a Volume');
+                        admintextfield('preacher', 'Preacher', $values['preacher'], '', 'Bishop Samuel Okello');
+                        admindatefield('sermon_date', 'Date preached', $values['sermon_date']);
+                        admintextfield('scripture', 'Scripture', $values['scripture'], 'For example Isaiah 40:1-5', 'Isaiah 40:1-5');
+                        admintextarea('description', 'Notes about this message', $values['description'],
                             'Leave an empty line between paragraphs. Shown on the website under the video.', 10);
                         ?>
 
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">Recording</h2>
                         <?php
-                        admin_text_field('video_url', 'YouTube address', $values['video_url'],
+                        admintextfield('video_url', 'YouTube address', $values['video_url'],
                             'Paste the video\'s web address from YouTube. Leave empty if there is no recording.',
                             'https://www.youtube.com/watch?v=');
                         ?>
-                        <?php $preview_embed_url = youtube_embed_url($values['video_url']); ?>
+                        <?php $preview_embed_url = youtubeembedurl($values['video_url']); ?>
                         <?php if ($preview_embed_url !== ''): ?>
                             <div class="ratio ratio-16x9 mb-3">
                                 <iframe src="<?php echo e($preview_embed_url); ?>"
@@ -167,8 +167,8 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <?php endif; ?>
 
                         <?php
-                        admin_status_field($values['status']);
-                        admin_form_buttons(admin_url('sermons'), $is_new ? 'Add sermon' : 'Save changes');
+                        adminstatusfield($values['status']);
+                        adminformbuttons(adminurl('sermons'), $is_new ? 'Add sermon' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -181,7 +181,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <p class="small text-body-secondary mb-3">
                             It comes off the website at once. This cannot be undone.
                         </p>
-                        <?php echo admin_delete_button('sermons', $sermon_id, 'the sermon "' . $sermon['title'] . '"'); ?>
+                        <?php echo admindeletebutton('sermons', $sermon_id, 'the sermon "' . $sermon['title'] . '"'); ?>
                     </div>
                 </div>
             <?php endif; ?>

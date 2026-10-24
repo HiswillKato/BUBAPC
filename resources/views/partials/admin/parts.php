@@ -25,15 +25,15 @@
 
    Two checks that look like belt and braces, because the one that is easy to
    forget is the one that matters. A church member who signed up on
-   register.php is a real account that can sign in, so require_login() is not
+   register.php is a real account that can sign in, so requirelogin() is not
    enough of a test for "may manage this website" - the page's saving and
    deleting would run for a member before the shell was ever reached.
 
-   Pages therefore do not call require_login() themselves, and this line is the
+   Pages therefore do not call requirelogin() themselves, and this line is the
    reason they do not need to. If you write a new admin page, load
    admin-parts.php (or admin-header.php) and you are covered.
  */
-require_staff();
+requirestaff();
 
 /* -------------------------------------------------------------------------
    0b. THE MENU IN THE SIDEBAR
@@ -51,9 +51,9 @@ require_staff();
  * the page you are on is highlighted. admin_only rows are hidden from an
  * editor who is authorised.
  */
-function admin_menu()
+function adminmenu()
 {
-    $dashboard = ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fa-gauge-high', 'url' => admin_url()];
+    $dashboard = ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'fa-gauge-high', 'url' => adminurl()];
     $content = [
         ['key' => 'sermons', 'label' => 'Sermons', 'icon' => 'fa-church'],
         ['key' => 'devotionals', 'label' => 'Devotionals', 'icon' => 'fa-scroll'],
@@ -79,19 +79,19 @@ function admin_menu()
     ];
 
     $menu = [$dashboard];
-    $role = current_user()['role'] ?? '';
-    $full = has_full_access();
+    $role = currentuser()['role'] ?? '';
+    $full = hasfullaccess();
     foreach (['Content' => $content, 'Church' => $church] as $group => $rows) {
         foreach ($rows as $row) {
             $row['group'] = $group;
-            $row['url'] = admin_url($row['key']);
+            $row['url'] = adminurl($row['key']);
             $menu[] = $row;
         }
     }
     if ($full || $role === 'editor') {
         foreach ($inbox as $row) {
             $row['group'] = 'Inbox';
-            $row['url'] = admin_url($row['key']);
+            $row['url'] = adminurl($row['key']);
             $menu[] = $row;
         }
         foreach ($system as $row) {
@@ -99,7 +99,7 @@ function admin_menu()
                 continue;
             }
             $row['group'] = 'System';
-            $row['url'] = admin_url($row['key']);
+            $row['url'] = adminurl($row['key']);
             $menu[] = $row;
         }
     }
@@ -114,9 +114,9 @@ function admin_menu()
 /**
  * A small Edit button for one row.
  */
-function admin_edit_button($module, $id)
+function admineditbutton($module, $id)
 {
-    return '<a class="btn btn-sm btn-soft" href="' . admin_url($module . '/form.php?id=' . (int) $id) . '">'
+    return '<a class="btn btn-sm btn-soft" href="' . adminurl($module . '/form.php?id=' . (int) $id) . '">'
         . '<i class="fa-solid fa-pen" aria-hidden="true"></i><span class="visually-hidden">Edit</span></a>';
 }
 
@@ -124,15 +124,15 @@ function admin_edit_button($module, $id)
  * A Delete button. It is a POST form with a CSRF token, never a link, and
  * the browser asks the admin to confirm first.
  */
-function admin_delete_button($module, $id, $record_label = 'this record')
+function admindeletebutton($module, $id, $record_label = 'this record')
 {
     $message = 'Delete ' . $record_label . '? This cannot be undone.';
     if ($record_label === 'this record') {
         $message = 'Delete this record? This cannot be undone.';
     }
 
-    return '<form method="post" action="' . admin_url($module) . '" class="d-inline">'
-        . csrf_field()
+    return '<form method="post" action="' . adminurl($module) . '" class="d-inline">'
+        . csrffield()
         . '<input type="hidden" name="action" value="delete">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
         . '<button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="' . e($message) . '">'
@@ -152,7 +152,7 @@ function admin_delete_button($module, $id, $record_label = 'this record')
  *               the same function; only the words the module's list page is
  *               listening for differ.
  */
-function admin_toggle_button($module, $id, $current, $turn_on_label = 'Show', $turn_off_label = 'Hide', $kind = 'active')
+function admintogglebutton($module, $id, $current, $turn_on_label = 'Show', $turn_off_label = 'Hide', $kind = 'active')
 {
     $is_status = $kind === 'status';
     $turn_on = $is_status ? $current === 'published' : (int) $current === 1;
@@ -161,8 +161,8 @@ function admin_toggle_button($module, $id, $current, $turn_on_label = 'Show', $t
     $icon = $turn_on ? 'fa-eye-slash' : ($is_status ? 'fa-paper-plane' : 'fa-eye');
     $class = $turn_on ? 'btn-outline-secondary' : 'btn-soft';
 
-    return '<form method="post" action="' . admin_url($module) . '" class="d-inline">'
-        . csrf_field()
+    return '<form method="post" action="' . adminurl($module) . '" class="d-inline">'
+        . csrffield()
         . '<input type="hidden" name="action" value="' . ($is_status ? 'toggle_status' : 'toggle') . '">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
         . '<button type="submit" class="btn btn-sm ' . e($class) . '">'
@@ -176,7 +176,7 @@ function admin_toggle_button($module, $id, $current, $turn_on_label = 'Show', $t
  * Each button function returns a bare button, and two bare buttons printed one
  * after another have nothing between them, so they sit flush against each other
  * and read as one lumpy shape. A flex row with a gap is the same answer
- * Bootstrap gives .btn-group. admin_row_actions() calls this for you; a page
+ * Bootstrap gives .btn-group. adminrowactions() calls this for you; a page
  * that builds its own row of buttons - the messages, subscribers and users
  * screens - calls it round its own markup so it cannot forget.
  *
@@ -184,7 +184,7 @@ function admin_toggle_button($module, $id, $current, $turn_on_label = 'Show', $t
  * as a button on its own line inside a card. It takes a Bootstrap justify
  * class, so it stays 'justify-content-end' (the table default) everywhere else.
  */
-function admin_action_group($buttons, $justify = 'justify-content-end')
+function adminactiongroup($buttons, $justify = 'justify-content-end')
 {
     return '<div class="d-flex gap-2 ' . e($justify) . '">' . $buttons . '</div>';
 }
@@ -197,19 +197,19 @@ function admin_action_group($buttons, $justify = 'justify-content-end')
  * ask to be flipped, and which one is meant is decided by the page when it
  * builds the table rather than by a function per module.
  */
-function admin_row_actions($module, $id, $options = [])
+function adminrowactions($module, $id, $options = [])
 {
-    $actions = admin_edit_button($module, $id);
+    $actions = admineditbutton($module, $id);
 
     if (array_key_exists('status', $options)) {
-        $actions .= admin_toggle_button($module, $id, $options['status'], 'Publish', 'Unpublish', 'status');
+        $actions .= admintogglebutton($module, $id, $options['status'], 'Publish', 'Unpublish', 'status');
     } elseif (array_key_exists('active', $options)) {
-        $actions .= admin_toggle_button($module, $id, $options['active']);
+        $actions .= admintogglebutton($module, $id, $options['active']);
     }
 
-    $actions .= admin_delete_button($module, $id, $options['label'] ?? 'this record');
+    $actions .= admindeletebutton($module, $id, $options['label'] ?? 'this record');
 
-    return admin_action_group($actions);
+    return adminactiongroup($actions);
 }
 
 /* -------------------------------------------------------------------------
@@ -219,12 +219,12 @@ function admin_row_actions($module, $id, $options = [])
 /**
  * Print a search box and a status drop down for an admin list page.
  *
- * $filter_action  where the form goes, for example admin_url('events')
+ * $filter_action  where the form goes, for example adminurl('events')
  * $filter_q       the search text that is already in the URL
  * $filter_status  the status that is already in the URL
  * $status_options  array of value => label, for example ['published' => 'Published']
  */
-function admin_filter_bar($filter_action, $filter_q = '', $filter_status = '', $status_options = [])
+function adminfilterbar($filter_action, $filter_q = '', $filter_status = '', $status_options = [])
 {
     $any_option = '<option value="">All</option>';
     ?>
@@ -269,20 +269,20 @@ function admin_filter_bar($filter_action, $filter_q = '', $filter_status = '', $
 /**
  * Print the "Showing 1 to 10 of 40" line and the page buttons.
  *
- * The line of numbers is printed by render_result_count() in app/functions.php,
+ * The line of numbers is printed by renderresultcount() in app/functions.php,
  * the same one the public lists use - only the words for an empty list differ,
  * so there is one piece of wording to keep right. This wrapper exists because
  * the two always travel together on an admin page, and writing two calls in
  * eleven modules would be a chance to forget the second one.
  */
-function admin_result_bar($pagination, $query = [], $label = 'records')
+function adminresultbar($pagination, $query = [], $label = 'records')
 {
     ?>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-        <?php render_result_count($pagination, $label, 'No ' . $label . ' found.'); ?>
+        <?php renderresultcount($pagination, $label, 'No ' . $label . ' found.'); ?>
     </div>
     <?php
-    render_pagination($pagination, $query);
+    renderpagination($pagination, $query);
 }
 
 /* -------------------------------------------------------------------------
@@ -292,7 +292,7 @@ function admin_result_bar($pagination, $query = [], $label = 'records')
 /**
  * Print the Save and Cancel buttons at the bottom of an admin form.
  */
-function admin_form_buttons($cancel_url, $save_label = 'Save')
+function adminformbuttons($cancel_url, $save_label = 'Save')
 {
     ?>
     <div class="d-flex flex-wrap gap-2 mt-4">
@@ -310,18 +310,18 @@ function admin_form_buttons($cancel_url, $save_label = 'Save')
  * $field_name   the name of the file input, for example 'poster'
  * $label        the words shown above the box
  * $current      the image already saved in the database, or ''
- * $hint         small text under the box, or null for image_hint()
+ * $hint         small text under the box, or null for imagehint()
  */
-function admin_image_field($field_name, $label, $current = '', $hint = null)
+function adminimagefield($field_name, $label, $current = '', $hint = null)
 {
-    $hint = $hint ?? image_hint();
+    $hint = $hint ?? imagehint();
     ?>
     <div class="mb-3">
         <label class="form-label" for="<?php echo e($field_name); ?>"><?php echo e($label); ?></label>
 
         <?php if ($current): ?>
             <div class="d-flex align-items-center gap-3 p-2 border rounded-3 mb-2 bg-body-tertiary">
-                <img src="<?php echo upload_url($current); ?>" alt="" width="84" height="84"
+                <img src="<?php echo uploadurl($current); ?>" alt="" width="84" height="84"
                      class="rounded-3 object-fit-cover">
                 <span class="small text-body-secondary">This is the image that is saved now. Choosing a new file replaces it.</span>
             </div>
@@ -362,9 +362,9 @@ function admin_image_field($field_name, $label, $current = '', $hint = null)
 /**
  * Print the list of things that went wrong, at the top of a form.
  */
-function admin_errors($errors)
+function adminerrors($errors)
 {
-    form_errors($errors);
+    formerrors($errors);
 }
 
 /**
@@ -381,7 +381,7 @@ function admin_errors($errors)
  * stands and never escaped, because every field below builds it from its own
  * name and value through e().
  */
-function admin_field($name, $label, $control_html, $help = '', $labelled = true)
+function adminfield($name, $label, $control_html, $help = '', $labelled = true)
 {
     ?>
     <div class="mb-3">
@@ -401,14 +401,14 @@ function admin_field($name, $label, $control_html, $help = '', $labelled = true)
 /**
  * One labelled text box.
  */
-function admin_text_field($name, $label, $value = '', $help = '', $placeholder = '', $extra = '')
+function admintextfield($name, $label, $value = '', $help = '', $placeholder = '', $extra = '')
 {
     $control = '<input type="text" class="form-control" id="' . e($name) . '" name="' . e($name) . '"'
         . ' value="' . e($value) . '"'
         . ($placeholder !== '' ? ' placeholder="' . e($placeholder) . '"' : '')
         . ' ' . $extra . '>';
 
-    admin_field($name, $label, $control, $help);
+    adminfield($name, $label, $control, $help);
 }
 
 /**
@@ -420,18 +420,18 @@ function admin_text_field($name, $label, $value = '', $help = '', $placeholder =
  * while it was being written, and a person reads their own words for meaning,
  * not for alignment. Nothing typed into one of these is code.
  */
-function admin_textarea($name, $label, $value = '', $help = '', $rows = 8)
+function admintextarea($name, $label, $value = '', $help = '', $rows = 8)
 {
     $control = '<textarea class="form-control" id="' . e($name) . '" name="' . e($name) . '"'
         . ' rows="' . (int) $rows . '">' . e($value) . '</textarea>';
 
-    admin_field($name, $label, $control, $help);
+    adminfield($name, $label, $control, $help);
 }
 
 /**
  * A drop down. $options is an array of value => label.
  */
-function admin_select($name, $label, $options, $value = '', $help = '')
+function adminselect($name, $label, $options, $value = '', $help = '')
 {
     $control = '<select class="form-select" id="' . e($name) . '" name="' . e($name) . '">';
     foreach ($options as $option_value => $option_label) {
@@ -441,17 +441,17 @@ function admin_select($name, $label, $options, $value = '', $help = '')
     }
     $control .= '</select>';
 
-    admin_field($name, $label, $control, $help);
+    adminfield($name, $label, $control, $help);
 }
 
 /**
  * A single tick box, for the is_active columns.
  *
  * The label sits beside the box rather than above it, so this one does not use
- * admin_field()'s frame - a switch with a caption floating over it looks like a
+ * adminfield()'s frame - a switch with a caption floating over it looks like a
  * form that has lost something.
  */
-function admin_checkbox($name, $label, $checked = false, $help = '')
+function admincheckbox($name, $label, $checked = false, $help = '')
 {
     ?>
     <div class="mb-3">
@@ -470,19 +470,19 @@ function admin_checkbox($name, $label, $checked = false, $help = '')
 /**
  * A date box.
  */
-function admin_date_field($name, $label, $value = '', $help = '')
+function admindatefield($name, $label, $value = '', $help = '')
 {
-    admin_text_field($name, $label, $value, $help, '', 'type="date"');
+    admintextfield($name, $label, $value, $help, '', 'type="date"');
 }
 
 /**
  * A time box. The database keeps TIME, so the box sends 09:00 and MySQL
  * stores 09:00:00.
  */
-function admin_time_field($name, $label, $value = '', $help = '')
+function admintimefield($name, $label, $value = '', $help = '')
 {
     $value = substr((string) $value, 0, 5);
-    admin_text_field($name, $label, $value, $help, '', 'type="time"');
+    admintextfield($name, $label, $value, $help, '', 'type="time"');
 }
 
 /**
@@ -496,9 +496,9 @@ function admin_time_field($name, $label, $value = '', $help = '')
  *
  * $selected_id  the leader_id already saved, or 0
  * $typed_name   the name already typed in, or ''
- * $choices      the result of leader_choices($conn)
+ * $choices      the result of leaderchoices($conn)
  */
-function admin_leader_field($selected_id, $typed_name, $choices, $help = '')
+function adminleaderfield($selected_id, $typed_name, $choices, $help = '')
 {
     $none = 0;
     $options = [$none => 'Not listed on the website'];
@@ -537,7 +537,7 @@ function admin_leader_field($selected_id, $typed_name, $choices, $help = '')
  * Print the published / draft choice. It is two buttons rather than a drop down
  * because it is the one thing an editor changes most often.
  */
-function admin_status_field($value = 'published')
+function adminstatusfield($value = 'published')
 {
     $control = '<div class="btn-group w-100" role="group" aria-label="Status">';
     foreach (['published' => 'Published', 'draft' => 'Draft'] as $option => $label) {
@@ -550,7 +550,7 @@ function admin_status_field($value = 'published')
 
     /* $labelled is false because a row of buttons is not one control that a
        single "for" can point at, so it gets a heading rather than a label. */
-    admin_field('status', 'Status', $control, 'A draft is saved but nobody can see it on the website.', false);
+    adminfield('status', 'Status', $control, 'A draft is saved but nobody can see it on the website.', false);
 }
 
 /* -------------------------------------------------------------------------
@@ -562,7 +562,7 @@ function admin_status_field($value = 'published')
  * page, never from a browser, but the list is here anyway so that no page can
  * ask for a table that does not belong to it.
  */
-function admin_table_allowed($table)
+function admintableallowed($table)
 {
     return in_array($table, [
         'events', 'devotionals', 'sermons', 'announcements', 'programs', 'people',
@@ -579,10 +579,10 @@ function admin_table_allowed($table)
  * through the module's own list page, so the order can be fixed without
  * opening a form for each row.
  */
-function admin_order_field($module, $id, $value)
+function adminorderfield($module, $id, $value)
 {
-    return '<form method="post" action="' . admin_url($module) . '" class="d-inline-block">'
-        . csrf_field()
+    return '<form method="post" action="' . adminurl($module) . '" class="d-inline-block">'
+        . csrffield()
         . '<input type="hidden" name="action" value="set_order">'
         . '<input type="hidden" name="id" value="' . (int) $id . '">'
         . '<label class="visually-hidden" for="order-' . (int) $id . '">Order</label>'
@@ -596,9 +596,9 @@ function admin_order_field($module, $id, $value)
  * Find one row for the edit form. Returns an empty array when there is no such
  * row, which is what happens when a stale bookmark is followed.
  */
-function admin_row($conn, $table, $id)
+function adminrow($conn, $table, $id)
 {
-    if (!admin_table_allowed($table)) {
+    if (!admintableallowed($table)) {
         return [];
     }
 
@@ -616,9 +616,9 @@ function admin_row($conn, $table, $id)
 /**
  * Say what is missing, without stopping the form from being shown again.
  */
-function admin_check_required($value, $label, &$errors)
+function admincheckrequired($value, $label, &$errors)
 {
-    if (is_empty_value($value)) {
+    if (isemptyvalue($value)) {
         $errors[] = $label . ' is needed.';
         return false;
     }
@@ -646,7 +646,7 @@ function admin_check_required($value, $label, &$errors)
  * Returns '' when there is a problem, after adding a line to $errors, so the
  * form is shown again with the words still in the boxes.
  */
-function admin_check_moment($value, $label, &$errors, $kind = 'date', $needed = true)
+function admincheckmoment($value, $label, &$errors, $kind = 'date', $needed = true)
 {
     $value = trim((string) $value);
 
@@ -679,7 +679,7 @@ function admin_check_moment($value, $label, &$errors, $kind = 'date', $needed = 
  * up in the table itself. 0 is the "not in one" entry and is passed straight
  * back, which is why the column defaults to 0 rather than NULL.
  */
-function admin_check_group_choice($conn, $table, $id, $label, &$errors)
+function admincheckgroupchoice($conn, $table, $id, $label, &$errors)
 {
     $id = (int) $id;
 
@@ -687,7 +687,7 @@ function admin_check_group_choice($conn, $table, $id, $label, &$errors)
         return 0;
     }
 
-    if (!admin_table_allowed($table)) {
+    if (!admintableallowed($table)) {
         $errors[] = 'That choice was not one of the list.';
         return 0;
     }
@@ -715,7 +715,7 @@ function admin_check_group_choice($conn, $table, $id, $label, &$errors)
  * four digit year between 1900 and the year after next is refused, so a stray
  * full stop cannot end up in the column and quietly sort the list wrongly.
  */
-function admin_check_year($value, $label, &$errors)
+function admincheckyear($value, $label, &$errors)
 {
     $value = trim((string) $value);
 

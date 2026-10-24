@@ -21,14 +21,14 @@
 
 require_once __DIR__ . '/../../../app/init.php';
 
-require_login();
+requirelogin();
 
 /* An account with no directory page behind it - a website admin, or a member
    who signed up themselves - has nothing to edit here, so they are sent back
    to the account page rather than shown an empty form. */
-$person = current_person($conn);
+$person = currentperson($conn);
 if (!$person) {
-    redirect(member_url());
+    redirect(memberurl());
 }
 
 $errors = [];
@@ -43,32 +43,32 @@ $values = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $values['name'] = post_text('name');
-    $values['email'] = post_text('email');
-    $values['phone'] = post_text('phone');
-    $values['born'] = post_text('born');
-    $values['bio'] = post_text('bio');
-    $values['testimony'] = post_text('testimony');
+    $values['name'] = posttext('name');
+    $values['email'] = posttext('email');
+    $values['phone'] = posttext('phone');
+    $values['born'] = posttext('born');
+    $values['bio'] = posttext('bio');
+    $values['testimony'] = posttext('testimony');
 
     /* One helper decides what a real birthday looks like for both forms
        that ask for one, so this page and the account page can never
        disagree. It answers with the value for the column, an empty
        string for an empty box, or null for something that is not a
        birthday at all. */
-    $birthday = birthday_from_form($values['born']);
+    $birthday = birthdayfromform($values['born']);
     if ($birthday === null) {
         $errors[] = 'Please type your birthday as a real day, or leave the box empty.';
     }
 
-    if (is_empty_value($values['name'])) {
+    if (isemptyvalue($values['name'])) {
         $errors[] = 'Please tell us your name.';
     } elseif (mb_strlen($values['name']) > 160) {
         $errors[] = 'That name is too long. Please use 160 characters or fewer.';
     }
 
-    if (!is_valid_email($values['email'])) {
+    if (!isvalidemail($values['email'])) {
         $errors[] = 'Please type a real email address, for example name@example.com.';
     } elseif ($values['email'] !== $person['email']) {
         /* The address is also the sign-in name, so no other account may use
@@ -88,9 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!$errors) {
-        $image = save_image(
+        $image = saveimage(
             $_FILES['image'] ?? null,
-            post_checkbox('remove_image'),
+            postcheckbox('remove_image'),
             'people',
             $person['image']
         );
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message .= ' The picture was not changed: ' . $image['error'];
         }
 
-        log_action($conn, 'person_self_updated', $values['name']);
+        logaction($conn, 'person_self_updated', $values['name']);
         flash('success', $message);
         redirect('dashboard/person');
     }
@@ -151,20 +151,20 @@ require_once __DIR__ . '/../partials/public/header.php';
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 col-md-9 col-lg-8">
-                    <?php page_header(
+                    <?php pageheader(
                         'My church profile',
                         'The page the church shows about you.',
-                        [['Home', url('')], ['My account', member_url()], ['My church profile', null]]
+                        [['Home', url('')], ['My account', memberurl()], ['My church profile', null]]
                     ); ?>
 
-                    <?php form_errors($errors); ?>
-                    <?php show_flashes(); ?>
+                    <?php formerrors($errors); ?>
+                    <?php showflashes(); ?>
 
                     <div class="card border-0 shadow rounded-4">
                         <div class="card-body p-4 p-md-5">
                             <form method="post" action="<?php echo url('dashboard/person'); ?>"
                                   enctype="multipart/form-data" novalidate>
-                                <?php echo csrf_field(); ?>
+                                <?php echo csrffield(); ?>
 
                                 <div class="d-flex flex-column flex-sm-row align-items-sm-center gap-3 mb-4">
                                     <?php echo avatar($person['image'], $person['name'], 72); ?>
@@ -174,7 +174,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                                         <input type="file" class="form-control" id="image" name="image"
                                                accept="image/jpeg,image/png,image/webp">
                                         <div class="form-text">
-                                            <?php echo e(image_hint()); ?>
+                                            <?php echo e(imagehint()); ?>
                                         </div>
                                         <?php if (!empty($person['image'])): ?>
                                             <div class="form-check mt-2">
@@ -252,7 +252,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                             <dl class="row mb-0 small">
                                 <dt class="col-sm-4 text-body-secondary fw-normal">In the church as</dt>
                                 <dd class="col-sm-8 mb-2">
-                                    <?php echo e(people_categories()[$person['category']] ?? $person['category']); ?>
+                                    <?php echo e(peoplecategories()[$person['category']] ?? $person['category']); ?>
                                 </dd>
 
                                 <?php if ($person['position'] !== ''): ?>
@@ -268,7 +268,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                     </div>
 
                     <p class="mt-4 mb-0">
-                        <a href="<?php echo member_url(); ?>">
+                        <a href="<?php echo memberurl(); ?>">
                             <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>
                             Back to my account
                         </a>

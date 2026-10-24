@@ -17,11 +17,11 @@
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
 require_once __DIR__ . '/../../partials/admin/parts.php';
-if (current_user()['role'] ?? '' !== 'admin') {
+if (currentuser()['role'] ?? '' !== 'admin') {
     flash('error', 'Only website administrators can open that page.');
-    redirect(admin_url());
+    redirect(adminurl());
 }
-require_staff();
+requirestaff();
 
 $active_module = 'settings';
 
@@ -37,30 +37,30 @@ $setting_fields = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $was_on = is_maintenance_mode($conn);
+    $was_on = ismaintenancemode($conn);
 
-    setting_set($conn, 'maintenance_mode', post_checkbox('maintenance_mode') ? '1' : '0');
+    settingset($conn, 'maintenance_mode', postcheckbox('maintenance_mode') ? '1' : '0');
 
     foreach ($setting_fields as $key => $field) {
-        setting_set($conn, $key, post_text($key));
+        settingset($conn, $key, posttext($key));
     }
 
     /* What was actually changed is named in the log, because "settings changed"
        on its own would be useless to whoever reads the screen in six months. */
-    $now_on = post_checkbox('maintenance_mode');
+    $now_on = postcheckbox('maintenance_mode');
     if ($was_on !== $now_on) {
-        log_action($conn, 'settings_changed', $now_on
+        logaction($conn, 'settings_changed', $now_on
             ? 'Maintenance mode was turned ON. Visitors cannot see the website.'
             : 'Maintenance mode was turned OFF.');
     }
 
     flash('success', 'The settings have been saved.');
-    redirect(admin_url('settings'));
+    redirect(adminurl('settings'));
 }
 
-$maintenance_on = is_maintenance_mode($conn);
+$maintenance_on = ismaintenancemode($conn);
 
 $page_title = 'Settings';
 $page_heading = 'Settings';
@@ -73,7 +73,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
         <div class="col-12 col-xl-10">
 
             <form method="post" novalidate>
-                <?php echo csrf_field(); ?>
+                <?php echo csrffield(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
@@ -100,16 +100,16 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
                         <?php
                         foreach ($setting_fields as $key => $field) {
-                            $value = setting_get($conn, $key, $field['default']);
+                            $value = settingget($conn, $key, $field['default']);
                             if ($field['type'] === 'textarea') {
-                                admin_textarea($key, $field['label'], $value, '', $field['rows']);
+                                admintextarea($key, $field['label'], $value, '', $field['rows']);
                             } else {
-                                admin_text_field($key, $field['label'], $value);
+                                admintextfield($key, $field['label'], $value);
                             }
                         }
                         ?>
 
-                        <?php admin_form_buttons(admin_url('settings'), 'Save settings'); ?>
+                        <?php adminformbuttons(adminurl('settings'), 'Save settings'); ?>
                     </div>
                 </div>
             </form>

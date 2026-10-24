@@ -10,6 +10,6 @@
  */
 
 require_once __DIR__ . '/../../../../app/init.php';
-require_staff();
+requirestaff();
 
-redirect(admin_url('people'));
+redirect(adminurl('people'));

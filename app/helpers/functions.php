@@ -79,7 +79,7 @@ function agent()
  * the checks: Edge and Opera both carry "Chrome" in their string, and Chrome
  * carries "Safari", so the narrower names are tested first.
  */
-function browser_name($user_agent)
+function browsername($user_agent)
 {
     $browsers = [
         'Edg'     => 'Edge',
@@ -137,9 +137,9 @@ function e($value)
  * browser to a page called "amp".
  *
  * A page building an href or a src wants url() instead, which escapes.
- * Example: url_raw('events') gives "https://bubapc.int.yt/events"
+ * Example: urlraw('events') gives "https://bubapc.int.yt/events"
  */
-function url_raw($path = '')
+function urlraw($path = '')
 {
     if (BASE_URL !== '') {
         $base = rtrim(BASE_URL, '/');
@@ -177,11 +177,11 @@ function url_raw($path = '')
  * Almost every caller is writing an href or a src, so the escaping happens
  * here once rather than as e(url(...)) at several hundred call sites. The few
  * places that are not writing HTML - redirect() and the password-reset email -
- * use url_raw() instead.
+ * use urlraw() instead.
  */
 function url($path = '')
 {
-    return url_raw($path);
+    return urlraw($path);
 }
 
 /**
@@ -198,7 +198,7 @@ function asset($path = '')
  * When the database value is empty a soft placeholder is returned, so a page
  * never breaks because of a missing image.
  */
-function upload_url($path = '')
+function uploadurl($path = '')
 {
     if ($path === '' || $path === null) {
         return asset('images/placeholder.svg');
@@ -211,7 +211,7 @@ function upload_url($path = '')
  *
  * $path is normally a path from the root of the site, like 'admin/events'.
  * A full address is also accepted, so a page can write
- * redirect(admin_url('events')) and not have the site name put in twice -
+ * redirect(adminurl('events')) and not have the site name put in twice -
  * but only if it is an address on this same website. Anywhere else is ignored
  * and the visitor is sent to the home page instead, which closes the door on
  * a "sign in and then get sent to another site" trick.
@@ -223,7 +223,7 @@ function redirect($path)
        that arrives escaped is decoded before it is sent - and decoding is safe
        here precisely because a real address never carries an entity, so this
        cannot invent characters that were not asked for. Without it, the sixty
-       odd redirect(admin_url('events')) calls would put "&amp;" in a header
+       odd redirect(adminurl('events')) calls would put "&amp;" in a header
        the moment a module gained a query string. */
     $path = html_entity_decode((string) $path, ENT_QUOTES, 'UTF-8');
 
@@ -239,7 +239,7 @@ function redirect($path)
         $path = '';
     }
 
-    header('Location: ' . url_raw($path));
+    header('Location: ' . urlraw($path));
     exit;
 }
 
@@ -253,13 +253,13 @@ function redirect($path)
  * should not have to know whether the site is at the root of the domain or in
  * a sub folder.
  *
- * The address itself comes from current_page_path() instead, because a page
+ * The address itself comes from currentpagepath() instead, because a page
  * button has to hand back the exact path the browser asked for - this one
  * tidies the path up for matching, which is not the same job.
  */
-function current_path()
+function currentpath()
 {
-    $path = trim((string) parse_url(current_page_path(), PHP_URL_PATH), '/');
+    $path = trim((string) parse_url(currentpagepath(), PHP_URL_PATH), '/');
 
     $base_path = trim(BASE_PATH, '/');
     if ($base_path !== '' && strpos($path, $base_path) === 0) {
@@ -275,7 +275,7 @@ function current_path()
  * sent back to after signing in, and what the canonical link should point at,
  * because both of those want the address they actually asked for.
  */
-function current_page_path()
+function currentpagepath()
 {
     return $_SERVER['REQUEST_URI'] ?? '/';
 }
@@ -369,7 +369,7 @@ function paragraphs($text)
  * Turn a list of lines (one item per line) into list items.
  * Used for the devotional "Further Study" which has one reference per line.
  */
-function line_list($text, $class = '')
+function linelist($text, $class = '')
 {
     $lines = preg_split('/\r\n|\r|\n/', (string) $text);
     $lines = array_filter(array_map('trim', $lines), 'strlen');
@@ -412,15 +412,15 @@ function initials($name)
    no user input. Anything that comes from a form, a URL or a login box
    always uses $conn->prepare() with bind_param().
 
-   Only two shapes of reading are allowed here: one row (db_one) and one number
-   (db_count). A page that needs to walk many rows writes the loop itself, so
+   Only two shapes of reading are allowed here: one row (dbone) and one number
+   (dbcount). A page that needs to walk many rows writes the loop itself, so
    there is no third helper to remember the difference between. */
 
 /**
  * Run a fixed SELECT query and return the first row as an array.
  * Returns an empty array when there is no row.
  */
-function db_one($conn, $sql)
+function dbone($conn, $sql)
 {
     $result = $conn->query($sql);
     $row = $result->fetch_assoc();
@@ -430,7 +430,7 @@ function db_one($conn, $sql)
 /**
  * Count the rows a fixed query returns.
  */
-function db_count($conn, $sql)
+function dbcount($conn, $sql)
 {
     $result = $conn->query($sql);
     $row = $result->fetch_row();
@@ -440,7 +440,7 @@ function db_count($conn, $sql)
 /**
  * The id of the record that was just inserted.
  */
-function db_last_id($conn)
+function dblastid($conn)
 {
     return $conn->insert_id;
 }
@@ -448,7 +448,7 @@ function db_last_id($conn)
 /**
  * Count the rows a SELECT returns, when the SQL has ? placeholders in it.
  *
- * db_count() above uses $conn->query(), which is only allowed for fixed SQL
+ * dbcount() above uses $conn->query(), which is only allowed for fixed SQL
  * because a browser-supplied word would be read as SQL. A counting query that
  * searches for something the visitor typed has placeholders, so it has to be
  * prepared and bound like any other reading of $_GET.
@@ -457,12 +457,12 @@ function db_last_id($conn)
  * broken count should not take the whole page down - the list below it is
  * prepared separately and will report the real problem.
  */
-function db_count_prepared($conn, $sql, $types, $values)
+function dbcountprepared($conn, $sql, $types, $values)
 {
     /* With no search word the SQL has no ? in it, and bind_param() refuses an
        empty type string, so the plain count is both allowed and simpler here. */
     if ($types === '' || $values === []) {
-        return db_count($conn, $sql);
+        return dbcount($conn, $sql);
     }
 
     try {
@@ -485,7 +485,7 @@ function db_count_prepared($conn, $sql, $types, $values)
 /**
  * Format a date in a friendly way, for example "27 September 2026".
  */
-function format_date($date, $format = 'd F Y')
+function formatdate($date, $format = 'd F Y')
 {
     if (!$date || strpos((string) $date, '0000-00-00') === 0) {
         return '';
@@ -497,7 +497,7 @@ function format_date($date, $format = 'd F Y')
 /**
  * Format a time, for example "7:30 AM".
  */
-function format_time($time)
+function formattime($time)
 {
     if (!$time) {
         return '';
@@ -509,10 +509,10 @@ function format_time($time)
 /**
  * Format a time range, for example "7:30 AM - 10:30 AM".
  */
-function format_time_range($start_time, $end_time)
+function formattimerange($start_time, $end_time)
 {
-    $start = format_time($start_time);
-    $end = format_time($end_time);
+    $start = formattime($start_time);
+    $end = formattime($end_time);
     if ($start && $end) {
         return $start . ' &ndash; ' . $end;
     }
@@ -557,11 +557,11 @@ function ago($datetime)
  * A birthday the way everybody else is allowed to see it, "19 October".
  *
  * The year never leaves the person who told it, so this takes the date
- * apart rather than formatting it: birthday_label() is the one place that
+ * apart rather than formatting it: birthdaylabel() is the one place that
  * decides what every page, list and screen prints, and no caller ever
  * formats the born column itself.
  */
-function birthday_label($born)
+function birthdaylabel($born)
 {
     if (empty($born)) {
         return '';
@@ -574,7 +574,7 @@ function birthday_label($born)
  * Is today this person's birthday? The month and the day are compared
  * without the year, so the age never enters into it.
  */
-function birthday_today($born)
+function birthdaytoday($born)
 {
     return !empty($born) && date('m-d', strtotime($born)) === date('m-d');
 }
@@ -586,7 +586,7 @@ function birthday_today($born)
  * one day only, which is how the church gets to see who to greet on the
  * Sunday and how the office reads a finished month back.
  */
-function birthday_month($born, $month)
+function birthdaymonth($born, $month)
 {
     return !empty($born) && (int) date('n', strtotime($born)) === (int) $month;
 }
@@ -599,7 +599,7 @@ function birthday_month($born, $month)
  * still to come. Both forms that ask for a birthday call this one helper,
  * so the two can never disagree about what a real answer looks like.
  */
-function birthday_from_form($value)
+function birthdayfromform($value)
 {
     $value = trim((string) $value);
 
@@ -628,7 +628,7 @@ function birthday_from_form($value)
  * The seven day names, matching the day_of_week numbers in the programs
  * table (0 = Sunday ... 6 = Saturday).
  */
-function day_name($day_number)
+function dayname($day_number)
 {
     $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     $day_number = (int) $day_number;
@@ -658,11 +658,11 @@ function greeting()
  * A short friendly label for an event date, for example
  * "Sat, 4 Oct 2026 at 6:00 PM".
  */
-function event_date_label($event)
+function eventdatelabel($event)
 {
-    $label = format_date($event['start_date'], 'D, j M Y');
+    $label = formatdate($event['start_date'], 'D, j M Y');
     if (!empty($event['start_time'])) {
-        $label .= ' at ' . format_time($event['start_time']);
+        $label .= ' at ' . formattime($event['start_time']);
     }
     return $label;
 }
@@ -671,7 +671,7 @@ function event_date_label($event)
  * The date and time of an event as one value JavaScript can count down to.
  * Returns '' when the event has no date.
  */
-function event_moment($event)
+function eventmoment($event)
 {
     if (empty($event['start_date'])) {
         return '';
@@ -702,7 +702,7 @@ function flash($type, $message)
  * once, so there is no point in letting something else read them first and
  * find the page blank.
  */
-function show_flashes()
+function showflashes()
 {
     $messages = $_SESSION['flash_messages'] ?? [];
     unset($_SESSION['flash_messages']);
@@ -728,7 +728,7 @@ function show_flashes()
  * Both the public forms and the admin panel use this, so a message is worded
  * and laid out in one place.
  */
-function form_errors($errors, $heading = 'Please fix the following before saving:')
+function formerrors($errors, $heading = 'Please fix the following before saving:')
 {
     if (!$errors) {
         return;
@@ -755,7 +755,7 @@ function form_errors($errors, $heading = 'Please fix the following before saving
 /**
  * The page number asked for in the URL, for example ?page=3
  */
-function page_number()
+function pagenumber()
 {
     return isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 }
@@ -791,9 +791,9 @@ function paginate($total_items, $per_page = 12, $current_page = 1)
 
 /**
  * Build the link to one page of a list, keeping the current filters.
- * Example: page_link(3, ['q' => 'praise']) gives "/devotionals?page=3&q=praise"
+ * Example: pagelink(3, ['q' => 'praise']) gives "/devotionals?page=3&q=praise"
  */
-function page_link($page_number_value, $extra_query = [])
+function pagelink($page_number_value, $extra_query = [])
 {
     $query = $extra_query;
     $query['page'] = $page_number_value;
@@ -804,7 +804,7 @@ function page_link($page_number_value, $extra_query = [])
        button should hand back the address they were on rather than a tidyed-up
        version of it: whether /devotionals or /devotionals/ is the right form is
        Apache's business, and it answers that with a redirect either way. */
-    $address = strtok(current_page_path(), '?');
+    $address = strtok(currentpagepath(), '?');
     return e($address . '?' . http_build_query($query));
 }
 
@@ -812,7 +812,7 @@ function page_link($page_number_value, $extra_query = [])
  * Print the page number buttons under a list.
  * Call it only when there is more than one page.
  */
-function render_pagination($pagination, $extra_query = [])
+function renderpagination($pagination, $extra_query = [])
 {
     if ($pagination['total_pages'] < 2) {
         return;
@@ -830,7 +830,7 @@ function render_pagination($pagination, $extra_query = [])
 
     // Previous button
     if ($current > 1) {
-        echo '<li class="page-item"><a class="page-link" href="' . page_link($current - 1, $extra_query) . '">&laquo;</a></li>';
+        echo '<li class="page-item"><a class="page-link" href="' . pagelink($current - 1, $extra_query) . '">&laquo;</a></li>';
     } else {
         echo '<li class="page-item disabled"><span class="page-link">&laquo;</span></li>';
     }
@@ -839,13 +839,13 @@ function render_pagination($pagination, $extra_query = [])
         if ($number === $current) {
             echo '<li class="page-item active" aria-current="page"><span class="page-link">' . $number . '</span></li>';
         } else {
-            echo '<li class="page-item"><a class="page-link" href="' . page_link($number, $extra_query) . '">' . $number . '</a></li>';
+            echo '<li class="page-item"><a class="page-link" href="' . pagelink($number, $extra_query) . '">' . $number . '</a></li>';
         }
     }
 
     // Next button
     if ($current < $total) {
-        echo '<li class="page-item"><a class="page-link" href="' . page_link($current + 1, $extra_query) . '">&raquo;</a></li>';
+        echo '<li class="page-item"><a class="page-link" href="' . pagelink($current + 1, $extra_query) . '">&raquo;</a></li>';
     } else {
         echo '<li class="page-item disabled"><span class="page-link">&raquo;</span></li>';
     }
@@ -863,7 +863,7 @@ function render_pagination($pagination, $extra_query = [])
  * because the person looking at it needs to know the search worked and the
  * table is genuinely empty rather than broken.
  */
-function render_result_count($pagination, $label = 'results', $when_empty = '')
+function renderresultcount($pagination, $label = 'results', $when_empty = '')
 {
     if ($pagination['total_items'] === 0) {
         if ($when_empty !== '') {
@@ -882,10 +882,10 @@ function render_result_count($pagination, $label = 'results', $when_empty = '')
  * page has something to say, and it is always a Bootstrap class, so it turns
  * gold in dark mode by itself with no extra rule here.
  *
- *   section_heading('Upcoming events', 'Mark your calendar',
+ *   sectionheading('Upcoming events', 'Mark your calendar',
  *                   'Everything happening at the church in one place.');
  */
-function section_heading($title, $kicker = '', $lead = '', $level = 2)
+function sectionheading($title, $kicker = '', $lead = '', $level = 2)
 {
     ?>
     <div class="mb-4">
@@ -907,7 +907,7 @@ function section_heading($title, $kicker = '', $lead = '', $level = 2)
  * this is used a lot: it says what is missing and what to do about it rather
  * than showing a blank page.
  *
- *   empty_state('fa-calendar-plus', 'No events yet',
+ *   emptystate('fa-calendar-plus', 'No events yet',
  *               'When an event is planned it will appear here.',
  *               '<a class="btn btn-gold" href="...">Tell us about one</a>');
  *
@@ -918,7 +918,7 @@ function section_heading($title, $kicker = '', $lead = '', $level = 2)
  * look like a screen full of tables. Both live here so there is one answer to
  * "what does an empty box look like" rather than one per kind of page.
  */
-function empty_state($icon, $title, $text, $button_html = '', $style = 'public')
+function emptystate($icon, $title, $text, $button_html = '', $style = 'public')
 {
     if ($style === 'admin') {
         ?>
@@ -954,12 +954,12 @@ function empty_state($icon, $title, $text, $button_html = '', $style = 'public')
  * "Home / Media / Sermon title" trail inside it.
  *
  * Use it instead of writing the same band on every page:
- *   page_header('Sermons', 'Watch and listen to every message.', [['Home', url('')], ['Sermons', url('sermons')]]);
+ *   pageheader('Sermons', 'Watch and listen to every message.', [['Home', url('')], ['Sermons', url('sermons')]]);
  *
  * The last item in $crumbs is the current page, so it is never a link.
  * Leave $crumbs out when the page has no parent.
  */
-function page_header($title, $subtitle = '', $crumbs = [])
+function pageheader($title, $subtitle = '', $crumbs = [])
 {
     ?>
     <section class="bg-brand text-white py-5">
@@ -1014,7 +1014,7 @@ function page_header($title, $subtitle = '', $crumbs = [])
  * Print the "share this page" row. Copying the link works, and the other
  * buttons open WhatsApp, Facebook or X in a new tab.
  */
-function share_bar($title, $link)
+function sharebar($title, $link)
 {
     ?>
     <div class="card border-0 shadow-sm rounded-4">
@@ -1027,7 +1027,7 @@ function share_bar($title, $link)
             </button>
             <span class="small fw-semibold text-success" data-copy-feedback role="status" aria-live="polite"></span>
 
-            <?php foreach (share_networks($title, $link) as $network => $network_details): ?>
+            <?php foreach (sharenetworks($title, $link) as $network => $network_details): ?>
                 <a class="btn btn-sm btn-outline-secondary rounded-circle" href="<?php echo e($network_details['url']); ?>"
                    target="_blank" rel="noopener" aria-label="Share on <?php echo e($network); ?>">
                     <i class="<?php echo e($network_details['icon']); ?>" aria-hidden="true"></i>
@@ -1050,7 +1050,7 @@ function share_bar($title, $link)
  * stay icon-agnostic, so changing an icon is a change in this file and not a
  * hunt through every call site.
  */
-function share_networks($title, $link)
+function sharenetworks($title, $link)
 {
     /* The caller hands over url() output, which is escaped for printing into
        HTML. Percent-encoding an escaped address would bake the escape into the
@@ -1086,7 +1086,7 @@ function share_networks($title, $link)
  * All social platforms that have a URL filled in app/config.php.
  * A platform with an empty URL is never shown anywhere on the website.
  */
-function social_links()
+function sociallinks()
 {
     $links = [
         'Facebook'  => [FACEBOOK_URL, 'fa-brands fa-facebook-f'],
@@ -1111,7 +1111,7 @@ function social_links()
 /* A small list of verses kept in this file, so the homepage has something
    to show even before any devotional is written. One is picked per day. */
 
-function verse_of_the_day()
+function verseoftheday()
 {
     $verses = [
         ['Joshua 6:5', 'NKJV', 'And it shall come to pass, when they make a long blast with the ram\u2019s horn, and when you hear the sound of the trumpet, that all the people shall shout with a great shout; then the wall of the city will fall down flat.'],
@@ -1152,10 +1152,10 @@ function verse_of_the_day()
  * Both sides of the site use it - the dropzone in an admin form and the plain
  * file box on a member's own profile - so the words are written once and the
  * number in them is worked out from MAX_UPLOAD_SIZE. A church secretary has to
- * act on that number, and it must match what upload_image() will actually
+ * act on that number, and it must match what uploadimage() will actually
  * accept rather than being typed in a second time and left to drift.
  */
-function image_hint()
+function imagehint()
 {
     return 'A picture from your phone or camera, up to ' . round(MAX_UPLOAD_SIZE / 1048576) . ' MB.';
 }
@@ -1169,7 +1169,7 @@ function image_hint()
  * $file_item is one entry from $_FILES, for example $_FILES['poster'].
  * $folder is the uploads sub folder, for example 'gallery'.
  */
-function upload_image($file_item, $folder)
+function uploadimage($file_item, $folder)
 {
     $result = ['path' => '', 'error' => ''];
 
@@ -1231,7 +1231,7 @@ function upload_image($file_item, $folder)
  * Delete an uploaded image.
  * The path must come from the database, never straight from a form field.
  */
-function delete_uploaded_image($path)
+function deleteuploadedimage($path)
 {
     if (!$path) {
         return;
@@ -1256,18 +1256,18 @@ function delete_uploaded_image($path)
  * of the form. Both the admin panel and a person editing their own page use
  * this, so the rule about what a picture may be lives in one place.
  */
-function save_image($file_item, $remove_ticked, $folder, $old_path = '')
+function saveimage($file_item, $remove_ticked, $folder, $old_path = '')
 {
     $result = ['path' => $old_path, 'error' => ''];
 
-    $upload = upload_image($file_item, $folder);
+    $upload = uploadimage($file_item, $folder);
     if ($upload['error'] !== '') {
         $result['error'] = $upload['error'];
         return $result;
     }
 
     if ($remove_ticked) {
-        delete_uploaded_image($old_path);
+        deleteuploadedimage($old_path);
         $result['path'] = $upload['path'];
         return $result;
     }
@@ -1277,7 +1277,7 @@ function save_image($file_item, $remove_ticked, $folder, $old_path = '')
            once the new one is safely on disk, so a picture problem never loses
            the one that was already there. */
         if ($old_path !== '' && $old_path !== $upload['path']) {
-            delete_uploaded_image($old_path);
+            deleteuploadedimage($old_path);
         }
         $result['path'] = $upload['path'];
     }
@@ -1301,7 +1301,7 @@ function save_image($file_item, $remove_ticked, $folder, $old_path = '')
  *
  * Handles youtu.be links, watch?v= links and /embed/ links.
  */
-function youtube_embed_url($url)
+function youtubeembedurl($url)
 {
     $url = trim((string) $url);
     if ($url === '') {
@@ -1334,7 +1334,7 @@ function youtube_embed_url($url)
  * The programs table stores the day number and the times, so the website
  * can work out what happens next on its own.
  */
-function next_program($conn)
+function nextprogram($conn)
 {
     $current_day = (int) date('w');
     $current_time = date('H:i:s');
@@ -1374,7 +1374,7 @@ function next_program($conn)
             } elseif ($days_ahead === 1) {
                 $program['day_label'] = 'Tomorrow';
             } else {
-                $program['day_label'] = day_name($day_number);
+                $program['day_label'] = dayname($day_number);
             }
             return $program;
         }
@@ -1387,18 +1387,18 @@ function next_program($conn)
  * Read the whole weekly program grouped by day.
  * $grouped['Sunday'] is a list of program rows.
  */
-function weekly_program_by_day($conn)
+function weeklyprogrambyday($conn)
 {
     /* The whole program for the week in one read. There is no ? in this
        statement, so a plain query() is allowed here by the same rule as
-       db_one() above. */
+       dbone() above. */
     $result = $conn->query("SELECT * FROM programs
                             WHERE active = 1
                             ORDER BY day_of_week ASC, start_time ASC, sort_order ASC");
 
     $grouped = [];
     while ($program = $result->fetch_assoc()) {
-        $name = day_name($program['day_of_week']);
+        $name = dayname($program['day_of_week']);
         if (!isset($grouped[$name])) {
             $grouped[$name] = [];
         }
@@ -1422,7 +1422,7 @@ function weekly_program_by_day($conn)
  * than letting a long sentence run off the side of a narrow card, and there
  * is one rule for the admin to remember when typing either field.
  */
-function team_lines($text)
+function teamlines($text)
 {
     $lines = [];
     foreach (explode(';', (string) $text) as $line) {
@@ -1448,9 +1448,9 @@ function team_lines($text)
  * so they are escaped here, and a page must echo them as they stand rather
  * than escape them a second time.
  */
-function program_times($program)
+function programtimes($program)
 {
-    $lines = team_lines($program['times'] ?? '');
+    $lines = teamlines($program['times'] ?? '');
     if (!$lines) {
         return [];
     }
@@ -1469,9 +1469,9 @@ function program_times($program)
  *
  * The first five (or six now) are the people who hold an office, and they are what the
  * leadership page shows. The rest are students, alumni, and members who have no directory page.
- * leader_categories() returns the office holders.
+ * leadercategories() returns the office holders.
  */
-function people_categories()
+function peoplecategories()
 {
     return [
         'pastor'            => 'Pastor',
@@ -1488,13 +1488,13 @@ function people_categories()
 
 /**
  * The groups that appear on the leadership page, in order.
- * It is the first five of people_categories(), kept as its own list so that
+ * It is the first five of peoplecategories(), kept as its own list so that
  * adding a group like "members" later cannot accidentally make it appear
  * among the pastors.
  */
-function leader_categories()
+function leadercategories()
 {
-    return array_slice(people_categories(), 0, 6, true);
+    return array_slice(peoplecategories(), 0, 6, true);
 }
 
 /**
@@ -1502,12 +1502,12 @@ function leader_categories()
  * boxes are shown: the office holders, the pastors, the alumni.
  *
  * $where_sql is the SQL filter to add, already written out with no placeholders
- * in it, because the group is checked against people_categories() first and so
+ * in it, because the group is checked against peoplecategories() first and so
  * can never be anything a visitor typed.
  */
-function people_filters()
+function peoplefilters()
 {
-    $leader_list = "'" . implode("','", array_keys(leader_categories())) . "'";
+    $leader_list = "'" . implode("','", array_keys(leadercategories())) . "'";
 
     return [
         'leadership' => [
@@ -1532,17 +1532,17 @@ function people_filters()
  * always has a group to show and a mistyped or hand-edited address is never a
  * dead end.
  */
-function people_filter_from_url()
+function peoplefilterfromurl()
 {
     $asked = isset($_GET['group']) ? trim((string) $_GET['group']) : '';
-    return array_key_exists($asked, people_filters()) ? $asked : 'leadership';
+    return array_key_exists($asked, peoplefilters()) ? $asked : 'leadership';
 }
 
 /**
  * Find one person by their address, for /people/<slug>.
  * Returns an empty array when there is no such person, or when they are hidden.
  */
-function person_by_slug($conn, $slug)
+function personbyslug($conn, $slug)
 {
     /* A 'member' row is an account, not a page on the website, so
        it is left out even when it happens to be marked as shown. */
@@ -1567,7 +1567,7 @@ function person_by_slug($conn, $slug)
  * one, because a student belongs to a family first and a department second.
  * Returns ['family' => row or [], 'department' => row or []].
  */
-function person_groups($conn, $person)
+function persongroups($conn, $person)
 {
     $found = ['family' => [], 'department' => []];
 
@@ -1612,15 +1612,15 @@ function person_groups($conn, $person)
  * The two callers want different things from it, and the extra arguments are
  * how they say so:
  *
- *   people_in_group($conn, 'family', $id, 12, $person_id)
+ *   peopleingroup($conn, 'family', $id, 12, $person_id)
  *       the rest of one family, to link across from a person's page - capped
  *       at 12, and with the person being shown left out.
- *   people_in_group($conn, 'department', $id)
+ *   peopleingroup($conn, 'department', $id)
  *       the whole team of a department, uncapped, because that page is about
  *       the team. A department is listed in the order of the church, office
  *       holders first; a family is listed by name.
  */
-function people_in_group($conn, $group, $group_id, $limit = 0, $except_person_id = 0)
+function peopleingroup($conn, $group, $group_id, $limit = 0, $except_person_id = 0)
 {
     $group_columns = ['family' => 'family', 'department' => 'department'];
     if (!isset($group_columns[$group]) || (int) $group_id < 1) {
@@ -1692,7 +1692,7 @@ function people_in_group($conn, $group, $group_id, $limit = 0, $except_person_id
  * joined in for the same reason the admin people list joins them, so the
  * office can see where somebody sits without opening each page.
  */
-function birthdays_in_month($conn, $month)
+function birthdaysinmonth($conn, $month)
 {
     $month = max(1, min(12, (int) $month));
 
@@ -1726,7 +1726,7 @@ function birthdays_in_month($conn, $month)
  * $group is a departments or families row. Returns
  * array('name' => ..., 'person' => row or [], 'linked' => true/false).
  */
-function group_leader($conn, $group)
+function groupleader($conn, $group)
 {
     $person_id = (int) ($group['leader'] ?? 0);
 
@@ -1751,7 +1751,7 @@ function group_leader($conn, $group)
  * How many students are in a family, for the card on the families list.
  * A prepared statement, because this is asked once per card on the page.
  */
-function family_member_count($conn, $family_id)
+function familymembercount($conn, $family_id)
 {
     if ((int) $family_id < 1) {
         return 0;
@@ -1774,13 +1774,13 @@ function family_member_count($conn, $family_id)
  * actually be asked to lead a group. The first entry is "none", which means
  * "type the name in the box underneath instead".
  */
-function leader_choices($conn)
+function leaderchoices($conn)
 {
     /* Only the five office categories can be offered here. It is not enough to
        rule out students, because an alumnus is a graduate rather than somebody
        holding an office, and offering them here would put an old student in
        charge of a department on the website. */
-    $categories = leader_categories();
+    $categories = leadercategories();
     $placeholders = implode(', ', array_fill(0, count($categories), '?'));
     $types = str_repeat('s', count($categories));
     $names = array_keys($categories);
@@ -1792,7 +1792,7 @@ function leader_choices($conn)
     $statement->execute();
     $result = $statement->get_result();
 
-    $all_categories = people_categories();
+    $all_categories = peoplecategories();
     $choices = [];
     while ($row = $result->fetch_assoc()) {
         $title = trim($row['position'] !== '' ? $row['position'] . ' ' . $row['name'] : $row['name']);
@@ -1811,7 +1811,7 @@ function leader_choices($conn)
 /**
  * The nearest events that have not happened yet.
  */
-function next_events($conn, $limit = 3)
+function nextevents($conn, $limit = 3)
 {
     $sql = "SELECT * FROM events
             WHERE status = 'published' AND start_date >= CURDATE()
@@ -1844,7 +1844,7 @@ function next_events($conn, $limit = 3)
  * written for today or for an earlier day. Returns an empty array when
  * nothing has been published yet.
  */
-function current_devotional($conn)
+function currentdevotional($conn)
 {
     $sql = "SELECT * FROM devotionals
             WHERE status = 'published' AND devotional_date <= CURDATE()
@@ -1863,7 +1863,7 @@ function current_devotional($conn)
 /**
  * The newest published announcements, newest first.
  */
-function recent_announcements($conn, $limit = 3)
+function recentannouncements($conn, $limit = 3)
 {
     $sql = "SELECT * FROM announcements
             WHERE status = 'published'
@@ -1893,7 +1893,7 @@ function recent_announcements($conn, $limit = 3)
 /**
  * Read one setting. $fallback is returned when the key is not there.
  */
-function setting_get($conn, $key, $fallback = '')
+function settingget($conn, $key, $fallback = '')
 {
     $statement = $conn->prepare('SELECT value FROM settings WHERE name = ? LIMIT 1');
     $statement->bind_param('s', $key);
@@ -1914,7 +1914,7 @@ function setting_get($conn, $key, $fallback = '')
  * straight from a form field on the settings screen, which is exactly the kind
  * of value this project is not allowed to build a query out of.
  */
-function setting_set($conn, $key, $value)
+function settingset($conn, $key, $value)
 {
     $lookup = $conn->prepare('SELECT name FROM settings WHERE name = ? LIMIT 1');
     $lookup->bind_param('s', $key);
@@ -1935,9 +1935,9 @@ function setting_set($conn, $key, $value)
 /**
  * Is the website closed for maintenance?
  */
-function is_maintenance_mode($conn)
+function ismaintenancemode($conn)
 {
-    return setting_get($conn, 'maintenance_mode', '0') === '1';
+    return settingget($conn, 'maintenance_mode', '0') === '1';
 }
 
 /* =========================================================================
@@ -1949,7 +1949,7 @@ function is_maintenance_mode($conn)
  * Returns an array of groups, for example:
  *   $results['Devotionals'][] = array('title' => ..., 'url' => ..., 'text' => ...)
  */
-function search_site($conn, $search_term, $per_group = 6)
+function searchsite($conn, $search_term, $per_group = 6)
 {
     $results = [];
     $term = trim($search_term);
@@ -2055,7 +2055,7 @@ function search_site($conn, $search_term, $per_group = 6)
         $query_result = $statement->get_result();
 
         while ($row = $query_result->fetch_assoc()) {
-            $results[$group_name][] = search_result_row($group_name, $row, $folder);
+            $results[$group_name][] = searchresultrow($group_name, $row, $folder);
         }
         $statement->close();
     }
@@ -2066,13 +2066,13 @@ function search_site($conn, $search_term, $per_group = 6)
 /**
  * Turn one database row into a search result that the page can print.
  */
-function search_result_row($group_name, $row, $folder)
+function searchresultrow($group_name, $row, $folder)
 {
     if ($group_name === 'Devotionals') {
         return [
             'title' => $row['title'],
             'text'  => excerpt($row['message'], 140),
-            'meta'  => format_date($row['devotional_date']),
+            'meta'  => formatdate($row['devotional_date']),
             'url'   => url('devotionals/' . $row['slug']),
         ];
     }
@@ -2081,7 +2081,7 @@ function search_result_row($group_name, $row, $folder)
         return [
             'title' => $row['title'],
             'text'  => excerpt($row['description'], 140),
-            'meta'  => $row['preacher'] . ' - ' . format_date($row['sermon_date']),
+            'meta'  => $row['preacher'] . ' - ' . formatdate($row['sermon_date']),
             'url'   => url('sermons#sermon-' . $row['id']),
         ];
     }
@@ -2090,7 +2090,7 @@ function search_result_row($group_name, $row, $folder)
         return [
             'title' => $row['title'],
             'text'  => excerpt($row['description'], 140),
-            'meta'  => event_date_label($row),
+            'meta'  => eventdatelabel($row),
             'url'   => url('events/' . $row['slug']),
         ];
     }
@@ -2112,7 +2112,7 @@ function search_result_row($group_name, $row, $folder)
         return [
             'title' => $row['title'],
             'text'  => excerpt($row['content'], 140),
-            'meta'  => format_date($row['publish_date']),
+            'meta'  => formatdate($row['publish_date']),
             'url'   => url('announcements#announcement-' . $row['id']),
         ];
     }
@@ -2120,7 +2120,7 @@ function search_result_row($group_name, $row, $folder)
     /* The people table covers the pastors, the students and the alumni, so
        the line under a result says which group that person is in rather than
        repeating their job title. */
-    $categories = people_categories();
+    $categories = peoplecategories();
     $group = $categories[$row['category']] ?? '';
     $meta = trim($group . ' ' . (string) ($row['position'] ?? ''));
 
@@ -2145,7 +2145,7 @@ function search_result_row($group_name, $row, $folder)
  * there is never a second "is it strong?" test that could disagree with the
  * message the visitor is actually shown.
  */
-function password_problem($password)
+function passwordproblem($password)
 {
     if (strlen((string) $password) < MIN_PASSWORD_LENGTH) {
         return 'The password must be at least ' . MIN_PASSWORD_LENGTH . ' characters long.';
@@ -2183,7 +2183,7 @@ function avatar($image, $name, $size = 48, $extra = 'flex-shrink-0')
     $size = (int) $size;
 
     if (!empty($image)) {
-        return '<img src="' . upload_url($image) . '" alt="" width="' . $size . '" height="' . $size
+        return '<img src="' . uploadurl($image) . '" alt="" width="' . $size . '" height="' . $size
             . '" class="rounded-circle object-fit-cover ' . e($extra) . '">';
     }
 
@@ -2203,14 +2203,14 @@ function avatar($image, $name, $size = 48, $extra = 'flex-shrink-0')
  * $link is the address the share buttons copy. It is left out when the
  * message is being shown inside a list rather than as a page.
  */
-function render_devotional($devotional, $link = '')
+function renderdevotional($devotional, $link = '')
 {
     ?>
     <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
 
     <article class="devotional-article" id="devotional-article">
         <p class="devotional-brand mb-2">
-            Devotional for <?php echo format_date($devotional['devotional_date'], 'l, j F Y'); ?>
+            Devotional for <?php echo formatdate($devotional['devotional_date'], 'l, j F Y'); ?>
         </p>
 
         <?php if (!empty($devotional['scripture_text']) || !empty($devotional['scripture_reference'])): ?>
@@ -2230,11 +2230,11 @@ function render_devotional($devotional, $link = '')
 
         <?php if (!empty($devotional['further_study'])): ?>
             <h2 class="h4 mt-5">Further study</h2>
-            <?php echo line_list($devotional['further_study'], 'list-unstyled d-grid gap-2 small text-body-secondary'); ?>
+            <?php echo linelist($devotional['further_study'], 'list-unstyled d-grid gap-2 small text-body-secondary'); ?>
         <?php endif; ?>
 
         <?php if ($link !== ''): ?>
-            <div class="mt-5"><?php share_bar($devotional['title'], $link); ?></div>
+            <div class="mt-5"><?php sharebar($devotional['title'], $link); ?></div>
         <?php endif; ?>
     </article>
     <?php
@@ -2243,18 +2243,18 @@ function render_devotional($devotional, $link = '')
 /**
  * The small cake that sits beside a name in a line of people, on the
  * family and department pages. It marks the month and carries the date
- * in its tooltip; the badge with the words on it is birthday_badge().
+ * in its tooltip; the badge with the words on it is birthdaybadge().
  * Empty for a person who has not told their birthday, so nobody is
  * marked by accident.
  */
-function birthday_cake($born)
+function birthdaycake($born)
 {
     if (empty($born)) {
         return '';
     }
 
     return '<i class="fa-solid fa-cake-candles text-gold-dark" aria-hidden="true" title="'
-        . e('Birthday ' . strip_tags(birthday_label($born))) . '"></i>';
+        . e('Birthday ' . strip_tags(birthdaylabel($born))) . '"></i>';
 }
 
 /**
@@ -2264,25 +2264,25 @@ function birthday_cake($born)
  * this rather than writing the badge out again, so a birthday looks the
  * same on the people page, the leadership page and the admin panel.
  */
-function birthday_badge($born)
+function birthdaybadge($born)
 {
-    if (!birthday_month($born, (int) date('n'))) {
+    if (!birthdaymonth($born, (int) date('n'))) {
         return '';
     }
 
-    $words = birthday_today($born)
+    $words = birthdaytoday($born)
         ? 'Happy birthday!'
-        : 'Birthday ' . strip_tags(birthday_label($born));
+        : 'Birthday ' . strip_tags(birthdaylabel($born));
 
     return '<span class="badge rounded-pill text-bg-warning">'
-        . birthday_cake($born)
+        . birthdaycake($born)
         . '<span class="ms-1">' . e($words) . '</span></span>';
 }
 
 /**
  * A coloured label for a status, used in the admin tables and on cards.
  */
-function status_badge($status, $active_flag = null)
+function statusbadge($status, $active_flag = null)
 {
     if ($active_flag !== null) {
         return (int) $active_flag === 1
@@ -2317,10 +2317,10 @@ function status_badge($status, $active_flag = null)
  * church office and still be only an editor here, or hold no office and be
  * an administrator.
  *
- * The roles that can access the admin panel are defined in staff_roles()
+ * The roles that can access the admin panel are defined in staffroles()
  * in app/auth.php. This function provides human-readable labels for all roles.
  */
-function user_role_label($role)
+function userrolelabel($role)
 {
     $labels = [
         'admin'        => 'Administrator',
@@ -2343,7 +2343,7 @@ function user_role_label($role)
  * to switch it on. The wording lives here so the register form and the users
  * list cannot drift apart.
  */
-function standing_labels()
+function standinglabels()
 {
     return [
         'member'  => 'Member',
@@ -2360,15 +2360,15 @@ function standing_labels()
  * plural name (events.php) and the form is named after the single thing it edits
  * (add-event.php), which is how a reader tells the two apart in the folder.
  *
- * This list is the only place that pairing is written down. admin_url() reads it,
- * so a caller keeps saying admin_url('events/form.php') and never has to know
+ * This list is the only place that pairing is written down. adminurl() reads it,
+ * so a caller keeps saying adminurl('events/form.php') and never has to know
  * what the file was renamed to.
  *
  * A module with no entry here has no form - leaders, logs, subscribers and
  * visitors are read-only screens - so asking for one is a mistake worth showing
  * rather than hiding.
  */
-function admin_form_file($module)
+function adminformfile($module)
 {
     static $forms = [
         'announcements' => 'add-announcement',
@@ -2399,7 +2399,7 @@ function admin_form_file($module)
  * the .php file. A form screen is named after the single thing it edits, so
  * 'events/form.php' becomes /dashboard/admin/add-event.
  */
-function admin_url($module = '')
+function adminurl($module = '')
 {
     $module = ltrim($module, '/');
     if ($module === '') {
@@ -2417,7 +2417,7 @@ function admin_url($module = '')
        separate files, so both are looked up by name. */
     $file = '';
     if (substr($screen, -9) === '/form.php') {
-        $file = admin_form_file(substr($screen, 0, -9));
+        $file = adminformfile(substr($screen, 0, -9));
     } elseif (substr($screen, -9) === '/view.php') {
         $file = 'message-view';
     }
@@ -2440,9 +2440,9 @@ function admin_url($module = '')
  * Is this the menu item for the page being viewed?
  * $keys is the first part of the path, for example 'events'.
  */
-function nav_active($keys)
+function navactive($keys)
 {
-    $path = current_path();
+    $path = currentpath();
     $first_part = explode('/', $path)[0];
 
     if ($keys === 'home') {
@@ -2454,7 +2454,7 @@ function nav_active($keys)
 /* =========================================================================
    20. THE ACTIVITY LOG
    ========================================================================= */
-/* One row per interesting thing that happened, written by log_action(), so
+/* One row per interesting thing that happened, written by logaction(), so
    the admin can answer "who changed that?" and "did somebody try to sign in
    from a strange address?" without the website having to be watched. */
 
@@ -2473,13 +2473,13 @@ function nav_active($keys)
  * This must never break the page that called it: a full disk should not stop
  * a devotional being saved. So a failure here is ignored on purpose.
  */
-function log_action($conn, $action, $details = '')
+function logaction($conn, $action, $details = '')
 {
     if (!defined('BUBAPC_LOGS') || !BUBAPC_LOGS) {
         return;
     }
 
-    $user = current_user();
+    $user = currentuser();
     $actor = (int) ($user['id'] ?? 0);
     $action = substr(trim((string) $action), 0, 60);
     $details = substr((string) $details, 0, 255);
@@ -2498,7 +2498,7 @@ function log_action($conn, $action, $details = '')
  * filter button. Returns the name with the underscores turned into spaces
  * when there is no nicer wording, so a new action never shows a blank.
  */
-function log_action_label($action)
+function logactionlabel($action)
 {
     $nicer = [
         'user_signed_in'    => 'signed in',
@@ -2563,7 +2563,7 @@ function log_action_label($action)
  * Anything that is not recognised is grey, which is the honest answer for an
  * event nobody has thought about yet.
  */
-function log_action_tone($action)
+function logactiontone($action)
 {
     $action = (string) $action;
 
@@ -2609,7 +2609,7 @@ function log_action_tone($action)
  * so the row cannot be turned back into an address by reading the table, and
  * an empty address still produces a usable key rather than an error.
  */
-function visitor_key()
+function visitorkey()
 {
     $address = ip();
     $browser = agent();
@@ -2634,13 +2634,13 @@ function visitor_key()
  * error is swallowed, because nothing a visitor is looking at may depend on
  * whether a counter moved.
  */
-function record_visit($conn, $path = '')
+function recordvisit($conn, $path = '')
 {
     if (defined('BUBAPC_INSTALLER') || defined('BUBAPC_SKIP_VISITS')) {
         return;
     }
 
-    $key = visitor_key();
+    $key = visitorkey();
     $browser = agent();
     $referer = referer();
     $path = substr((string) $path, 0, 190);
@@ -2701,7 +2701,7 @@ function record_visit($conn, $path = '')
  * without end. Called by cron-or-by-hand; it deletes nothing the admin is
  * still reading, because anything that old is noise.
  */
-function visitor_sweep($conn)
+function visitorsweep($conn)
 {
     $statement = $conn->prepare(
         'DELETE FROM visitors WHERE seen < DATE_SUB(NOW(), INTERVAL ? DAY)'
@@ -2720,15 +2720,15 @@ function visitor_sweep($conn)
  * and how many were here in the last seven days. Both are read from the
  * table, so neither can be out of date.
  */
-function visitor_counts($conn)
+function visitorcounts($conn)
 {
-    $today = db_one(
+    $today = dbone(
         $conn,
         "SELECT COUNT(*) AS total FROM visitors
          WHERE seen >= DATE_SUB(CURDATE(), INTERVAL 0 DAY)
            AND seen <  DATE_ADD(CURDATE(), INTERVAL 1 DAY)"
     );
-    $week = db_one(
+    $week = dbone(
         $conn,
         "SELECT COUNT(*) AS total FROM visitors
          WHERE seen >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)

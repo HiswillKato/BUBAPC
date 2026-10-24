@@ -41,19 +41,19 @@ if ($slug !== '') {
     $page_description = excerpt(strip_tags(html_entity_decode($family['description'] ?: $family['name'])), 160);
     $canonical = 'families/' . $family['slug'];
 
-    /* The leader is looked up through group_leader() rather than read straight
+    /* The leader is looked up through groupleader() rather than read straight
        off the row, so a leader who has a page of their own is linked and their
        name follows any change to it. A name typed in by hand still shows for
        the leaders who do not have a page. */
-    $leader = group_leader($conn, $family);
+    $leader = groupleader($conn, $family);
 
     /* The students in this family, so a page that says a family is "a group of
        students" can actually show the group. */
-    $members = people_in_group($conn, 'family', (int) $family['id'], 24);
+    $members = peopleingroup($conn, 'family', (int) $family['id'], 24);
 
     require_once __DIR__ . '/../partials/public/header.php';
 
-    page_header(
+    pageheader(
         $family['name'],
         $leader['name'] !== '' ? 'Led by ' . $leader['name'] : 'A family of students at ' . SITE_NAME . '.',
         [['Home', url('')], ['Our church', url('leadership')], ['Families', url('families')], [$family['name'], '']]
@@ -110,7 +110,7 @@ if ($slug !== '') {
                                                  photograph when there is one, their
                                                  initials when there is not. */
                                         if (!empty($member['image'])): ?>
-                                            <img src="<?php echo upload_url($member['image']); ?>" alt=""
+                                            <img src="<?php echo uploadurl($member['image']); ?>" alt=""
                                                  width="48" height="48" class="rounded-circle object-fit-cover flex-shrink-0">
                                         <?php else: ?>
                                             <span class="brand-mark bg-brand-soft text-brand rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"
@@ -120,7 +120,7 @@ if ($slug !== '') {
                                         <?php endif; ?>
                                         <span class="text-body">
                                             <?php echo e($member['name']); ?>
-                                            <?php echo birthday_cake($member['born']); ?>
+                                            <?php echo birthdaycake($member['born']); ?>
                                         </span>
                                     </a>
                                 </div>
@@ -129,7 +129,7 @@ if ($slug !== '') {
                     <?php endif; ?>
 
                     <div class="mt-4">
-                        <?php share_bar($family['name'], url('families/' . $family['slug'])); ?>
+                        <?php sharebar($family['name'], url('families/' . $family['slug'])); ?>
                     </div>
 
                     <a class="btn btn-outline-primary mt-4" href="<?php echo url('families'); ?>">
@@ -187,7 +187,7 @@ $canonical = 'families';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     'Families',
     'Our students are gathered into families that meet through the week. '
     . 'In a family you are known, and you are looked after.',
@@ -224,8 +224,8 @@ $list_sql = "SELECT families.*, people.name AS linked_leader
              " . $where
     . " ORDER BY families.display_order ASC, families.name ASC LIMIT ? OFFSET ?";
 
-$current_page = page_number();
-$total = db_count_prepared($conn, $count_sql, $search_types, $search_values);
+$current_page = pagenumber();
+$total = dbcountprepared($conn, $count_sql, $search_types, $search_values);
 $pagination = paginate($total, $per_page, $current_page);
 
 $offset = $pagination['offset'];
@@ -263,17 +263,17 @@ $statement->close();
                 </div>
             </form>
 
-            <?php render_result_count($pagination, 'families'); ?>
+            <?php renderresultcount($pagination, 'families'); ?>
 
             <?php if (!$families): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($search_term !== '') {
-                            empty_state('fa-magnifying-glass', 'No family found for "' . $search_term . '"',
+                            emptystate('fa-magnifying-glass', 'No family found for "' . $search_term . '"',
                                 'Try another word, or browse the whole list.');
                         } else {
-                            empty_state('fa-users', 'The families are being listed',
+                            emptystate('fa-users', 'The families are being listed',
                                 'Every family at ' . SITE_NAME . ' will appear here, with the name of the '
                                 . 'person who leads it and when it meets.');
                         }
@@ -283,12 +283,12 @@ $statement->close();
             <?php else: ?>
                 <div class="row g-4 mt-1">
                     <?php
-                    /* group_leader() is one query per card on a page of nine,
+                    /* groupleader() is one query per card on a page of nine,
                        which is nothing at this size, and it means the list and
                        the detail page can never disagree about who leads what. */
                     foreach ($families as $family):
-                        $leader = group_leader($conn, $family);
-                        $member_count = family_member_count($conn, (int) $family['id']);
+                        $leader = groupleader($conn, $family);
+                        $member_count = familymembercount($conn, (int) $family['id']);
                     ?>
                         <div class="col-md-6 col-lg-4">
                             <article class="card h-100 border-0 shadow-sm rounded-4">
@@ -323,7 +323,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php render_pagination($pagination, ['q' => $search_term]); ?>
+                <?php renderpagination($pagination, ['q' => $search_term]); ?>
             <?php endif; ?>
         </div>
     </section>

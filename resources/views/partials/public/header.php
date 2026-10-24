@@ -2,8 +2,8 @@
 $page_title = $page_title ?? SITE_NAME;
 $page_description = $page_description ?? SITE_TAGLINE . ' - ' . SITE_FULL_NAME;
 $body_class = $body_class ?? '';
-$canonical = $canonical ?? current_page_path();
-record_visit($conn, $canonical);
+$canonical = $canonical ?? currentpagepath();
+recordvisit($conn, $canonical);
 ?>
 <!DOCTYPE html>
 <html lang="en">

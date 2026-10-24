@@ -19,15 +19,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'subscribers';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $action = post_text('action');
+    $action = posttext('action');
     $subscriber_id = (int) ($_POST['id'] ?? 0);
-    $subscriber = admin_row($conn, 'subscribers', $subscriber_id);
+    $subscriber = adminrow($conn, 'subscribers', $subscriber_id);
 
     if (!$subscriber) {
         flash('error', 'That address is no longer on the list.');
-        redirect(admin_url('subscribers'));
+        redirect(adminurl('subscribers'));
     }
 
     if ($action === 'delete') {
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : $subscriber['email'] . ' will not get the devotional any more. The address is kept, so it can be switched back on.');
     }
 
-    redirect(admin_url('subscribers'));
+    redirect(adminurl('subscribers'));
 }
 
 /* The export is a download rather than a change, so it is a plain link. Only
@@ -111,13 +111,13 @@ if ($bind_values) {
     $total_subscribers = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_subscribers = db_count($conn, "SELECT COUNT(*) FROM subscribers" . $where_sql);
+    $total_subscribers = dbcount($conn, "SELECT COUNT(*) FROM subscribers" . $where_sql);
 }
 
-$active_count = db_count($conn, "SELECT COUNT(*) FROM subscribers WHERE status = 1");
+$active_count = dbcount($conn, "SELECT COUNT(*) FROM subscribers WHERE status = 1");
 
 $per_page = 50;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_subscribers, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -137,7 +137,7 @@ $statement->close();
 $page_title = 'Devotional list';
 $page_heading = 'Devotional list';
 $page_actions = $active_count > 0
-    ? '<a class="btn btn-outline-secondary" href="' . admin_url('subscribers?export=1') . '">'
+    ? '<a class="btn btn-outline-secondary" href="' . adminurl('subscribers?export=1') . '">'
         . '<i class="fa-solid fa-file-csv me-1" aria-hidden="true"></i>Download as a spreadsheet</a>'
     : '';
 
@@ -162,7 +162,7 @@ if ($filter !== '') {
     $filter_query['filter'] = $filter;
 }
 ?>
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('subscribers'); ?>" role="search">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminurl('subscribers'); ?>" role="search">
     <div class="col-12 col-md">
         <label class="visually-hidden" for="filter-search">Search</label>
         <div class="input-group">
@@ -182,16 +182,16 @@ if ($filter !== '') {
     <div class="col-12 col-md-auto d-flex gap-2">
         <button type="submit" class="btn btn-primary">Filter</button>
         <?php if ($search !== '' || $filter !== ''): ?>
-            <a class="btn btn-outline-secondary" href="<?php echo admin_url('subscribers'); ?>">Clear</a>
+            <a class="btn btn-outline-secondary" href="<?php echo adminurl('subscribers'); ?>">Clear</a>
         <?php endif; ?>
     </div>
 </form>
 
-<?php admin_result_bar($pagination, $filter_query, 'addresses'); ?>
+<?php adminresultbar($pagination, $filter_query, 'addresses'); ?>
 
 <?php if (!$subscribers): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-paper-plane',
         $search !== '' || $filter !== '' ? 'No addresses match that' : 'The list is empty',
         $search !== '' || $filter !== ''
@@ -221,7 +221,7 @@ if ($filter !== '') {
                                 <a href="mailto:<?php echo e($subscriber['email']); ?>"><?php echo e($subscriber['email']); ?></a>
                             </td>
                             <td class="small text-body-secondary text-nowrap">
-                                <?php echo format_date($subscriber['created'], 'j M Y'); ?>
+                                <?php echo formatdate($subscriber['created'], 'j M Y'); ?>
                             </td>
                             <td>
                                 <span class="badge rounded-pill <?php echo (int) $subscriber['status'] === 1 ? 'text-bg-success' : 'text-bg-secondary'; ?>">
@@ -230,9 +230,9 @@ if ($filter !== '') {
                             </td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo admin_action_group(
-                                    admin_toggle_button('subscribers', $subscriber['id'], $subscriber['status'], 'Send to them', 'Stop sending')
-                                    . admin_delete_button('subscribers', $subscriber['id'], $subscriber['email'])
+                                echo adminactiongroup(
+                                    admintogglebutton('subscribers', $subscriber['id'], $subscriber['status'], 'Send to them', 'Stop sending')
+                                    . admindeletebutton('subscribers', $subscriber['id'], $subscriber['email'])
                                 );
                                 ?>
                             </td>

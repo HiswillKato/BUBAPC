@@ -7,7 +7,7 @@
  * a page three times is still one person.
  *
  * What this page is NOT: there is no cookie, no fingerprint and no way to
- * follow anybody from here. The address is hashed by visitor_key() before it
+ * follow anybody from here. The address is hashed by visitorkey() before it
  * is stored, so the column shown below is not an address and cannot be turned
  * back into one. This answers "is anyone visiting?", never "who was that?".
  */
@@ -19,27 +19,27 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'visitors';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
     /* Deleting rows is a website-admin action, not an editor's: an editor is
        trusted with content, and wiping the record of who has been here is a
        different kind of power. */
-    if (!is_admin()) {
+    if (!isadmin()) {
         flash('error', 'Only an administrator can do that.');
-        redirect(admin_url('visitors'));
+        redirect(adminurl('visitors'));
     }
 
-    if (post_text('action') === 'sweep') {
-        $removed = visitor_sweep($conn);
+    if (posttext('action') === 'sweep') {
+        $removed = visitorsweep($conn);
         flash('success', $removed === 1
             ? 'One old visit was removed.'
             : $removed . ' old visits were removed.');
     }
 
-    redirect(admin_url('visitors'));
+    redirect(adminurl('visitors'));
 }
 
-$counts = visitor_counts($conn);
+$counts = visitorcounts($conn);
 
 /* One row per day, taken from `seen`, so the chart needs no table of its own
    and cannot disagree with the list below it. */
@@ -92,11 +92,11 @@ if ($bind_values) {
     $total_visitors = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_visitors = db_count($conn, 'SELECT COUNT(*) FROM visitors v' . $where_sql);
+    $total_visitors = dbcount($conn, 'SELECT COUNT(*) FROM visitors v' . $where_sql);
 }
 
 $per_page = 50;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_visitors, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -119,10 +119,10 @@ $statement->close();
 
 $page_title = 'Visitors';
 $page_heading = 'Visitors';
-$page_actions = (is_admin()
-    ? '<form method="post" action="' . admin_url('visitors') . '" data-confirm="Delete the visits older '
+$page_actions = (isadmin()
+    ? '<form method="post" action="' . adminurl('visitors') . '" data-confirm="Delete the visits older '
         . 'than ' . (int) VISITOR_KEEP_DAYS . ' days?">'
-        . csrf_field()
+        . csrffield()
         . '<input type="hidden" name="action" value="sweep">'
         . '<button type="submit" class="btn btn-outline-secondary">'
         . '<i class="fa-solid fa-broom me-1" aria-hidden="true"></i>Tidy up old visits</button></form>'
@@ -172,21 +172,21 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                  aria-label="Visitors per day for the last 30 days. The busiest day had <?php echo e($busiest); ?>.">
                 <?php foreach ($chart as $day): ?>
                     <div class="h-100 d-flex align-items-end flex-grow-1"
-                         title="<?php echo format_date($day['day'], 'j M Y'); ?>: <?php echo e($day['total']); ?>">
+                         title="<?php echo formatdate($day['day'], 'j M Y'); ?>: <?php echo e($day['total']); ?>">
                         <div class="w-100 rounded-top<?php echo $day['total'] > 0 ? ' bg-gold' : ' bg-body-secondary'; ?>"
                              style="height:<?php echo $day['total'] > 0 ? e($day['height']) : '3px'; ?>;<?php echo $day['total'] > 0 ? '' : 'opacity:.25'; ?>"></div>
                     </div>
                 <?php endforeach; ?>
             </div>
             <div class="d-flex justify-content-between small text-body-secondary mt-2">
-                <span><?php echo format_date($chart[0]['day'], 'j M'); ?></span>
-                <span><?php echo format_date($chart[count($chart) - 1]['day'], 'j M'); ?></span>
+                <span><?php echo formatdate($chart[0]['day'], 'j M'); ?></span>
+                <span><?php echo formatdate($chart[count($chart) - 1]['day'], 'j M'); ?></span>
             </div>
         <?php endif; ?>
     </div>
 </div>
 
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('visitors'); ?>" role="search">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminurl('visitors'); ?>" role="search">
     <div class="col-12 col-md">
         <label class="visually-hidden" for="visitor-search">Search the list</label>
         <div class="input-group">
@@ -198,23 +198,23 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="col-12 col-md-auto d-flex gap-2">
         <button type="submit" class="btn btn-primary">Search</button>
         <?php if ($search !== ''): ?>
-            <a class="btn btn-outline-secondary" href="<?php echo admin_url('visitors'); ?>">Clear</a>
+            <a class="btn btn-outline-secondary" href="<?php echo adminurl('visitors'); ?>">Clear</a>
         <?php endif; ?>
     </div>
 </form>
 
-<?php admin_result_bar($pagination, $search !== '' ? ['q' => $search] : [], 'visitors'); ?>
+<?php adminresultbar($pagination, $search !== '' ? ['q' => $search] : [], 'visitors'); ?>
 
 <?php if (!$visitors): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-chart-simple',
         $search !== '' ? 'Nothing matches that' : 'Nobody has been counted yet',
         $search !== ''
             ? 'Try part of the browser name or the page address.'
             : 'This counts visitors who reach the website. It fills up on its own as people visit.',
         $search !== ''
-            ? '<a class="btn btn-outline-secondary" href="' . admin_url('visitors') . '">Show everything</a>'
+            ? '<a class="btn btn-outline-secondary" href="' . adminurl('visitors') . '">Show everything</a>'
             : '<a class="btn btn-outline-secondary" href="' . url('') . '" target="_blank" rel="noopener">'
               . '<i class="fa-solid fa-up-right-from-square me-1" aria-hidden="true"></i>Open the website</a>',
         'admin'
@@ -237,7 +237,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <tr>
                             <td class="text-nowrap">
                                 <?php echo e(ago($visitor['seen'])); ?>
-                                <span class="d-block small text-body-secondary"><?php echo format_date($visitor['seen'], 'j M Y'); ?></span>
+                                <span class="d-block small text-body-secondary"><?php echo formatdate($visitor['seen'], 'j M Y'); ?></span>
                             </td>
                             <td>
                                 <span class="badge rounded-pill text-bg-light border"><?php echo e($visitor['visits']); ?></span>
@@ -246,7 +246,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                 <?php echo $visitor['path'] !== '' ? e($visitor['path']) : 'unknown'; ?>
                             </td>
                             <td class="text-body-secondary small">
-                                <?php echo e(browser_name($visitor['agent'])); ?>
+                                <?php echo e(browsername($visitor['agent'])); ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

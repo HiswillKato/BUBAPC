@@ -2,7 +2,7 @@
 /**
  * BUBAPC - Admin: what has been happening on the website
  *
- * A plain, read-only list of the things log_action() has written: what
+ * A plain, read-only list of the things logaction() has written: what
  * changed, who changed it, and where from. It exists so a question like
  * "who took the photo off the homepage?" can be answered after the fact
  * without anybody having to watch the site.
@@ -19,23 +19,23 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'logs';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
     /* An editor can read the log but cannot wipe it: the log is the only
        trace of a change made by somebody with more access than they have,
        so the button that destroys it belongs to the website admin only. */
-    if (!is_admin()) {
+    if (!isadmin()) {
         flash('error', 'Only somebody with administrator access can clear the log.');
-        redirect(admin_url('logs'));
+        redirect(adminurl('logs'));
     }
 
-    if (post_text('action') === 'clear') {
+    if (posttext('action') === 'clear') {
         $conn->query("DELETE FROM logs");
-        log_action($conn, 'log_cleared', 'The activity log was cleared');
+        logaction($conn, 'log_cleared', 'The activity log was cleared');
         flash('success', 'The activity log has been cleared.');
     }
 
-    redirect(admin_url('logs'));
+    redirect(adminurl('logs'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -43,7 +43,7 @@ $filter = isset($_GET['filter']) ? (string) $_GET['filter'] : '';
 
 /* The filter is a list of the event names that are actually in the table, so
    the dropdown can never offer a filter that returns nothing. Building the
-   list from the table is also why a new log_action() call needs no edit here. */
+   list from the table is also why a new logaction() call needs no edit here. */
 $statement = $conn->query("SELECT action, COUNT(*) AS total
                            FROM logs GROUP BY action ORDER BY total DESC, action ASC");
 $action_names = [];
@@ -83,11 +83,11 @@ if ($bind_values) {
     $total_logs = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_logs = db_count($conn, 'SELECT COUNT(*) FROM logs l' . $where_sql);
+    $total_logs = dbcount($conn, 'SELECT COUNT(*) FROM logs l' . $where_sql);
 }
 
 $per_page = 50;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_logs, $per_page, $current_page);
 
 /* The person's name is joined in rather than read from a second query, so the
@@ -119,7 +119,7 @@ $statement->close();
    screen worth watching: a burst of them is either somebody who has
    forgotten their password or somebody guessing, and the details below say
    which addresses and which names were tried. */
-$refused_today = (int) db_one(
+$refused_today = (int) dbone(
     $conn,
     "SELECT COUNT(*) AS total FROM logs
      WHERE action = 'login_refused' AND created >= CURDATE()"
@@ -127,10 +127,10 @@ $refused_today = (int) db_one(
 
 $page_title = 'Activity log';
 $page_heading = 'Activity log';
-$page_actions = (is_admin() && $total_logs > 0)
-    ? '<form method="post" action="' . admin_url('logs') . '" data-confirm="Clear the whole log? '
+$page_actions = (isadmin() && $total_logs > 0)
+    ? '<form method="post" action="' . adminurl('logs') . '" data-confirm="Clear the whole log? '
         . 'This cannot be undone." class="d-inline">'
-        . csrf_field()
+        . csrffield()
         . '<input type="hidden" name="action" value="clear">'
         . '<button type="submit" class="btn btn-outline-danger">'
         . '<i class="fa-solid fa-broom me-1" aria-hidden="true"></i>Clear the log</button></form>'
@@ -153,7 +153,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
 <div class="row g-2 align-items-center mb-3">
     <div class="col-12 col-lg">
-        <form class="input-group" method="get" action="<?php echo admin_url('logs'); ?>" role="search">
+        <form class="input-group" method="get" action="<?php echo adminurl('logs'); ?>" role="search">
             <?php if ($filter !== ''): ?>
                 <input type="hidden" name="filter" value="<?php echo e($filter); ?>">
             <?php endif; ?>
@@ -168,7 +168,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
     <?php if ($action_names): ?>
         <div class="col-12 col-lg-auto">
-            <form method="get" action="<?php echo admin_url('logs'); ?>">
+            <form method="get" action="<?php echo adminurl('logs'); ?>">
                 <?php if ($search !== ''): ?>
                     <input type="hidden" name="q" value="<?php echo e($search); ?>">
                 <?php endif; ?>
@@ -177,7 +177,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                     <option value="">Everything (<?php echo e($total_logs); ?>)</option>
                     <?php foreach ($action_names as $action_name => $action_total): ?>
                         <option value="<?php echo e($action_name); ?>" <?php echo $filter === $action_name ? 'selected' : ''; ?>>
-                            <?php echo log_action_label($action_name); ?> (<?php echo e($action_total); ?>)
+                            <?php echo logactionlabel($action_name); ?> (<?php echo e($action_total); ?>)
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -194,12 +194,12 @@ if ($search !== '') {
 if ($filter !== '') {
     $filter_query['filter'] = $filter;
 }
-admin_result_bar($pagination, $filter_query, 'entries');
+adminresultbar($pagination, $filter_query, 'entries');
 ?>
 
 <?php if (!$logs): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-clipboard-list',
         $search !== '' || $filter !== '' ? 'Nothing matches that' : 'Nothing has happened yet',
         $search !== '' || $filter !== ''
@@ -207,7 +207,7 @@ admin_result_bar($pagination, $filter_query, 'entries');
             : 'Anything anybody changes on the website is written here as it happens, so this list '
               . 'fills up on its own. A sign-in is recorded too.',
         $search !== '' || $filter !== ''
-            ? '<a class="btn btn-outline-secondary" href="' . admin_url('logs') . '">Show everything</a>'
+            ? '<a class="btn btn-outline-secondary" href="' . adminurl('logs') . '">Show everything</a>'
             : '',
         'admin'
     );
@@ -237,8 +237,8 @@ admin_result_bar($pagination, $filter_query, 'entries');
                         ?>
                         <tr<?php echo $is_refusal ? ' class="table-warning"' : ''; ?>>
                             <td class="text-nowrap">
-                                <?php echo format_date($log['created'], 'j M Y'); ?>
-                                <span class="d-block small text-body-secondary"><?php echo format_date($log['created'], 'H:i'); ?></span>
+                                <?php echo formatdate($log['created'], 'j M Y'); ?>
+                                <span class="d-block small text-body-secondary"><?php echo formatdate($log['created'], 'H:i'); ?></span>
                             </td>
                             <td>
                                 <?php if ($who !== ''): ?>
@@ -252,7 +252,7 @@ admin_result_bar($pagination, $filter_query, 'entries');
                             </td>
                             <td>
                                 <span class="d-block">
-                                    <?php echo log_action_label($log['action']); ?>
+                                    <?php echo logactionlabel($log['action']); ?>
                                     <?php if ($is_refusal): ?>
                                         <i class="fa-solid fa-ban text-danger ms-1" aria-hidden="true"></i>
                                     <?php endif; ?>

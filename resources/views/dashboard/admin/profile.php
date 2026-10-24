@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'profile';
 
-$me = current_user();
+$me = currentuser();
 $my_id = (int) $me['id'];
 
 $errors = [];
@@ -29,9 +29,9 @@ $new_password = '';
 $confirm_password = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $what = post_text('what');
+    $what = posttext('what');
 
     if ($what === 'password') {
         $current_password = (string) ($_POST['current_password'] ?? '');
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($new_password !== $confirm_password) {
             $errors['confirm_password'] = 'The two new passwords are not the same.';
         }
-        $problem = password_problem($new_password);
+        $problem = passwordproblem($new_password);
         if ($problem !== '') {
             $errors['new_password'] = $problem;
         }
@@ -65,19 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $done = 'Your password has been changed. Use the new one the next time you sign in.';
         }
     } else {
-        $full_name = post_text('full_name');
-        $email = post_text('email');
+        $full_name = posttext('full_name');
+        $email = posttext('email');
 
-        admin_check_required($full_name, 'Your name', $errors);
-        admin_check_required($email, 'Your email address', $errors);
-        if (!is_empty_value($email) && !is_valid_email($email)) {
+        admincheckrequired($full_name, 'Your name', $errors);
+        admincheckrequired($email, 'Your email address', $errors);
+        if (!isemptyvalue($email) && !isvalidemail($email)) {
             $errors['email'] = 'That email address does not look right.';
         }
 
         /* Somebody else may already have that address on their account. A
            directory-only person may share it, so the check is limited to rows
            that carry a sign-in. */
-        if (!is_empty_value($email)) {
+        if (!isemptyvalue($email)) {
             $statement = $conn->prepare(
                 "SELECT id FROM people WHERE password IS NOT NULL AND (username = ? OR email = ?) AND id <> ? LIMIT 1"
             );
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->close();
 
             /* The session keeps a copy of the row, so it is thrown away here
-               and current_user() reads the fresh one when the header needs it. */
+               and currentuser() reads the fresh one when the header needs it. */
             unset($_SESSION['user_data']);
 
             $done = 'Your details have been saved.';
@@ -121,7 +121,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                 </div>
             <?php endif; ?>
 
-            <?php admin_errors($errors); ?>
+            <?php adminerrors($errors); ?>
 
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
@@ -130,22 +130,22 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <div>
                             <h2 class="h5 mb-1"><?php echo e($me['full_name']); ?></h2>
                             <p class="small text-body-secondary mb-0">
-                                <?php echo e(user_role_label($me['role'] ?? 'member')); ?>
+                                <?php echo e(userrolelabel($me['role'] ?? 'member')); ?>
                                 &middot; signed in as <strong><?php echo e($me['username']); ?></strong>
                             </p>
                         </div>
                     </div>
 
                     <form method="post" novalidate>
-                        <?php echo csrf_field(); ?>
+                        <?php echo csrffield(); ?>
                         <input type="hidden" name="what" value="details">
 
                         <div class="row">
                             <div class="col-md-6">
-                                <?php admin_text_field('full_name', 'Your name', $full_name); ?>
+                                <?php admintextfield('full_name', 'Your name', $full_name); ?>
                             </div>
                             <div class="col-md-6">
-                                <?php admin_text_field('email', 'Your email address', $email); ?>
+                                <?php admintextfield('email', 'Your email address', $email); ?>
                             </div>
                         </div>
 
@@ -154,7 +154,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             confused. Only a website administrator can change it, on the People page.
                         </p>
 
-                        <?php admin_form_buttons(admin_url('profile'), 'Save my details'); ?>
+                        <?php adminformbuttons(adminurl('profile'), 'Save my details'); ?>
                     </form>
 
                     <h2 class="h5 mt-5 mb-3">
@@ -162,7 +162,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                     </h2>
 
                     <form method="post" novalidate autocomplete="off">
-                        <?php echo csrf_field(); ?>
+                        <?php echo csrffield(); ?>
                         <input type="hidden" name="what" value="password">
 
                         <div class="row">
@@ -199,7 +199,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             than a short password you will not.
                         </p>
 
-                        <?php admin_form_buttons(admin_url('profile'), 'Change my password'); ?>
+                        <?php adminformbuttons(adminurl('profile'), 'Change my password'); ?>
                     </form>
                 </div>
             </div>

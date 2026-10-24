@@ -14,15 +14,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'devotionals';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $action = post_text('action');
+    $action = posttext('action');
     $devotional_id = (int) ($_POST['id'] ?? 0);
-    $devotional = admin_row($conn, 'devotionals', $devotional_id);
+    $devotional = adminrow($conn, 'devotionals', $devotional_id);
 
     if (!$devotional) {
         flash('error', 'That devotional is no longer here. It may already have been deleted.');
-        redirect(admin_url('devotionals'));
+        redirect(adminurl('devotionals'));
     }
 
     if ($action === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->execute();
         $statement->close();
 
-        log_action($conn, 'devotional_deleted', 'The devotional "' . $devotional['title'] . '"');
+        logaction($conn, 'devotional_deleted', 'The devotional "' . $devotional['title'] . '"');
         flash('success', 'The devotional "' . $devotional['title'] . '" has been deleted.');
     } elseif ($action === 'toggle_status') {
         $new_status = $devotional['status'] === 'published' ? 'draft' : 'published';
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : '"' . $devotional['title'] . '" is now a draft. Nobody can see it.');
     }
 
-    redirect(admin_url('devotionals'));
+    redirect(adminurl('devotionals'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -81,11 +81,11 @@ if ($bind_values) {
     $total_devotionals = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_devotionals = db_count($conn, "SELECT COUNT(*) FROM devotionals" . $where_sql);
+    $total_devotionals = dbcount($conn, "SELECT COUNT(*) FROM devotionals" . $where_sql);
 }
 
 $per_page = 20;
-$current_page = page_number();
+$current_page = pagenumber();
 $pagination = paginate($total_devotionals, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -104,26 +104,26 @@ $statement->close();
 
 $page_title = 'Devotionals';
 $page_heading = 'Devotionals';
-$page_actions = '<a class="btn btn-primary" href="' . admin_url('devotionals/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminurl('devotionals/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add devotional</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<?php admin_filter_bar(admin_url('devotionals'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
+<?php adminfilterbar(adminurl('devotionals'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
 
-<?php admin_result_bar($pagination, ['q' => $search, 'status' => $status], 'devotionals'); ?>
+<?php adminresultbar($pagination, ['q' => $search, 'status' => $status], 'devotionals'); ?>
 
 <?php if (!$devotionals): ?>
     <?php
-    empty_state(
+    emptystate(
         'fa-book-bible',
         $search !== '' || $status !== '' ? 'No devotionals match that' : 'No devotionals yet',
         $search !== '' || $status !== ''
             ? 'Try a different word, or clear the filter to see everything.'
             : 'A devotional is a short message for one day. The home page shows the one for today, and '
                 . 'the devotional page keeps the whole archive.',
-        '<a class="btn btn-primary" href="' . admin_url('devotionals/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminurl('devotionals/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Write the first one</a>',
         'admin'
     );
@@ -150,22 +150,22 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         ?>
                         <tr>
                             <td class="ps-3 text-nowrap">
-                                <?php echo format_date($devotional['devotional_date'], 'j M Y'); ?>
+                                <?php echo formatdate($devotional['devotional_date'], 'j M Y'); ?>
                                 <?php if ($is_future): ?>
                                     <span class="badge rounded-pill text-bg-info ms-1">Later</span>
                                 <?php endif; ?>
                             </td>
                             <td>
                                 <a class="fw-semibold d-block text-decoration-none"
-                                   href="<?php echo admin_url('devotionals/form.php?id=' . (int) $devotional['id']); ?>">
+                                   href="<?php echo adminurl('devotionals/form.php?id=' . (int) $devotional['id']); ?>">
                                     <?php echo e($devotional['title']); ?>
                                 </a>
                             </td>
                             <td class="small text-body-secondary"><?php echo e($devotional['scripture_reference']); ?></td>
-                            <td><?php echo status_badge($devotional['status']); ?></td>
+                            <td><?php echo statusbadge($devotional['status']); ?></td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo admin_row_actions('devotionals', $devotional['id'], [
+                                echo adminrowactions('devotionals', $devotional['id'], [
                                     'status' => $devotional['status'],
                                     'label' => 'the devotional "' . $devotional['title'] . '"',
                                 ]);

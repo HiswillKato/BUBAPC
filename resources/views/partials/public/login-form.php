@@ -41,10 +41,10 @@ $login_next = $login_next ?? ($_POST['next'] ?? ($_GET['next'] ?? ''));
             </div>
         <?php endif; ?>
 
-        <?php show_flashes(); ?>
+        <?php showflashes(); ?>
 
         <form method="post" action="<?php echo url('login'); ?>" id="login-form" novalidate>
-            <?php echo csrf_field(); ?>
+            <?php echo csrffield(); ?>
             <input type="hidden" name="next" value="<?php echo e($login_next); ?>">
 
             <div class="mb-3">

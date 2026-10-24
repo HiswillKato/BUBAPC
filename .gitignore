@@ -1,6 +1,7 @@
 # Files that must never be committed
 .env
 .env.*
+!.env.example
 *.before-install
 
 # Editor and OS leftovers

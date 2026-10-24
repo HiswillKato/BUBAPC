@@ -40,15 +40,15 @@ if ($slug !== '') {
     $page_description = excerpt(strip_tags(html_entity_decode($department['description'] ?: $department['name'])), 160);
     $canonical = 'departments/' . $department['slug'];
 
-    /* The leader is looked up through group_leader() rather than read straight
+    /* The leader is looked up through groupleader() rather than read straight
        off the row, so a leader who has a page of their own is linked and their
        name follows any change to it. A name typed in by hand still shows for
        the leaders who do not have a page. */
-    $leader = group_leader($conn, $department);
+    $leader = groupleader($conn, $department);
 
     require_once __DIR__ . '/../partials/public/header.php';
 
-    page_header(
+    pageheader(
         $department['name'],
         $leader['name'] !== '' ? 'Led by ' . $leader['name'] : 'One of the departments of ' . SITE_NAME . '.',
         [['Home', url('')], ['Our church', url('leadership')], ['Departments', url('departments')], [$department['name'], '']]
@@ -56,7 +56,7 @@ if ($slug !== '') {
 
     /* Whoever serves in this department, so the page can show the team as well
        as the person who leads it. */
-    $department_people = people_in_group($conn, 'department', (int) $department['id']);
+    $department_people = peopleingroup($conn, 'department', (int) $department['id']);
 
     /* The other departments, so a visitor who liked one can keep looking. */
     $statement = $conn->prepare("SELECT name, slug FROM departments
@@ -110,7 +110,7 @@ if ($slug !== '') {
                                                  photograph when there is one, their
                                                  initials when there is not. */
                                         if (!empty($member['image'])): ?>
-                                            <img src="<?php echo upload_url($member['image']); ?>" alt=""
+                                            <img src="<?php echo uploadurl($member['image']); ?>" alt=""
                                                  width="48" height="48" class="rounded-circle object-fit-cover flex-shrink-0">
                                         <?php else: ?>
                                             <span class="brand-mark bg-brand-soft text-brand rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"
@@ -121,7 +121,7 @@ if ($slug !== '') {
                                         <span>
                                             <span class="d-block fw-semibold text-body">
                                                 <?php echo e($member['name']); ?>
-                                                <?php echo birthday_cake($member['born']); ?>
+                                                <?php echo birthdaycake($member['born']); ?>
                                             </span>
                                             <?php if ($member['position'] !== ''): ?>
                                                 <span class="small text-body-secondary"><?php echo e($member['position']); ?></span>
@@ -134,7 +134,7 @@ if ($slug !== '') {
                     <?php endif; ?>
 
                     <div class="mt-4">
-                        <?php share_bar($department['name'], url('departments/' . $department['slug'])); ?>
+                        <?php sharebar($department['name'], url('departments/' . $department['slug'])); ?>
                     </div>
 
                     <a class="btn btn-outline-primary mt-4" href="<?php echo url('departments'); ?>">
@@ -192,7 +192,7 @@ $canonical = 'departments';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     'Departments',
     'Each department takes care of one part of the church&rsquo;s life, and each one '
     . 'is open to anybody who wants to serve.',
@@ -230,8 +230,8 @@ $list_sql = "SELECT departments.*, people.name AS linked_leader
              " . $where
     . " ORDER BY departments.display_order ASC, departments.name ASC LIMIT ? OFFSET ?";
 
-$current_page = page_number();
-$total = db_count_prepared($conn, $count_sql, $search_types, $search_values);
+$current_page = pagenumber();
+$total = dbcountprepared($conn, $count_sql, $search_types, $search_values);
 $pagination = paginate($total, $per_page, $current_page);
 
 $offset = $pagination['offset'];
@@ -269,17 +269,17 @@ $statement->close();
                 </div>
             </form>
 
-            <?php render_result_count($pagination, 'departments'); ?>
+            <?php renderresultcount($pagination, 'departments'); ?>
 
             <?php if (!$departments): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($search_term !== '') {
-                            empty_state('fa-magnifying-glass', 'No department found for "' . $search_term . '"',
+                            emptystate('fa-magnifying-glass', 'No department found for "' . $search_term . '"',
                                 'Try another word, or browse the whole list.');
                         } else {
-                            empty_state('fa-sitemap', 'The departments are being listed',
+                            emptystate('fa-sitemap', 'The departments are being listed',
                                 'Every department of the church will appear here, with the name of the person '
                                 . 'who leads it and how to join.');
                         }
@@ -289,11 +289,11 @@ $statement->close();
             <?php else: ?>
                 <div class="row g-4 mt-1">
                     <?php
-                    /* group_leader() is one query per card on a page of nine,
+                    /* groupleader() is one query per card on a page of nine,
                        which is nothing at this size, and it means the list and
                        the detail page can never disagree about who leads what. */
                     foreach ($departments as $department):
-                        $leader = group_leader($conn, $department);
+                        $leader = groupleader($conn, $department);
                     ?>
                         <div class="col-md-6 col-lg-4">
                             <article class="card h-100 border-0 shadow-sm rounded-4">
@@ -320,7 +320,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php render_pagination($pagination, ['q' => $search_term]); ?>
+                <?php renderpagination($pagination, ['q' => $search_term]); ?>
             <?php endif; ?>
         </div>
     </section>

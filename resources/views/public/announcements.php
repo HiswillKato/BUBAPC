@@ -15,14 +15,14 @@ $canonical = 'announcements';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     'Announcements',
     'News from the church, newest first. Anything you need to know about a '
     . 'meeting, a trip or a change will be posted here.',
     [['Home', url('')], ['Media', url('sermons')], ['Announcements', '']]
 );
 
-$announcements = recent_announcements($conn, 50);
+$announcements = recentannouncements($conn, 50);
 ?>
 
     <section class="py-5">
@@ -31,7 +31,7 @@ $announcements = recent_announcements($conn, 50);
                 <div class="row justify-content-center">
                     <div class="col-lg-8">
                         <?php
-                        empty_state('fa-bullhorn', 'There is no news at the moment',
+                        emptystate('fa-bullhorn', 'There is no news at the moment',
                             'When there is something worth telling you, it will be posted here. '
                             . 'In the meantime, come and join us in person.',
                             '<a class="btn btn-primary" href="' . url('programs') . '">See the weekly program</a>');
@@ -46,7 +46,7 @@ $announcements = recent_announcements($conn, 50);
                                 <div class="card-body p-4">
                                     <p class="small text-uppercase fw-bold text-gold-dark mb-2">
                                         <i class="fa-solid fa-bullhorn me-1" aria-hidden="true"></i>
-                                        <?php echo format_date($notice['publish_date'], 'j F Y'); ?>
+                                        <?php echo formatdate($notice['publish_date'], 'j F Y'); ?>
                                     </p>
 
                                     <h2 class="h4 mb-2"><?php echo e($notice['title']); ?></h2>
@@ -55,7 +55,7 @@ $announcements = recent_announcements($conn, 50);
                                         <?php echo paragraphs($notice['content']); ?>
                                     </div>
 
-                                    <div class="mt-3"><?php share_bar($notice['title'], url('announcements#announcement-' . $notice['id'])); ?></div>
+                                    <div class="mt-3"><?php sharebar($notice['title'], url('announcements#announcement-' . $notice['id'])); ?></div>
                                 </div>
                             </article>
                         </div>

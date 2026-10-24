@@ -22,14 +22,14 @@ require_once __DIR__ . '/../../../app/init.php';
 /* A signed in person may use this page whichever kind of account they have. A
    member is the ordinary case; an authorised member who wanders in simply edits
    their own name and number, which is the same form and harmless. */
-require_login();
+requirelogin();
 
-$member = current_user();
+$member = currentuser();
 
 /* Some accounts have a page in the directory behind them - a student or a
    leader - and those people can edit that page here. A website admin, or a
    member who signed up themselves, has none, and is shown the account only. */
-$person = current_person($conn);
+$person = currentperson($conn);
 
 /* The church links, in the order somebody would use them. A person's own page
    leads the list because that is the thing about this website they own. */
@@ -48,9 +48,9 @@ require_once __DIR__ . '/../partials/public/header.php';
 
     <section class="py-4 py-lg-5">
         <div class="container">
-            <?php page_header('My account', '', [['Home', url('')], ['My account', null]]); ?>
+            <?php pageheader('My account', '', [['Home', url('')], ['My account', null]]); ?>
 
-            <?php show_flashes(); ?>
+            <?php showflashes(); ?>
 
             <div class="row g-4">
                 <div class="col-12 col-lg-7">
@@ -75,7 +75,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                                 </dd>
 
                                 <dt class="col-sm-4 text-body-secondary fw-normal mb-0">Member since</dt>
-                                <dd class="col-sm-8 mb-0"><?php echo format_date($member['created'], 'j F Y'); ?></dd>
+                                <dd class="col-sm-8 mb-0"><?php echo formatdate($member['created'], 'j F Y'); ?></dd>
                             </dl>
 
                             <div class="d-flex flex-wrap gap-2 mt-4">
@@ -118,7 +118,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                     </div>
 
                     <form method="post" action="<?php echo url('logout'); ?>" class="mt-3">
-                        <?php echo csrf_field(); ?>
+                        <?php echo csrffield(); ?>
                         <button type="submit" class="btn btn-outline-secondary w-100">
                             <i class="fa-solid fa-right-from-bracket me-1" aria-hidden="true"></i>
                             Sign out

@@ -6,7 +6,7 @@
  * typed twice: the admin changes a time in the browser and it is correct here
  * on the next visit.
  *
- * next_program() works out which meeting is coming next and marks it at the
+ * nextprogram() works out which meeting is coming next and marks it at the
  * top of the page, which is the one thing a visitor really came to read.
  */
 
@@ -18,11 +18,11 @@ $canonical = 'programs';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-$programs_by_day = weekly_program_by_day($conn);
+$programs_by_day = weeklyprogrambyday($conn);
 $has_programs = count($programs_by_day) > 0;
-$next_service = next_program($conn);
+$next_service = nextprogram($conn);
 
-page_header(
+pageheader(
     'Weekly program',
     'Here is everything we meet for, in the order it happens in the week. '
     . 'Everyone is welcome at any of these meetings.',
@@ -37,7 +37,7 @@ page_header(
                 <div class="row justify-content-center">
                     <div class="col-lg-8">
                         <?php
-                        empty_state('fa-clock', 'The weekly program is being prepared',
+                        emptystate('fa-clock', 'The weekly program is being prepared',
                             'The days and times of our meetings will appear here as soon as they are confirmed. '
                             . 'In the meantime, please get in touch and we will tell you when we meet.',
                             '<a class="btn btn-primary" href="' . url('contact') . '">Contact us</a>');
@@ -51,16 +51,16 @@ page_header(
                         <div class="card-body p-4">
                             <p class="text-uppercase fw-bold small text-gold-dark mb-2">Next meeting</p>
                             <h2 class="h4 mb-1"><?php echo e($next_service['title'] ?: 'Service'); ?></h2>
-                            <?php $time_lines = program_times($next_service); ?>
+                            <?php $time_lines = programtimes($next_service); ?>
                             <p class="mb-0">
                                 <i class="fa-solid fa-calendar-day me-1" aria-hidden="true"></i>
                                 <strong><?php echo e($next_service['day_label']); ?></strong><?php if (!$time_lines): ?>,
-                                <?php echo format_time_range($next_service['start_time'], $next_service['end_time'] ?? ''); ?><?php endif; ?>
+                                <?php echo formattimerange($next_service['start_time'], $next_service['end_time'] ?? ''); ?><?php endif; ?>
                             </p>
                             <?php foreach ($time_lines as $time_line): ?>
                                 <p class="small mb-0"><?php echo $time_line; ?></p>
                             <?php endforeach; ?>
-                            <?php foreach (team_lines($next_service['venue']) as $place): ?>
+                            <?php foreach (teamlines($next_service['venue']) as $place): ?>
                                 <p class="small mb-0">
                                     <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
                                 </p>
@@ -93,16 +93,16 @@ page_header(
                                                            teams meet at different hours keeps
                                                            those hours as their own lines below. */ ?>
                                                     <span class="badge rounded-pill text-bg-primary px-3 py-2">
-                                                        <?php echo format_time_range($program['start_time'], $program['end_time'] ?? ''); ?>
+                                                        <?php echo formattimerange($program['start_time'], $program['end_time'] ?? ''); ?>
                                                     </span>
                                                     <div class="flex-grow-1">
                                                         <p class="fw-semibold mb-0">
                                                             <?php echo e($program['title'] ?: 'Service'); ?>
                                                         </p>
-                                                        <?php foreach (program_times($program) as $time_line): ?>
+                                                        <?php foreach (programtimes($program) as $time_line): ?>
                                                             <p class="small text-body-secondary mb-0"><?php echo $time_line; ?></p>
                                                         <?php endforeach; ?>
-                                                        <?php foreach (team_lines($program['venue']) as $place): ?>
+                                                        <?php foreach (teamlines($program['venue']) as $place): ?>
                                                             <p class="small mb-0">
                                                                 <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
                                                             </p>

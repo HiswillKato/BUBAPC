@@ -2,7 +2,7 @@
 /**
  * BUBAPC - Site search
  *
- * One box that searches every part of the website at once. search_site() in
+ * One box that searches every part of the website at once. searchsite() in
  * app/functions.php runs the seven searches and hands back the groups, so this
  * page only has to print them.
  */
@@ -10,7 +10,7 @@
 require_once __DIR__ . '/../../../app/init.php';
 
 $search_term = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
-$results = ($search_term === '') ? [] : search_site($conn, $search_term);
+$results = ($search_term === '') ? [] : searchsite($conn, $search_term);
 $result_total = 0;
 foreach ($results as $group_items) {
     $result_total += count($group_items);
@@ -22,7 +22,7 @@ $canonical = 'search';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     $search_term === '' ? 'Search' : 'Search results',
     $search_term === ''
         ? 'Look for anything on this website: a sermon, a devotional, an event, a leader or a department.'
@@ -80,7 +80,7 @@ page_header(
                 <div class="row justify-content-center">
                     <div class="col-lg-7">
                         <?php
-                        empty_state('fa-magnifying-glass', 'Nothing found for "' . $search_term . '"',
+                        emptystate('fa-magnifying-glass', 'Nothing found for "' . $search_term . '"',
                             'Check the spelling, try one word instead of a phrase, or use the menu to find '
                             . 'your way. The devotional and sermon archives are the best places to look.',
                             '<a class="btn btn-primary" href="' . url('contact') . '">Ask us instead</a>');
@@ -90,7 +90,7 @@ page_header(
             <?php else: ?>
                 <?php foreach ($results as $group_name => $group_items): ?>
                     <div class="mb-5">
-                        <?php section_heading($group_name . 's', count($group_items) . ' found', '', 2); ?>
+                        <?php sectionheading($group_name . 's', count($group_items) . ' found', '', 2); ?>
 
                         <?php if ($group_name === 'Departments' || $group_name === 'Families' || $group_name === 'Leadership'): ?>
                             <div class="row g-3">

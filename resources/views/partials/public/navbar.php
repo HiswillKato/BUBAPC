@@ -40,7 +40,7 @@
  */
 
 $search_term = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
-$available_social = social_links();
+$available_social = sociallinks();
 
 /* The top strip is only for accounts a visitor can follow, so YouTube is kept
    to the footer instead. */
@@ -111,11 +111,11 @@ unset($available_social['YouTube']);
             <div class="collapse navbar-collapse order-lg-2" id="bubapc-menu">
                 <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2 py-3 py-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold<?php echo nav_active('home') ? ' active' : ''; ?>"
+                        <a class="nav-link fw-semibold<?php echo navactive('home') ? ' active' : ''; ?>"
                            href="<?php echo url(''); ?>">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold<?php echo nav_active('about') ? ' active' : ''; ?>"
+                        <a class="nav-link fw-semibold<?php echo navactive('about') ? ' active' : ''; ?>"
                            href="<?php echo url('about'); ?>">About</a>
                     </li>
 
@@ -124,7 +124,7 @@ unset($available_social['YouTube']);
                            belong in sit together rather than being spread
                            across the bar. */ ?>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fw-semibold<?php echo nav_active('leadership') || nav_active('departments') || nav_active('families') || nav_active('people') ? ' active' : ''; ?>"
+                        <a class="nav-link dropdown-toggle fw-semibold<?php echo navactive('leadership') || navactive('departments') || navactive('families') || navactive('people') ? ' active' : ''; ?>"
                            href="<?php echo url('leadership'); ?>" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">Our Church</a>
                         <ul class="dropdown-menu rounded-4 shadow border-0 p-2">
@@ -145,14 +145,14 @@ unset($available_social['YouTube']);
                            Media with the other things that are written down and
                            kept. */ ?>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold<?php echo nav_active('devotional') ? ' active' : ''; ?>"
+                        <a class="nav-link fw-semibold<?php echo navactive('devotional') ? ' active' : ''; ?>"
                            href="<?php echo url('devotional'); ?>">Devotional</a>
                     </li>
 
 <?php /* WHAT WE PUBLISH. Everything here is a thing that was
                             written down and kept, so the pictures and notices follow it. */ ?>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fw-semibold<?php echo nav_active('devotionals') || nav_active('gallery') || nav_active('announcements') ? ' active' : ''; ?>"
+                        <a class="nav-link dropdown-toggle fw-semibold<?php echo navactive('devotionals') || navactive('gallery') || navactive('announcements') ? ' active' : ''; ?>"
                            href="<?php echo url('gallery'); ?>" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">Media</a>
                         <ul class="dropdown-menu rounded-4 shadow border-0 p-2">
@@ -168,7 +168,7 @@ unset($available_social['YouTube']);
                            between About and the dropdowns, where it read as an
                            ordinary section rather than the end of a journey. */ ?>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle fw-semibold<?php echo nav_active('programs') || nav_active('events') || nav_active('contact') ? ' active' : ''; ?>"
+                        <a class="nav-link dropdown-toggle fw-semibold<?php echo navactive('programs') || navactive('events') || navactive('contact') ? ' active' : ''; ?>"
                            href="<?php echo url('programs'); ?>" role="button"
                            data-bs-toggle="dropdown" aria-expanded="false">Programs</a>
                         <ul class="dropdown-menu rounded-4 shadow border-0 p-2">
@@ -188,7 +188,7 @@ unset($available_social['YouTube']);
                            thing in the bar a visitor is being asked to DO, and
                            putting it last gives the eye an end to stop at. Both
                            disappear once somebody is signed in. The Login link's
-                           address, word and icon come from account_link(), so the
+                           address, word and icon come from accountlink(), so the
                            bar and the account menu cannot drift apart.
 
                            Somebody who IS signed in gets one menu where those two
@@ -197,12 +197,12 @@ unset($available_social['YouTube']);
                            nothing at all: the two links simply disappeared, and a
                            member who wandered back to the public pages had to
                            remember /dashboard to get to their own account. */ ?>
-                    <?php if (!is_logged_in()): ?>
-                        <?php $account = account_link(); ?>
+                    <?php if (!isloggedin()): ?>
+                        <?php $account = accountlink(); ?>
                         <li class="nav-item">
-                            <a class="nav-link fw-semibold<?php echo nav_active('login') ? ' active' : ''; ?>"
+                            <a class="nav-link fw-semibold<?php echo navactive('login') ? ' active' : ''; ?>"
                                href="<?php echo e($account['url']); ?>"
-                               <?php echo nav_active('login') ? 'aria-current="page"' : ''; ?>>
+                               <?php echo navactive('login') ? 'aria-current="page"' : ''; ?>>
                                 <i class="fa-solid <?php echo e($account['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account['label']); ?></a>
                         </li>
                         <li class="nav-item">
@@ -214,12 +214,12 @@ unset($available_social['YouTube']);
                                    are on. */ ?>
                             <a class="btn btn-gold ms-lg-2"
                                href="<?php echo url('register'); ?>"
-                               <?php echo nav_active('register') ? 'aria-current="page"' : ''; ?>>Register</a>
+                               <?php echo navactive('register') ? 'aria-current="page"' : ''; ?>>Register</a>
                         </li>
                     <?php else: ?>
                         <?php
-                        $account = account_link();
-                        $mine = current_person($conn);
+                        $account = accountlink();
+                        $mine = currentperson($conn);
                         ?>
                         <li class="nav-item dropdown">
                             <?php /* href is a way in with no JavaScript; Bootstrap
@@ -230,15 +230,15 @@ unset($available_social['YouTube']);
                                 <i class="fa-solid <?php echo e($account['icon']); ?> me-1" aria-hidden="true"></i><?php echo e($account['label']); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end rounded-4 shadow border-0 p-2">
-                                <?php if (is_staff()): ?>
+                                <?php if (isstaff()): ?>
                                     <li>
-                                        <a class="dropdown-item rounded-3" href="<?php echo admin_url(); ?>">
+                                        <a class="dropdown-item rounded-3" href="<?php echo adminurl(); ?>">
                                             <i class="fa-solid fa-shield-halved me-2" aria-hidden="true"></i>Admin panel
                                         </a>
                                     </li>
                                 <?php endif; ?>
                                 <li>
-                                    <a class="dropdown-item rounded-3" href="<?php echo member_url(); ?>">
+                                    <a class="dropdown-item rounded-3" href="<?php echo memberurl(); ?>">
                                         <i class="fa-solid fa-user me-2" aria-hidden="true"></i>My account
                                     </a>
                                 </li>
@@ -256,7 +256,7 @@ unset($available_social['YouTube']);
                                            is a POST with a token like every other
                                            change on this site - never a link. */ ?>
                                     <form method="post" action="<?php echo url('logout'); ?>">
-                                        <?php echo csrf_field(); ?>
+                                        <?php echo csrffield(); ?>
                                         <button type="submit" class="dropdown-item rounded-3 text-danger">
                                             <i class="fa-solid fa-right-from-bracket me-2" aria-hidden="true"></i>Log out
                                         </button>

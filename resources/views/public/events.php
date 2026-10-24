@@ -42,14 +42,14 @@ if ($slug !== '') {
 
     require_once __DIR__ . '/../partials/public/header.php';
 
-    page_header(
+    pageheader(
         $event['title'],
         $event['theme'] !== '' ? $event['theme'] : 'You are warmly invited.',
         [['Home', url('')], ['Events', url('events')], [$event['title'], '']]
     );
 
     $event_link = url('events/' . $event['slug']);
-    $moment = event_moment($event);
+    $moment = eventmoment($event);
     $is_past = !empty($event['start_date']) && $event['start_date'] < date('Y-m-d');
     ?>
 
@@ -59,7 +59,7 @@ if ($slug !== '') {
                 <div class="col-lg-8">
 
                     <?php if (!empty($event['image'])): ?>
-                        <img src="<?php echo upload_url($event['image']); ?>" alt="<?php echo e($event['title']); ?>"
+                        <img src="<?php echo uploadurl($event['image']); ?>" alt="<?php echo e($event['title']); ?>"
                              class="img-fluid rounded-4 shadow-sm mb-4 w-100">
                     <?php endif; ?>
 
@@ -75,7 +75,7 @@ if ($slug !== '') {
                         </p>
                     <?php endif; ?>
 
-                    <div class="mt-4"><?php share_bar($event['title'], $event_link); ?></div>
+                    <div class="mt-4"><?php sharebar($event['title'], $event_link); ?></div>
 
                     <a class="btn btn-outline-primary mt-4" href="<?php echo url('events'); ?>">
                         <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>All events
@@ -93,9 +93,9 @@ if ($slug !== '') {
                                     <div>
                                         <p class="fw-semibold mb-0">Date</p>
                                         <span class="small text-body-secondary">
-                                            <?php echo format_date($event['start_date'], 'l, j F Y'); ?>
+                                            <?php echo formatdate($event['start_date'], 'l, j F Y'); ?>
                                             <?php if (!empty($event['end_date']) && $event['end_date'] !== $event['start_date']): ?>
-                                                to <?php echo format_date($event['end_date'], 'j F Y'); ?>
+                                                to <?php echo formatdate($event['end_date'], 'j F Y'); ?>
                                             <?php endif; ?>
                                         </span>
                                     </div>
@@ -107,7 +107,7 @@ if ($slug !== '') {
                                         <div>
                                             <p class="fw-semibold mb-0">Time</p>
                                             <span class="small text-body-secondary">
-                                                <?php echo format_time_range($event['start_time'], $event['end_time']); ?>
+                                                <?php echo formattimerange($event['start_time'], $event['end_time']); ?>
                                             </span>
                                         </div>
                                     </li>
@@ -162,7 +162,7 @@ $canonical = 'events';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-page_header(
+pageheader(
     'Events',
     'Everything we gather for, from the big conventions to the quiet evenings '
     . 'that change people. All of it is open to you.',
@@ -187,8 +187,8 @@ $count_sql = "SELECT COUNT(*) FROM events WHERE status = 'published'" . $date_fi
 $list_sql = "SELECT * FROM events WHERE status = 'published'" . $date_filter
     . ' ORDER BY start_date ' . ($when === 'past' ? 'DESC' : 'ASC') . ', start_time ASC LIMIT ? OFFSET ?';
 
-$current_page = page_number();
-$pagination = paginate(db_count($conn, $count_sql), $per_page, $current_page);
+$current_page = pagenumber();
+$pagination = paginate(dbcount($conn, $count_sql), $per_page, $current_page);
 
 $statement = $conn->prepare($list_sql);
 $offset = $pagination['offset'];
@@ -226,22 +226,22 @@ $statement->close();
                 </a>
             </div>
 
-            <?php render_result_count($pagination, 'events'); ?>
+            <?php renderresultcount($pagination, 'events'); ?>
 
             <?php if (!$events): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($when === 'upcoming') {
-                            empty_state('fa-calendar-plus', 'Nothing on the calendar yet',
+                            emptystate('fa-calendar-plus', 'Nothing on the calendar yet',
                                 'Every event we plan is announced here first. There is nothing coming up at the '
                                 . 'moment, but please check back soon.',
                                 '<a class="btn btn-primary" href="' . url('programs') . '">See the weekly program</a>');
                         } elseif ($when === 'past') {
-                            empty_state('fa-photo-film', 'No past events to show',
+                            emptystate('fa-photo-film', 'No past events to show',
                                 'Once an event is over it is filed here, so you can see what you missed.');
                         } else {
-                            empty_state('fa-calendar-days', 'No events at all yet',
+                            emptystate('fa-calendar-days', 'No events at all yet',
                                 'The first event will appear on this page as soon as it is added.');
                         }
                         ?>
@@ -253,7 +253,7 @@ $statement->close();
                         <div class="col-md-6 col-lg-4">
                             <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                                 <div class="ratio ratio-16x9 zoomable">
-                                    <img src="<?php echo upload_url($event['image']); ?>" alt=""
+                                    <img src="<?php echo uploadurl($event['image']); ?>" alt=""
                                          class="object-fit-cover">
                                 </div>
                                 <div class="card-body p-4 d-flex flex-column">
@@ -262,7 +262,7 @@ $statement->close();
                                             <span class="badge rounded-pill badge-gold"><?php echo e($event['theme']); ?></span>
                                         <?php endif; ?>
                                         <span class="badge rounded-pill text-bg-secondary">
-                                            <?php echo format_date($event['start_date'], 'M Y'); ?>
+                                            <?php echo formatdate($event['start_date'], 'M Y'); ?>
                                         </span>
                                     </div>
 
@@ -274,7 +274,7 @@ $statement->close();
 
                                     <p class="small text-body-secondary mb-2">
                                         <i class="fa-solid fa-calendar-day me-1" aria-hidden="true"></i>
-                                        <?php echo event_date_label($event); ?>
+                                        <?php echo eventdatelabel($event); ?>
                                         <?php if (!empty($event['venue'])): ?>
                                             <br><i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i>
                                             <?php echo e($event['venue']); ?>
@@ -290,7 +290,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php render_pagination($pagination, ['when' => $when]); ?>
+                <?php renderpagination($pagination, ['when' => $when]); ?>
             <?php endif; ?>
         </div>
     </section>

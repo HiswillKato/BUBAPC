@@ -34,27 +34,27 @@ $standing = 'member';
 $wants_devotional = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verify_csrf();
+    verifycsrf();
 
-    $full_name = post_text('full_name');
-    $email = post_text('email');
-    $phone = post_text('phone');
-    $standing = post_text('standing');
+    $full_name = posttext('full_name');
+    $email = posttext('email');
+    $phone = posttext('phone');
+    $standing = posttext('standing');
     $password = (string) ($_POST['password'] ?? '');
     $password_confirm = (string) ($_POST['password_confirm'] ?? '');
-    $wants_devotional = post_checkbox('devotional');
+    $wants_devotional = postcheckbox('devotional');
 
-    if (is_empty_value($full_name)) {
+    if (isemptyvalue($full_name)) {
         $errors[] = 'Please tell us your name.';
     } elseif (mb_strlen($full_name) > 160) {
         $errors[] = 'That name is too long. Please use 160 characters or fewer.';
     }
 
-    if (!is_valid_email($email)) {
+    if (!isvalidemail($email)) {
         $errors[] = 'Please type a real email address, for example name@example.com.';
     }
 
-    if (is_empty_value($phone)) {
+    if (isemptyvalue($phone)) {
         $errors[] = 'Please give us a phone number, so we can reach you.';
     } elseif (mb_strlen($phone) > 40) {
         $errors[] = 'That phone number is too long.';
@@ -62,14 +62,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* The password is checked before the address is looked up, so somebody
        probing for which addresses are registered is not told either. */
-    $password_error = password_problem($password);
+    $password_error = passwordproblem($password);
     if ($password_error !== '') {
         $errors[] = $password_error;
     } elseif ($password !== $password_confirm) {
         $errors[] = 'The two passwords do not match.';
     }
 
-    if (!array_key_exists($standing, standing_labels())) {
+    if (!array_key_exists($standing, standinglabels())) {
         $errors[] = 'Please choose how you are registering.';
     }
 
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             /* Read the row back rather than using the values that were just
                inserted, so the session holds the database's own copy - the
-               password hash, the id, everything sign_user_in() expects. */
+               password hash, the id, everything signuserin() expects. */
             $statement = $conn->prepare("SELECT * FROM people WHERE id = ? LIMIT 1");
             $member_id = (int) $new_id;
             $statement->bind_param('i', $member_id);
@@ -160,13 +160,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->close();
 
             /* Signing somebody in straight after they register saves typing the
-               password twice. It goes through sign_user_in() rather than
+               password twice. It goes through signuserin() rather than
                setting the session here, because that is where the fresh
                session id is. */
-            sign_user_in($member);
+            signuserin($member);
 
             flash('success', 'Welcome to the church, ' . $full_name . '. Your account is ready.');
-            redirect(member_url());
+            redirect(memberurl());
         }
     }
 }
@@ -183,9 +183,9 @@ require_once __DIR__ . '/../partials/public/header.php';
                         <div class="card-body p-4 p-md-5">
                             <h1 class="h4 mb-3">Register</h1>
                             <p class="text-body-secondary mb-4">Register here and keep your details up to date.</p>
-                            <?php form_errors($errors, 'Please check the form and try again.'); ?>
+                            <?php formerrors($errors, 'Please check the form and try again.'); ?>
                             <form method="post" action="<?php echo url('register'); ?>" novalidate>
-                                <?php echo csrf_field(); ?>
+                                <?php echo csrffield(); ?>
 
                                 <div class="mb-3">
                                     <label class="form-label" for="full_name">Your name</label>
@@ -214,7 +214,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                                 <div class="mb-3">
                                     <label class="form-label" for="standing">I am registering as</label>
                                     <select class="form-select" id="standing" name="standing" required>
-                                        <?php foreach (standing_labels() as $key => $label): ?>
+                                        <?php foreach (standinglabels() as $key => $label): ?>
                                             <option value="<?php echo e($key); ?>"<?php echo $standing === $key ? ' selected' : ''; ?>>
                                                 <?php echo e($label); ?>
                                             </option>

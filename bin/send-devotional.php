@@ -66,7 +66,7 @@ if (!checkdate($month, $day_of_month, $year)) {
     exit(2);
 }
 
-/* url_raw() builds the link in the email. With no BASE_URL set it reads the
+/* urlraw() builds the link in the email. With no BASE_URL set it reads the
    name the browser asked for, and a command has no browser, so --host is the
    way to say it. The live server should set BASE_URL in app/config.php and
    leave this alone. */
@@ -111,7 +111,7 @@ while ($row = $result->fetch_assoc()) {
         continue;
     }
 
-    if (mail_devotional($row['email'], $devotional)) {
+    if (maildevotional($row['email'], $devotional)) {
         $sent++;
     } else {
         $failed++;

@@ -9,10 +9,10 @@
  */
 
 require_once __DIR__ . '/../../../../app/init.php';
-if (current_user()['role'] ?? '' !== 'admin') {
+if (currentuser()['role'] ?? '' !== 'admin') {
     flash('error', 'Only website administrators can open that page.');
-    redirect(admin_url('people'));
+    redirect(adminurl('people'));
 }
-require_staff();
+requirestaff();
 
-redirect(admin_url('people'));
+redirect(adminurl('people'));
