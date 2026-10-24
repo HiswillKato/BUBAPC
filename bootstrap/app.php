@@ -1,27 +1,42 @@
 <?php
 /**
- * BUBAPC - bootstrap (martazi-style front controller entry)
- *
- * Loads configuration, helpers, auth, mail and the session, then installs the
- * failure handler. Every request enters through public/index.php, which
- * requires this file before dispatching the router.
+ * BUBAPC - bootstrap (martazi-style)
  */
 
 define('APP_ROOT', dirname(__DIR__));
 
-require_once APP_ROOT . '/config/config.php';
-
+// Composer autoload (also loads app/helpers/functions.php, defining env() etc.)
 if (is_file(APP_ROOT . '/vendor/autoload.php')) {
     require_once APP_ROOT . '/vendor/autoload.php';
 }
 
-require_once APP_ROOT . '/app/helpers/functions.php';
-require_once APP_ROOT . '/app/auth.php';
-require_once APP_ROOT . '/app/mail.php';
+// Load environment variables from .env
+if (class_exists('Dotenv\\Dotenv')) {
+    \Dotenv\Dotenv::createImmutable(APP_ROOT)->safeLoad();
+}
+
+// Load configuration (martazi-style array + legacy constants)
+$config = require_once APP_ROOT . '/config/config.php';
+
+// configure error reporting
+error_reporting(E_ALL);
+if (isset($config['app']['debug'])) {
+    ini_set('display_errors', $config['app']['debug'] ? '1' : '0');
+}
+
+// Configure timezone
+if (isset($config['app']['timezone'])) {
+    date_default_timezone_set($config['app']['timezone']);
+}
+
+// Initialize sessions / load auth & mail
+require_once APP_ROOT . '/app/helpers/auth.php';
+require_once APP_ROOT . '/app/helpers/mail.php';
+require_once APP_ROOT . '/bootstrap/session.php';
 
 define('APP_INITIALIZED', true);
 
-/* Failure handler (moved from app/init.php) */
+/* Failure handler (unchanged) */
 set_exception_handler(function ($problem) {
     error_log(sprintf(
         '[bubapc] %s in %s on line %d',

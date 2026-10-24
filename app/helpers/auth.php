@@ -595,7 +595,7 @@ if (!defined('BUBAPC_INSTALLER') && !defined('BUBAPC_SKIP_MAINTENANCE')) {
         http_response_code(503);
         $page_title = 'Website under maintenance';
         $body_class = 'page-maintenance';
-        require __DIR__ . '/includes/maintenance.php';
+        require APP_ROOT . '/resources/views/partials/maintenance.php';
         exit;
     }
 }

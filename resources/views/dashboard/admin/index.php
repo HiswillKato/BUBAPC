@@ -27,7 +27,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'dashboard';
 $page_title = 'Dashboard';
@@ -35,7 +35,7 @@ $page_heading = 'Dashboard';
 $page_actions = '<a class="btn btn-primary" href="' . admin_url('devotionals/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Write a devotional</a>';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 
 $admin = current_user();
 
@@ -199,4 +199,4 @@ $cards = [
         </div>
     </div>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

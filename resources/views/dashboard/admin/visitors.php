@@ -14,7 +14,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'visitors';
 
@@ -128,7 +128,7 @@ $page_actions = (is_admin()
         . '<i class="fa-solid fa-broom me-1" aria-hidden="true"></i>Tidy up old visits</button></form>'
     : '');
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
 <div class="row g-3 mb-4">
@@ -265,4 +265,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
     </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

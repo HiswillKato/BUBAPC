@@ -14,7 +14,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'subscribers';
 
@@ -141,7 +141,7 @@ $page_actions = $active_count > 0
         . '<i class="fa-solid fa-file-csv me-1" aria-hidden="true"></i>Download as a spreadsheet</a>'
     : '';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
 <?php if ($active_count === 0): ?>
@@ -244,4 +244,4 @@ if ($filter !== '') {
     </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

@@ -16,7 +16,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 if (current_user()['role'] ?? '' !== 'admin') {
     flash('error', 'Only website administrators can open that page.');
     redirect(admin_url());
@@ -65,7 +65,7 @@ $maintenance_on = is_maintenance_mode($conn);
 $page_title = 'Settings';
 $page_heading = 'Settings';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
     <div class="row justify-content-center">
@@ -117,4 +117,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
 
     </div>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

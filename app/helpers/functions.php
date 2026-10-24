@@ -2741,3 +2741,19 @@ function visitor_counts($conn)
     ];
 }
 
+
+
+/**
+ * Retrieve an environment variable (martazi-style helper).
+ */
+function env(string $variable, $default = null)
+{
+    if (array_key_exists($variable, $_ENV)) {
+        return $_ENV[$variable];
+    }
+    if (array_key_exists($variable, $_SERVER)) {
+        return $_SERVER[$variable];
+    }
+    $value = getenv($variable);
+    return $value === false ? $default : $value;
+}

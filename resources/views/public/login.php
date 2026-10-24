@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 /* The form partial reads these, so the page hands over what happened and
    where to go back to, and leaves the wording to the partial. */
@@ -106,10 +106,10 @@ $login_errors = $errors;
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 col-sm-10 col-md-8 col-lg-5">
-                    <?php require __DIR__ . '/../../../app/includes/public/login-form.php'; ?>
+                    <?php require __DIR__ . '/../partials/public/login-form.php'; ?>
                 </div>
             </div>
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

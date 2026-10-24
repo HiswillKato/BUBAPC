@@ -15,7 +15,7 @@ $page_title = 'Today’s devotional';
 $page_description = 'A short daily message from the Word of God at ' . SITE_NAME . '.';
 $canonical = 'devotional';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 $devotional = current_devotional($conn);
 
@@ -68,4 +68,4 @@ page_header(
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

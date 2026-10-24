@@ -15,7 +15,7 @@
  * saved in the tokens table. Email is a copy on the way out, not a receipt.
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+require_once APP_ROOT . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

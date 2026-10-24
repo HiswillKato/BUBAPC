@@ -19,7 +19,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'people';
 
@@ -183,7 +183,7 @@ $page_heading = 'People';
 $page_actions = '<a class="btn btn-primary" href="' . admin_url('people/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add a person</a>';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
 <?php
@@ -347,4 +347,4 @@ if ($category_filter !== '') {
     </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

@@ -20,7 +20,7 @@ $page_title = $search_term === '' ? 'Search' : 'Search results for ' . $search_t
 $page_description = 'Search ' . SITE_NAME . ' for sermons, devotionals, events, people and more.';
 $canonical = 'search';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     $search_term === '' ? 'Search' : 'Search results',
@@ -129,4 +129,4 @@ page_header(
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

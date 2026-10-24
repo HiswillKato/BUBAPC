@@ -19,4 +19,4 @@ $error_title = 'Page not found';
 $error_message = 'We could not find that page. It may have been moved, renamed or removed. '
     . 'Try the menu at the top, or search for what you were looking for.';
 
-require __DIR__ . '/../../../app/includes/error-page.php';
+require __DIR__ . '/../partials/error-page.php';

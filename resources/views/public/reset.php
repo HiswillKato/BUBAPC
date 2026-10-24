@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $page_title = 'Choose a new password';
 $page_description = 'Choose a new ' . SITE_NAME . ' password.';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 ?>
 
 <div class="container py-5">
@@ -143,4 +143,4 @@ require_once __DIR__ . '/../../../app/includes/public/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

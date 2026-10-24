@@ -14,7 +14,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'logs';
 
@@ -136,7 +136,7 @@ $page_actions = (is_admin() && $total_logs > 0)
         . '<i class="fa-solid fa-broom me-1" aria-hidden="true"></i>Clear the log</button></form>'
     : '';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
 <?php if ($refused_today > 0): ?>
@@ -272,4 +272,4 @@ admin_result_bar($pagination, $filter_query, 'entries');
     </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

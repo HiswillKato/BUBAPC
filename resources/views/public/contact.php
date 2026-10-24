@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 $programs_by_day = weekly_program_by_day($conn);
 
@@ -295,4 +295,4 @@ page_header(
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

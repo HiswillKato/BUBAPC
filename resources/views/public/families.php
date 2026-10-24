@@ -33,7 +33,7 @@ if ($slug !== '') {
         $error_title = 'Family not found';
         $error_message = 'That family is not on our website. It may have been renamed, '
             . 'or it may be listed as hidden for now. The full list is on the families page.';
-        require __DIR__ . '/../../../app/includes/error-page.php';
+        require __DIR__ . '/../partials/error-page.php';
         exit;
     }
 
@@ -51,7 +51,7 @@ if ($slug !== '') {
        students" can actually show the group. */
     $members = people_in_group($conn, 'family', (int) $family['id'], 24);
 
-    require_once __DIR__ . '/../../../app/includes/public/header.php';
+    require_once __DIR__ . '/../partials/public/header.php';
 
     page_header(
         $family['name'],
@@ -174,7 +174,7 @@ if ($slug !== '') {
     </section>
 
     <?php
-    require_once __DIR__ . '/../../../app/includes/public/footer.php';
+    require_once __DIR__ . '/../partials/public/footer.php';
     exit;
 }
 
@@ -185,7 +185,7 @@ $page_title = 'Families';
 $page_description = 'The families at ' . SITE_NAME . ' and how to find the one for you.';
 $canonical = 'families';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Families',
@@ -328,4 +328,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

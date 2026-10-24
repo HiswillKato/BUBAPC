@@ -13,7 +13,7 @@ $page_title = 'Gallery';
 $page_description = 'Photographs from the life of ' . SITE_NAME . '.';
 $canonical = 'gallery';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Gallery',
@@ -114,4 +114,4 @@ $statement->close();
         </div>
     <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

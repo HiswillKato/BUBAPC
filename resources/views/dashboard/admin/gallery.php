@@ -9,7 +9,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'gallery';
 
@@ -88,7 +88,7 @@ $page_heading = 'Gallery';
 $page_actions = '<a class="btn btn-primary" href="' . admin_url('gallery/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add photograph</a>';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -166,4 +166,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
     <?php render_pagination($pagination, ['show' => $show_hidden ? 'hidden' : '']); ?>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

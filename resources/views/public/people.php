@@ -41,7 +41,7 @@ if ($slug !== '') {
         $error_title = 'Person not found';
         $error_message = 'That person is not on our website. They may have been renamed, '
             . 'or they may be listed as hidden for now. Everyone we list is on the people page.';
-        require __DIR__ . '/../../../app/includes/error-page.php';
+        require __DIR__ . '/../partials/error-page.php';
         exit;
     }
 
@@ -57,7 +57,7 @@ if ($slug !== '') {
     $page_description = excerpt(strip_tags(html_entity_decode($about ?: $group_label)), 160);
     $canonical = 'people/' . $person['slug'];
 
-    require_once __DIR__ . '/../../../app/includes/public/header.php';
+    require_once __DIR__ . '/../partials/public/header.php';
 
     /* page_header() escapes whatever it is given, so the subtitle is plain
        text with a real middot in it rather than an &middot; entity, which
@@ -259,7 +259,7 @@ if ($slug !== '') {
     </section>
 
     <?php
-    require_once __DIR__ . '/../../../app/includes/public/footer.php';
+    require_once __DIR__ . '/../partials/public/footer.php';
     exit;
 }
 
@@ -296,7 +296,7 @@ $page_title = $page_titles[$group];
 $page_description = $page_subtitles[$group];
 $canonical = $group === 'leadership' ? 'people' : 'people?group=' . $group;
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     $page_title,
@@ -466,4 +466,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

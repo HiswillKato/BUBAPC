@@ -20,7 +20,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared menu, buttons and checks are needed for the screen around the list. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'birthdays';
 
@@ -37,7 +37,7 @@ $birthdays = birthdays_in_month($conn, $month);
 $page_title = 'Birthdays';
 $page_heading = 'Birthdays in ' . $month_name;
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
 <form class="row g-2 align-items-center mb-3" method="get" action="<?php echo admin_url('birthdays'); ?>">
@@ -132,4 +132,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
     </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

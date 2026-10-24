@@ -32,7 +32,7 @@ if ($slug !== '') {
         $error_title = 'Event not found';
         $error_message = 'That event is not on our website. It may have been removed, '
             . 'or it may still be a draft. Try the events list instead.';
-        require __DIR__ . '/../../../app/includes/error-page.php';
+        require __DIR__ . '/../partials/error-page.php';
         exit;
     }
 
@@ -40,7 +40,7 @@ if ($slug !== '') {
     $page_description = excerpt(strip_tags(html_entity_decode($event['description'] ?: $event['title'])), 160);
     $canonical = 'events/' . $event['slug'];
 
-    require_once __DIR__ . '/../../../app/includes/public/header.php';
+    require_once __DIR__ . '/../partials/public/header.php';
 
     page_header(
         $event['title'],
@@ -148,7 +148,7 @@ if ($slug !== '') {
     </section>
 
     <?php
-    require_once __DIR__ . '/../../../app/includes/public/footer.php';
+    require_once __DIR__ . '/../partials/public/footer.php';
     exit;
 }
 
@@ -160,7 +160,7 @@ $page_description = 'Retreats, conventions, special services and everything else
     . SITE_NAME . ' gathers for.';
 $canonical = 'events';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Events',
@@ -295,4 +295,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

@@ -1,188 +1,126 @@
 <?php
 /**
- * BUBAPC - Main configuration file
- * Busitema University Born Again Pentecostal Church
+ * BUBAPC - Main configuration file (martazi-style, .env backed)
  *
- * This is the only file you normally need to edit after installing the
- * website. It holds the database details, the website address, the contact
- * details, the social links and the database connection.
- *
- * The web installer (install.php) is also allowed to write to this file.
+ * Values come from /.env via env(). Legacy constants are still defined below
+ * so the existing codebase keeps working while call sites migrate to $config.
  */
 
-// The church keeps time in Uganda. PHP falls back to UTC when nobody says
-// otherwise, and this machine's clock is not Uganda's, so every date() and
-// time() in the site would be hours out: the "next meeting" on the program
-// page would name the wrong one, and a devotional would appear a day early
-// or late. One line here covers every page, because every page loads this
-// file first.
-//
-// The installer only rewrites the define() lines below, so this call is
-// never touched by an install.
-date_default_timezone_set('Africa/Kampala');
+// Timezone
+date_default_timezone_set(env('APP_TIMEZONE', 'Africa/Kampala'));
 
 /* =========================================================================
-   1. DATABASE CONNECTION DETAILS
+   CONFIG ARRAY (martazi-style)
    ========================================================================= */
-define('DB_HOST', '127.0.0.1');
-define('DB_USER', 'root');
-define('DB_PASS', 'root');
-define('DB_NAME', 'bubapc');
+$config = [
+    'app' => [
+        'name' => env('SITE_NAME', 'BUBAPC'),
+        'full_name' => env('SITE_FULL_NAME', 'Busitema University Born Again Pentecostal Church'),
+        'tagline' => env('SITE_TAGLINE', 'A Voice to Generations'),
+        'url' => env('BASE_URL', ''),
+        'debug' => filter_var(env('SHOW_ERRORS', false), FILTER_VALIDATE_BOOLEAN),
+        'timezone' => env('APP_TIMEZONE', 'Africa/Kampala'),
+    ],
+    'site' => [
+        'email' => env('SITE_EMAIL', ''),
+        'phone' => env('SITE_PHONE', ''),
+        'location' => env('SITE_LOCATION', ''),
+    ],
+    'database' => [
+        'host' => env('DB_HOST', '127.0.0.1'),
+        'port' => (int) env('DB_PORT', 3306),
+        'user' => env('DB_USER', 'root'),
+        'password' => env('DB_PASS', ''),
+        'name' => env('DB_NAME', 'bubapc'),
+        'charset' => 'utf8mb4',
+    ],
+    'mail' => [
+        'from' => env('MAIL_FROM', ''),
+        'from_name' => env('MAIL_FROM_NAME', env('SITE_NAME', 'BUBAPC')),
+        'admin' => env('MAIL_ADMIN', ''),
+        'host' => env('MAIL_HOST', '127.0.0.1'),
+        'port' => (int) env('MAIL_PORT', 25),
+        'user' => env('MAIL_USER', ''),
+        'password' => env('MAIL_PASS', ''),
+    ],
+    'social' => [
+        'facebook' => env('FACEBOOK_URL', ''),
+        'youtube' => env('YOUTUBE_URL', ''),
+        'instagram' => env('INSTAGRAM_URL', ''),
+        'tiktok' => env('TIKTOK_URL', ''),
+        'whatsapp' => env('WHATSAPP_URL', ''),
+    ],
+    'upload' => [
+        'max_size' => (int) env('MAX_UPLOAD_SIZE', 5242880),
+        'folder' => env('UPLOAD_FOLDER', 'assets/uploads'),
+    ],
+    'security' => [
+        'login_max_attempts' => (int) env('LOGIN_MAX_ATTEMPTS', 5),
+        'login_lock_minutes' => (int) env('LOGIN_LOCK_MINUTES', 15),
+        'min_password_length' => (int) env('MIN_PASSWORD_LENGTH', 8),
+        'token_reset_hours' => (int) env('TOKEN_RESET_HOURS', 2),
+        'visitor_keep_days' => (int) env('VISITOR_KEEP_DAYS', 365),
+        'logs' => filter_var(env('BUBAPC_LOGS', true), FILTER_VALIDATE_BOOLEAN),
+    ],
+    'hosts' => array_values(array_filter(array_map('trim', explode(',', (string) env('BUBAPC_HOSTS', ''))))),
+];
 
 /* =========================================================================
-   2. WEBSITE IDENTITY
+   LEGACY CONSTANTS (backward compat) — derived from .env
    ========================================================================= */
-define('SITE_NAME', 'BUBAPC');
-define('SITE_FULL_NAME', 'Busitema University Born Again Pentecostal Church');
-define('SITE_TAGLINE', 'A Voice to Generations');
+define('DB_HOST', $config['database']['host']);
+define('DB_USER', $config['database']['user']);
+define('DB_PASS', $config['database']['password']);
+define('DB_NAME', $config['database']['name']);
+define('DB_PORT', $config['database']['port']);
 
-/* =========================================================================
-   3. WEBSITE ADDRESS
-   ========================================================================= */
-// Leave BASE_URL as '' and the website works out its own address from the
-// request. That is what you want on this machine, where the site is reached
-// as http://bubapc/ — every link, redirect and email link then points back
-// to the same name the visitor typed.
-// On the live website set the real address, for example:
-//     define('BASE_URL', 'https://bubapc.int.yt');
-define('BASE_URL', '');
+define('SITE_NAME', $config['app']['name']);
+define('SITE_FULL_NAME', $config['app']['full_name']);
+define('SITE_TAGLINE', $config['app']['tagline']);
+define('SITE_EMAIL', $config['site']['email']);
+define('SITE_PHONE', $config['site']['phone']);
+define('SITE_LOCATION', $config['site']['location']);
 
-// When BASE_URL is empty the website trusts the Host header the browser sent,
-// which is how it works under any name without editing any config. That is a
-// tiny trust issue: the address written into links and emails is the visitor's
-// own word. BUBAPC_HOSTS pins which names may drive that, so a stray Host
-// header cannot make the website hand out addresses for a foreign domain.
-// Leave it empty to allow any name (ideal on this machine, where it answers
-// as http://bubapc/), fill it here on the live website:
-//     define('BUBAPC_HOSTS', ['bubapc.int.yt', 'www.bubapc.int.yt']);
-define('BUBAPC_HOSTS', ['bubapc', 'bubapc.int.yt', 'www.bubapc.int.yt']);
+define('BASE_URL', $config['app']['url']);
+define('BASE_PATH', env('BASE_PATH', ''));
+define('BUBAPC_HOSTS', $config['hosts'] ?: []);
 
-// Only needed when the project sits in a sub folder and not in the root of
-// the domain, for example '/bubapc'. Leave as '' for the normal case.
-define('BASE_PATH', '');
+define('MAIL_FROM', $config['mail']['from']);
+define('MAIL_FROM_NAME', $config['mail']['from_name']);
+define('MAIL_ADMIN', $config['mail']['admin']);
+define('MAIL_HOST', $config['mail']['host']);
+define('MAIL_PORT', $config['mail']['port']);
+define('MAIL_USER', $config['mail']['user']);
+define('MAIL_PASS', $config['mail']['password']);
 
-/* =========================================================================
-   4. MAIL (SENDING EMAILS)
-   ========================================================================= */
-// These are used by send_mail() in app/mail.php, which is the ONE way this
-// website sends an email. Three things use it today: the password reset
-// pages, the contact form (a copy of every message goes to the mailbox
-// below), and the daily devotional list.
-//
-// Mail is sent through Postfix on this machine, which delivers to local
-// mailboxes. Empty MAIL_USER means no SMTP authentication is needed, which
-// is the right setup for localhost. On the live website put the provider's
-// server and account here instead.
-// The FROM address is never taken from a form. Both addresses below must be
-// ones Postfix accepts on this machine, which means they end in the local
-// mail domain (mail.local here). An address in a domain that does not resolve
-// is accepted by the mail server and then bounces, which looks like a working
-// send and is not one.
-define('MAIL_FROM', 'bubapcministries@gmail.com');
-define('MAIL_FROM_NAME', SITE_NAME);
+define('TOKEN_RESET_HOURS', $config['security']['token_reset_hours']);
+define('VISITOR_KEEP_DAYS', $config['security']['visitor_keep_days']);
+define('BUBAPC_LOGS', $config['security']['logs']);
 
-// Where contact messages go. The admin mailbox on this machine is
-// admin@mail.local, which is what dovecot reads.
-define('MAIL_ADMIN', 'bubapcministries@gmail.com');
-define('MAIL_HOST', '127.0.0.1');
-define('MAIL_PORT', 25);
-define('MAIL_USER', '');
-define('MAIL_PASS', '');
+define('FACEBOOK_URL', $config['social']['facebook']);
+define('YOUTUBE_URL', $config['social']['youtube']);
+define('INSTAGRAM_URL', $config['social']['instagram']);
+define('TIKTOK_URL', $config['social']['tiktok']);
+define('WHATSAPP_URL', $config['social']['whatsapp']);
 
-// How long a password reset link stays valid. Reset links are one-time
-// anyway (see token_row() in app/auth.php), so this is only the window in
-// which the link may be used at all.
-define('TOKEN_RESET_HOURS', 2);
+define('MAX_UPLOAD_SIZE', $config['upload']['max_size']);
+define('UPLOAD_FOLDER', $config['upload']['folder']);
 
-// How many days a visitor row is kept before visitor_sweep() deletes it.
-// A year is long enough to see that people come back, and short enough that
-// the table never becomes the biggest thing in the database.
-define('VISITOR_KEEP_DAYS', 365);
+define('SHOW_ERRORS', $config['app']['debug']);
+define('LOGIN_MAX_ATTEMPTS', $config['security']['login_max_attempts']);
+define('LOGIN_LOCK_MINUTES', $config['security']['login_lock_minutes']);
+define('MIN_PASSWORD_LENGTH', $config['security']['min_password_length']);
 
-// Whether anything is written to the logs table. Turning this to false makes
-// log_action() a no-op, which is the one-line way to stop logging on a site
-// where nobody wants it. The logs screen hides itself too.
-define('BUBAPC_LOGS', true);
-
-/* =========================================================================
-   4. CONTACT DETAILS
-   ========================================================================= */
-define('SITE_EMAIL', 'bubapcministries@gmail.com');
-define('SITE_PHONE', '+256 700 000 000');
-define('SITE_LOCATION', 'Agape Palace (Main Hall)');
-
-/* =========================================================================
-   5. SOCIAL MEDIA LINKS
-   ========================================================================= */
-// These links live in this file on purpose. There is no social media table
-// in the database. A platform with an empty URL is simply not shown.
-// The church is on YouTube only for now, so Facebook is left empty. Put the
-// real channel address here when it is known, and it appears on its own.
-define('FACEBOOK_URL', '');
-define('YOUTUBE_URL', 'https://youtube.com/BUBAPCMinistries');
-define('INSTAGRAM_URL', '');
-define('TIKTOK_URL', '');
-define('WHATSAPP_URL', '');
-
-/* =========================================================================
-   6. UPLOAD SETTINGS
-   ========================================================================= */
-// The largest image we accept, in bytes (5 MB).
-define('MAX_UPLOAD_SIZE', 5 * 1024 * 1024);
-
-// The folder inside the project where uploaded images are stored.
-//
-// It sits inside assets/ so that everything the browser can download lives in
-// one place, and so that assets/.htaccess blocks script execution on anything
-// a person uploads without needing a second copy of those rules.
-//
-// What is saved in the database is only the part AFTER this folder, for
-// example "gallery/photo.jpg". Changing this folder therefore does not need
-// any change to the rows already in the database, because they never mention
-// it. Moving a live site's folder is a different job: the images have to be
-// copied across, or the old folder left in place.
-define('UPLOAD_FOLDER', 'assets/uploads');
-
-/* =========================================================================
-   7. SECURITY SETTINGS
-   ========================================================================= */
-// Set to true while testing so PHP shows errors on the screen.
-// Turn it to false on the live website.
-define('SHOW_ERRORS', false);
-
-// How many wrong passwords are allowed before the account is locked,
-// and for how many minutes the lock lasts.
-define('LOGIN_MAX_ATTEMPTS', 5);
-define('LOGIN_LOCK_MINUTES', 15);
-
-// The shortest password allowed for a website account.
-define('MIN_PASSWORD_LENGTH', 8);
-
-/* =========================================================================
-   8. SEND EXTRA SECURITY HEADERS
-   ========================================================================= */
-// These tell the browser how it is allowed to use our pages. They are sent
-// on every page, which protects the site from clickjacking and content
-// sniffing attacks.
+// Security headers block (kept from original)
 if (!headers_sent()) {
     header('X-Content-Type-Options: nosniff');
     header('X-Frame-Options: DENY');
     header('Referrer-Policy: strict-origin-when-cross-origin');
     header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
     header('X-Permitted-Cross-Domain-Policies: none');
-
-    // Only tell the browser to force HTTPS when we are really on HTTPS.
-    $on_https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
-    if ($on_https) {
-        // HSTS is emitted by Apache in bubapc.conf (*:443), not here, for the
-        // same duplicate-header reason described in the Gospelzora config.
-    }
 }
 
-/* =========================================================================
-   9. HARDEN THE PHP SESSION
-   ========================================================================= */
-// These must be set BEFORE session_start(), which happens in app/auth.php.
+// Session ini settings (kept from original)
 if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.use_strict_mode', '1');
     ini_set('session.use_only_cookies', '1');
@@ -190,7 +128,6 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_httponly', '1');
     ini_set('session.cookie_samesite', 'Lax');
     ini_set('session.gc_maxlifetime', '7200');
-
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         ini_set('session.cookie_secure', '1');
     }
@@ -204,30 +141,11 @@ if (SHOW_ERRORS) {
     error_reporting(0);
 }
 
-/* =========================================================================
-   10. THE DATABASE CONNECTION
-   ========================================================================= */
-// Every page includes this file, so one connection object is created and
-// shared by the whole website.
-//
-// We use MySQLi in its object style, and never PDO:
-//     $conn = new mysqli(...);
-//     $statement = $conn->prepare($sql);
-//     $statement->bind_param('i', $id);
-//
-// The web installer defines BUBAPC_INSTALLER before it includes this file,
-// so the installer can read the settings above even when the database
-// has not been created yet.
+// Database connection (kept from original)
 if (!defined('BUBAPC_INSTALLER')) {
-    // Since PHP 8.1 mysqli reports a failed connection by THROWING, not by
-    // setting connect_errno. Without this try/catch the exception escapes
-    // as a fatal error and the visitor gets a stack trace instead of the
-    // friendly page below, so the catch is what makes that page reachable.
     try {
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
     } catch (mysqli_sql_exception $problem) {
-        // The message is deliberately not printed: it can name the database
-        // user, and this page is shown to anyone who asked for a missing URL.
         $conn = null;
     }
 
@@ -244,7 +162,7 @@ if (!defined('BUBAPC_INSTALLER')) {
         echo 'a{color:#4338ca}</style></head><body><div class="box">';
         echo '<h1>The database is not reachable</h1>';
         echo '<p>The website could not connect to the database. Please check the details in ';
-        echo '<code>app/config.php</code> and make sure the database has been imported from ';
+        echo '<code>config/config.php</code> and make sure the database has been imported from ';
         echo '<code>database.sql</code>.</p>';
         echo '<p>If the website has not been installed yet, please open ';
         echo '<a href="' . (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
@@ -255,3 +173,5 @@ if (!defined('BUBAPC_INSTALLER')) {
 
     $conn->set_charset('utf8mb4');
 }
+
+return $config;

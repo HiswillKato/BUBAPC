@@ -11,7 +11,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'departments';
 
@@ -131,7 +131,7 @@ $page_heading = $is_new ? 'Add a department' : 'Edit department';
 $page_actions = '<a class="btn btn-outline-secondary" href="' . admin_url('departments') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
     <div class="row justify-content-center">
@@ -175,4 +175,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
         </div>
     </div>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

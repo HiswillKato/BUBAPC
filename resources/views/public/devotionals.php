@@ -32,7 +32,7 @@ if ($slug !== '') {
         $error_title = 'Devotional not found';
         $error_message = 'That devotional is not on our website. It may have been moved, '
             . 'or it may still be a draft. The archive has everything we have published.';
-        require __DIR__ . '/../../../app/includes/error-page.php';
+        require __DIR__ . '/../partials/error-page.php';
         exit;
     }
 
@@ -40,7 +40,7 @@ if ($slug !== '') {
     $page_description = excerpt(strip_tags(html_entity_decode($devotional['message'])), 160);
     $canonical = 'devotionals/' . $devotional['slug'];
 
-    require_once __DIR__ . '/../../../app/includes/public/header.php';
+    require_once __DIR__ . '/../partials/public/header.php';
 
     page_header(
         $devotional['title'],
@@ -65,7 +65,7 @@ if ($slug !== '') {
     </section>
 
     <?php
-    require_once __DIR__ . '/../../../app/includes/public/footer.php';
+    require_once __DIR__ . '/../partials/public/footer.php';
     exit;
 }
 
@@ -76,7 +76,7 @@ $page_title = 'Devotional archive';
 $page_description = 'Every devotional we have published at ' . SITE_NAME . ', newest first.';
 $canonical = 'devotionals';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Devotional archive',
@@ -206,4 +206,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

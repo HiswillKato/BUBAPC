@@ -14,7 +14,7 @@ $page_title = 'Sermons';
 $page_description = 'Watch and listen to the messages preached at ' . SITE_NAME . '.';
 $canonical = 'sermons';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Sermons',
@@ -160,4 +160,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

@@ -16,7 +16,7 @@ $page_description = 'Who we are and what you will find when you visit '
     . SITE_FULL_NAME . '.';
 $canonical = 'about';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'About ' . SITE_NAME,
@@ -110,4 +110,4 @@ $leader_total = db_count($conn, "SELECT COUNT(*) FROM people
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

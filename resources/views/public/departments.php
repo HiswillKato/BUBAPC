@@ -32,7 +32,7 @@ if ($slug !== '') {
         $error_title = 'Department not found';
         $error_message = 'That department is not on our website. It may have been renamed, '
             . 'or it may be listed as hidden for now. The full list is on the departments page.';
-        require __DIR__ . '/../../../app/includes/error-page.php';
+        require __DIR__ . '/../partials/error-page.php';
         exit;
     }
 
@@ -46,7 +46,7 @@ if ($slug !== '') {
        the leaders who do not have a page. */
     $leader = group_leader($conn, $department);
 
-    require_once __DIR__ . '/../../../app/includes/public/header.php';
+    require_once __DIR__ . '/../partials/public/header.php';
 
     page_header(
         $department['name'],
@@ -179,7 +179,7 @@ if ($slug !== '') {
     </section>
 
     <?php
-    require_once __DIR__ . '/../../../app/includes/public/footer.php';
+    require_once __DIR__ . '/../partials/public/footer.php';
     exit;
 }
 
@@ -190,7 +190,7 @@ $page_title = 'Departments';
 $page_description = 'The departments of ' . SITE_NAME . ' and how to join each one.';
 $canonical = 'departments';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 page_header(
     'Departments',
@@ -325,4 +325,4 @@ $statement->close();
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>

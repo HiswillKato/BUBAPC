@@ -12,7 +12,7 @@
 
 require_once __DIR__ . '/../../../../app/init.php';
 /* The shared buttons, fields and checks are needed before the saving below. */
-require_once __DIR__ . '/../../../../app/includes/admin/parts.php';
+require_once __DIR__ . '/../../partials/admin/parts.php';
 
 $active_module = 'programs';
 
@@ -77,7 +77,7 @@ $page_heading = 'Weekly program';
 $page_actions = '<a class="btn btn-primary" href="' . admin_url('programs/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add a meeting</a>';
 
-require_once __DIR__ . '/../../../../app/includes/admin/header.php';
+require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
     <p class="text-body-secondary">
@@ -155,4 +155,4 @@ require_once __DIR__ . '/../../../../app/includes/admin/header.php';
         <?php endforeach; ?>
     </div>
 
-<?php require_once __DIR__ . '/../../../../app/includes/admin/footer.php'; ?>
+<?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

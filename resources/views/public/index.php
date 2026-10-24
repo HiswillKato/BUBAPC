@@ -23,7 +23,7 @@ $page_title   = SITE_FULL_NAME;
 $page_description = 'Welcome to ' . SITE_FULL_NAME . ' — ' . SITE_TAGLINE . '.';
 $body_class   = 'page-home';
 
-require_once __DIR__ . '/../../../app/includes/public/header.php';
+require_once __DIR__ . '/../partials/public/header.php';
 
 /* Everything the page shows is read once, at the top, and then used in one
    place each. Reading any of it twice would run the same query twice. */
@@ -311,4 +311,4 @@ $notices          = recent_announcements($conn, 3);
         </div>
     </section>
 
-<?php require_once __DIR__ . '/../../../app/includes/public/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/public/footer.php'; ?>
