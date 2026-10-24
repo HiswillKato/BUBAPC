@@ -13,15 +13,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'announcements';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $announcement_id = (int) ($_POST['id'] ?? 0);
-    $announcement = adminrow($conn, 'announcements', $announcement_id);
+    $announcement = adminRow($conn, 'announcements', $announcement_id);
 
     if (!$announcement) {
         flash('error', 'That announcement is no longer here. It may already have been deleted.');
-        redirect(adminurl('announcements'));
+        redirect(adminUrl('announcements'));
     }
 
     if ($action === 'delete') {
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'announcement_deleted', 'The announcement "' . $announcement['title'] . '"');
+        logAction($conn, 'announcement_deleted', 'The announcement "' . $announcement['title'] . '"');
         flash('success', 'The announcement "' . $announcement['title'] . '" has been deleted.');
     } elseif ($action === 'toggle_status') {
         $new_status = $announcement['status'] === 'published' ? 'draft' : 'published';
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : '"' . $announcement['title'] . '" is now a draft. Nobody can see it.');
     }
 
-    redirect(adminurl('announcements'));
+    redirect(adminUrl('announcements'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -79,11 +79,11 @@ if ($bind_values) {
     $total_announcements = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_announcements = dbcount($conn, "SELECT COUNT(*) FROM announcements" . $where_sql);
+    $total_announcements = dbCount($conn, "SELECT COUNT(*) FROM announcements" . $where_sql);
 }
 
 $per_page = 20;
-$current_page = pagenumber();
+$current_page = pageNumber();
 $pagination = paginate($total_announcements, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -102,26 +102,26 @@ $statement->close();
 
 $page_title = 'Announcements';
 $page_heading = 'Announcements';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('announcements/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('announcements/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add announcement</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<?php adminfilterbar(adminurl('announcements'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
+<?php adminFilterBar(adminUrl('announcements'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
 
-<?php adminresultbar($pagination, ['q' => $search, 'status' => $status], 'announcements'); ?>
+<?php adminResultBar($pagination, ['q' => $search, 'status' => $status], 'announcements'); ?>
 
 <?php if (!$announcements): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-bullhorn',
         $search !== '' || $status !== '' ? 'No announcements match that' : 'No announcements yet',
         $search !== '' || $status !== ''
             ? 'Try a different word, or clear the filter to see everything.'
             : 'Announcements are the short notices at the top of the home page: registration, a vacancy, '
                 . 'a change of time. They stay there until you delete them.',
-        '<a class="btn btn-primary" href="' . adminurl('announcements/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminUrl('announcements/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Write the first one</a>',
         'admin'
     );
@@ -141,18 +141,18 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                 <tbody>
                     <?php foreach ($announcements as $announcement): ?>
                         <tr>
-                            <td class="ps-3 text-nowrap small"><?php echo formatdate($announcement['publish_date']); ?></td>
+                            <td class="ps-3 text-nowrap small"><?php echo formatDate($announcement['publish_date']); ?></td>
                             <td>
                                 <a class="fw-semibold d-block text-decoration-none"
-                                   href="<?php echo adminurl('announcements/form.php?id=' . (int) $announcement['id']); ?>">
+                                   href="<?php echo adminUrl('announcements/form.php?id=' . (int) $announcement['id']); ?>">
                                     <?php echo e($announcement['title']); ?>
                                 </a>
                                 <span class="small text-body-secondary"><?php echo e(excerpt($announcement['content'], 90)); ?></span>
                             </td>
-                            <td><?php echo statusbadge($announcement['status']); ?></td>
+                            <td><?php echo statusBadge($announcement['status']); ?></td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo adminrowactions('announcements', $announcement['id'], [
+                                echo adminRowActions('announcements', $announcement['id'], [
                                     'status' => $announcement['status'],
                                     'label' => 'the announcement "' . $announcement['title'] . '"',
                                 ]);

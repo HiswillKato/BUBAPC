@@ -16,11 +16,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'departments';
 
 $department_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$department = $department_id ? adminrow($conn, 'departments', $department_id) : [];
+$department = $department_id ? adminRow($conn, 'departments', $department_id) : [];
 
 if ($department_id && !$department) {
     flash('error', 'That department is no longer here.');
-    redirect(adminurl('departments'));
+    redirect(adminUrl('departments'));
 }
 
 $is_new = $department_id === 0;
@@ -38,20 +38,20 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $values['name'] = posttext('name');
-    $values['leader'] = posttext('leader');
-    $values['description'] = posttext('description');
+    $values['name'] = postText('name');
+    $values['leader'] = postText('leader');
+    $values['description'] = postText('description');
     $values['display_order'] = (int) ($_POST['display_order'] ?? 0);
-    $values['active'] = postcheckbox('active') ? 1 : 0;
+    $values['active'] = postCheckbox('active') ? 1 : 0;
 
-    admincheckrequired($values['name'], 'The name of the department', $errors);
-    admincheckrequired($values['description'], 'The description', $errors);
+    adminCheckRequired($values['name'], 'The name of the department', $errors);
+    adminCheckRequired($values['description'], 'The description', $errors);
 
     /* A leader chosen from the list has to be a real person, or a department
        would end up pointing at nothing. 0 means "type the name below". */
-    $values['leader_id'] = admincheckgroupchoice(
+    $values['leader_id'] = adminCheckGroupChoice(
         $conn, 'people', (int) ($_POST['leader_id'] ?? 0), 'The leader', $errors
     );
 
@@ -91,10 +91,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['display_order']
             );
             $statement->execute();
-            $department_id = (int) dblastid($conn);
+            $department_id = (int) dbLastId($conn);
             $statement->close();
 
-            logaction($conn, 'department_created', 'The department "' . $values['name'] . '"');
+            logAction($conn, 'department_created', 'The department "' . $values['name'] . '"');
             flash('success', 'The department "' . $values['name'] . '" has been added.');
         } else {
             $statement = $conn->prepare(
@@ -118,17 +118,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            logaction($conn, 'department_updated', 'The department "' . $values['name'] . '"');
+            logAction($conn, 'department_updated', 'The department "' . $values['name'] . '"');
             flash('success', 'The department "' . $values['name'] . '" has been saved.');
         }
 
-        redirect(adminurl('departments'));
+        redirect(adminUrl('departments'));
     }
 }
 
 $page_title = $is_new ? 'Add department' : 'Edit department';
 $page_heading = $is_new ? 'Add a department' : 'Edit department';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('departments') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminUrl('departments') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -137,24 +137,24 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php adminerrors($errors); ?>
+            <?php adminErrors($errors); ?>
 
             <form method="post" novalidate>
-                <?php echo csrffield(); ?>
+                <?php echo csrfField(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admintextfield('name', 'Name of the department', $values['name'], '',
+                        adminTextField('name', 'Name of the department', $values['name'], '',
                             'Worship & Creative Arts');
-                        adminleaderfield((int) $values['leader_id'], $values['leader'], leaderchoices($conn));
-                        admintextarea('description', 'What it does, and how to join', $values['description'],
+                        adminLeaderField((int) $values['leader_id'], $values['leader'], leaderChoices($conn));
+                        adminTextarea('description', 'What it does, and how to join', $values['description'],
                             'Leave an empty line between paragraphs. This is the page a visitor reads when they '
                             . 'are asking where they would fit in.', 8);
-                        admintextfield('display_order', 'Order on the page', (string) $values['display_order'],
+                        adminTextField('display_order', 'Order on the page', (string) $values['display_order'],
                             'Lower numbers come first. You can also change this from the list.', '0');
-                        admincheckbox('active', 'Show this department on the website', (int) $values['active'] === 1);
-                        adminformbuttons(adminurl('departments'), $is_new ? 'Add department' : 'Save changes');
+                        adminCheckbox('active', 'Show this department on the website', (int) $values['active'] === 1);
+                        adminFormButtons(adminUrl('departments'), $is_new ? 'Add department' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -168,7 +168,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             It comes off the website at once. If you only want it off for a while, use the
                             switch on the form instead.
                         </p>
-                        <?php echo admindeletebutton('departments', $department_id, 'the department "' . $department['name'] . '"'); ?>
+                        <?php echo adminDeleteButton('departments', $department_id, 'the department "' . $department['name'] . '"'); ?>
                     </div>
                 </div>
             <?php endif; ?>

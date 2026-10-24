@@ -16,7 +16,7 @@ $canonical = 'sermons';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-pageheader(
+pageHeader(
     'Sermons',
     'Every message we have recorded, newest first. Watch the video, read the notes, '
     . 'and take the message with you.',
@@ -43,8 +43,8 @@ if ($search_term !== '') {
     $values = [$like, $like, $like, $like];
 }
 
-$current_page = pagenumber();
-$pagination = paginate(dbcount($conn, $count_sql), $per_page, $current_page);
+$current_page = pageNumber();
+$pagination = paginate(dbCount($conn, $count_sql), $per_page, $current_page);
 
 $offset = $pagination['offset'];
 $values[] = $per_page;
@@ -83,17 +83,17 @@ $statement->close();
                 </div>
             </form>
 
-            <?php renderresultcount($pagination, 'sermons'); ?>
+            <?php renderResultCount($pagination, 'sermons'); ?>
 
             <?php if (!$sermons): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($search_term !== '') {
-                            emptystate('fa-magnifying-glass', 'No sermon found for "' . $search_term . '"',
+                            emptyState('fa-magnifying-glass', 'No sermon found for "' . $search_term . '"',
                                 'Try the preacher&rsquo;s name, part of the title, or a scripture reference.');
                         } else {
-                            emptystate('fa-microphone-lines', 'The sermon archive is being filled',
+                            emptyState('fa-microphone-lines', 'The sermon archive is being filled',
                                 'As soon as a message is recorded it will be listed here with the video '
                                 . 'and the notes, so you can watch it again at any time.');
                         }
@@ -103,7 +103,7 @@ $statement->close();
             <?php else: ?>
                 <div class="row g-4 mt-1">
                     <?php foreach ($sermons as $sermon): ?>
-                        <?php $embed_url = youtubeembedurl($sermon['video_url']); ?>
+                        <?php $embed_url = youtubeEmbedUrl($sermon['video_url']); ?>
                         <div class="col-lg-6" id="sermon-<?php echo (int) $sermon['id']; ?>">
                             <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                                 <?php if ($embed_url !== ''): ?>
@@ -121,7 +121,7 @@ $statement->close();
 
                                 <div class="card-body p-4">
                                     <p class="small text-uppercase fw-bold text-gold-dark mb-2">
-                                        <?php echo formatdate($sermon['sermon_date'], 'j F Y'); ?>
+                                        <?php echo formatDate($sermon['sermon_date'], 'j F Y'); ?>
                                         <?php if ($sermon['scripture'] !== ''): ?>
                                             &middot; <?php echo e($sermon['scripture']); ?>
                                         <?php endif; ?>
@@ -155,7 +155,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php renderpagination($pagination, ['q' => $search_term]); ?>
+                <?php renderPagination($pagination, ['q' => $search_term]); ?>
             <?php endif; ?>
         </div>
     </section>

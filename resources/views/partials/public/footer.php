@@ -1,5 +1,5 @@
 <?php
-$available_social = sociallinks();
+$available_social = socialLinks();
 $current_year = date('Y');
 ?>
     </main>
@@ -53,7 +53,7 @@ $current_year = date('Y');
                     <p class="text-uppercase small fw-bold text-white">Daily Devotional</p>
                     <p class="small mb-3">One short message from God&rsquo;s Word, in your inbox every morning.</p>
                     <form action="<?php echo url('devotional-subscribe'); ?>" method="post" data-devotional-form novalidate>
-                        <?php echo csrffield(); ?>
+                        <?php echo csrfField(); ?>
                         <div class="input-group">
                             <input type="email" name="email" class="form-control" placeholder="Your email address" required maxlength="190" autocomplete="email">
                             <button type="submit" class="btn btn-gold"><span class="devotional-button-text">Subscribe</span></button>

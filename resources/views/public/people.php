@@ -14,7 +14,7 @@
  * the page the church links to from the menu. This page is the full list, so a
  * pastor or an alumnus can be found here.
  *
- * The group names all come from peoplefilters(), which checks the word in the
+ * The group names all come from peopleFilters(), which checks the word in the
  * address against the church's own list of groups. A word that is not on the
  * list, and the plain /people address itself, falls back to the office holders
  * rather than an error, so a mistyped or hand-edited address is never a dead
@@ -24,16 +24,16 @@
 require_once __DIR__ . '/../../../app/init.php';
 
 $slug = isset($_GET['slug']) ? trim((string) $_GET['slug']) : '';
-$group = peoplefilterfromurl();
+$group = peopleFilterFromUrl();
 $per_page = 12;
 
-$categories = peoplecategories();
+$categories = peopleCategories();
 
 /* ---------------------------------------------------------------------
    1. ONE PERSON WHEN AN ADDRESS WAS GIVEN
    --------------------------------------------------------------------- */
 if ($slug !== '') {
-    $person = personbyslug($conn, $slug);
+    $person = personBySlug($conn, $slug);
 
     if (!$person) {
         http_response_code(404);
@@ -46,10 +46,10 @@ if ($slug !== '') {
     }
 
     $group_label = $categories[$person['category']] ?? 'Our church';
-    $where_they_belong = persongroups($conn, $person);
+    $where_they_belong = personGroups($conn, $person);
     $family = $where_they_belong['family'];
     $department = $where_they_belong['department'];
-    $others_in_family = peopleingroup($conn, 'family', (int) $person['family'], 12, (int) $person['id']);
+    $others_in_family = peopleInGroup($conn, 'family', (int) $person['family'], 12, (int) $person['id']);
 
     $about = $person['bio'] ?: $person['testimony'];
 
@@ -59,7 +59,7 @@ if ($slug !== '') {
 
     require_once __DIR__ . '/../partials/public/header.php';
 
-    /* pageheader() escapes whatever it is given, so the subtitle is plain
+    /* pageHeader() escapes whatever it is given, so the subtitle is plain
        text with a real middot in it rather than an &middot; entity, which
        would arrive on the page as "&amp;middot;". */
     $subtitle = $group_label;
@@ -67,7 +67,7 @@ if ($slug !== '') {
         $subtitle .= " \u{00B7} " . $person['position'];
     }
 
-    pageheader(
+    pageHeader(
         $person['name'],
         $subtitle,
         [['Home', url('')], ['People', url('people')], [$person['name'], '']]
@@ -105,7 +105,7 @@ if ($slug !== '') {
                     <?php endif; ?>
 
                     <div class="mt-4">
-                        <?php sharebar($person['name'], url('people/' . $person['slug'])); ?>
+                        <?php shareBar($person['name'], url('people/' . $person['slug'])); ?>
                     </div>
 
                     <a class="btn btn-outline-primary mt-4" href="<?php echo url('people'); ?>">
@@ -120,7 +120,7 @@ if ($slug !== '') {
                                    Both are circles of the same size so the page
                                    does not jump about as rows are added. */
                             if (!empty($person['image'])): ?>
-                                <img src="<?php echo uploadurl($person['image']); ?>"
+                                <img src="<?php echo uploadUrl($person['image']); ?>"
                                      alt="<?php echo e($person['name']); ?>"
                                      class="rounded-circle mb-3" width="140" height="140"
                                      style="object-fit:cover">
@@ -162,8 +162,8 @@ if ($slug !== '') {
                                     <div class="d-flex justify-content-between gap-3">
                                         <dt class="text-body-secondary fw-normal">Birthday</dt>
                                         <dd class="mb-0 fw-semibold text-end">
-                                            <?php echo birthdaylabel($person['born']); ?>
-                                            <?php if (birthdaytoday($person['born'])): ?>
+                                            <?php echo birthdayLabel($person['born']); ?>
+                                            <?php if (birthdayToday($person['born'])): ?>
                                                 <span class="badge rounded-pill text-bg-warning ms-1">
                                                     <i class="fa-solid fa-cake-candles me-1" aria-hidden="true"></i>Today!
                                                 </span>
@@ -266,7 +266,7 @@ if ($slug !== '') {
 /* ---------------------------------------------------------------------
    2. THE LIST OF PEOPLE
    --------------------------------------------------------------------- */
-$filters = peoplefilters();
+$filters = peopleFilters();
 $chosen = $filters[$group];
 $group_name = $chosen['label'];
 
@@ -298,13 +298,13 @@ $canonical = $group === 'leadership' ? 'people' : 'people?group=' . $group;
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-pageheader(
+pageHeader(
     $page_title,
     $page_subtitles[$group],
     [['Home', url('')], ['People', '']]
 );
 
-/* The group filter is written out by peoplefilters() with nothing from the
+/* The group filter is written out by peopleFilters() with nothing from the
    browser in it, because the group is checked against the list first. That is
    why there are no placeholders for it here. */
 $search_term = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -337,10 +337,10 @@ $count_sql = "SELECT COUNT(*) FROM people " . $where;
 $list_sql = "SELECT * FROM people " . $where
     . " ORDER BY category ASC, display_order ASC, name ASC LIMIT ? OFFSET ?";
 
-$current_page = pagenumber();
+$current_page = pageNumber();
 
 /* The count carries the same search words, so it has to be prepared as well. */
-$total = dbcountprepared($conn, $count_sql, $search_types, $search_values);
+$total = dbCountPrepared($conn, $count_sql, $search_types, $search_values);
 $pagination = paginate($total, $per_page, $current_page);
 
 $offset = $pagination['offset'];
@@ -394,17 +394,17 @@ $statement->close();
                 </div>
             </form>
 
-            <?php renderresultcount($pagination, strtolower($group_name)); ?>
+            <?php renderResultCount($pagination, strtolower($group_name)); ?>
 
             <?php if (!$people): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($search_term !== '') {
-                            emptystate('fa-magnifying-glass', 'Nobody found for "' . $search_term . '"',
+                            emptyState('fa-magnifying-glass', 'Nobody found for "' . $search_term . '"',
                                 'Try another name, or browse the whole list.');
                         } else {
-                            emptystate('fa-users', 'This list is being filled in',
+                            emptyState('fa-users', 'This list is being filled in',
                                 'Every ' . $group_one[$group] . ' at ' . SITE_NAME . ' will appear here. '
                                 . 'Names and photographs are added from the admin panel.');
                         }
@@ -418,7 +418,7 @@ $statement->close();
                             <article class="card h-100 border-0 shadow-sm rounded-4 text-center">
                                 <div class="card-body p-4">
                                     <?php if (!empty($person['image'])): ?>
-                                        <img src="<?php echo uploadurl($person['image']); ?>"
+                                        <img src="<?php echo uploadUrl($person['image']); ?>"
                                              alt="<?php echo e($person['name']); ?>"
                                              class="rounded-circle mb-3" width="120" height="120"
                                              style="object-fit:cover">
@@ -447,7 +447,7 @@ $statement->close();
 
                                     <?php /* Somebody who celebrates this month wears the cake on
                                            their card for the whole month, not for one day. */ ?>
-                                    <?php $cake = birthdaybadge($person['born']);
+                                    <?php $cake = birthdayBadge($person['born']);
                                     if ($cake !== ''): ?>
                                         <p class="mb-2"><?php echo $cake; ?></p>
                                     <?php endif; ?>
@@ -461,7 +461,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php renderpagination($pagination, ['group' => $group, 'q' => $search_term]); ?>
+                <?php renderPagination($pagination, ['group' => $group, 'q' => $search_term]); ?>
             <?php endif; ?>
         </div>
     </section>

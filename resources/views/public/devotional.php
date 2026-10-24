@@ -4,7 +4,7 @@
  *
  * The one page a visitor is most likely to open every day, so it stays
  * simple: the message, the scripture it is built on, a little further study
- * and the share buttons. Everything here comes from currentdevotional(),
+ * and the share buttons. Everything here comes from currentDevotional(),
  * which is the same function the homepage uses, so the two can never disagree
  * about which message is today's.
  */
@@ -17,7 +17,7 @@ $canonical = 'devotional';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-$devotional = currentdevotional($conn);
+$devotional = currentDevotional($conn);
 
 if ($devotional) {
     $page_title = $devotional['title'];
@@ -29,10 +29,10 @@ if ($devotional) {
    read, the same way the archive's single-message page does. */
 $devotional_title = $devotional ? $devotional['title'] : 'Today’s devotional';
 
-pageheader(
+pageHeader(
     $devotional_title,
     $devotional
-        ? 'Written for ' . formatdate($devotional['devotional_date'], 'l, j F Y') . '. Read it slowly, and keep what God shows you.'
+        ? 'Written for ' . formatDate($devotional['devotional_date'], 'l, j F Y') . '. Read it slowly, and keep what God shows you.'
         : 'One short message from the Word of God, here every morning.',
     [['Home', url('')], ['Devotional', url('devotionals')], [$devotional_title, '']]
 );
@@ -42,7 +42,7 @@ pageheader(
         <div class="container">
 
             <?php if ($devotional): ?>
-                <?php renderdevotional($devotional, url('devotionals/' . $devotional['slug'])); ?>
+                <?php renderDevotional($devotional, url('devotionals/' . $devotional['slug'])); ?>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-5 pt-4 border-top">
                     <a class="btn btn-outline-primary" href="<?php echo url('devotionals'); ?>">
@@ -56,7 +56,7 @@ pageheader(
                 <div class="row justify-content-center">
                     <div class="col-lg-7">
                         <?php
-                        emptystate('fa-book-bible', 'Today’s devotional is being written',
+                        emptyState('fa-book-bible', 'Today’s devotional is being written',
                             'We write a short message for every day, drawn from the Bible and from what God '
                             . 'has been doing at ' . SITE_NAME . '. Ours for today is on its way.',
                             '<a class="btn btn-primary" href="' . url('devotionals') . '">Read an earlier message</a>');

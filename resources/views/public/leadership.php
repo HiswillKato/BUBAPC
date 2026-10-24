@@ -21,7 +21,7 @@ $canonical = 'leadership';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-pageheader(
+pageHeader(
     'Our leadership',
     'These are the people who shepherd the church and carry the different parts of its work. '
     . 'Please feel free to greet them before or after a service.',
@@ -31,7 +31,7 @@ pageheader(
 /* The five office groups only. The list is built in SQL from the same helper
    that fills the drop down in the admin form, so a group can never be added to
    one place and forgotten in the other. */
-$leader_list = "'" . implode("','", array_keys(leadercategories())) . "'";
+$leader_list = "'" . implode("','", array_keys(leaderCategories())) . "'";
 
 $statement = $conn->prepare("SELECT * FROM people
                              WHERE status = 1 AND category IN ($leader_list)
@@ -49,7 +49,7 @@ $statement->close();
     <section class="py-5">
         <div class="container">
             <?php
-            $categories = leadercategories();
+            $categories = leaderCategories();
             $any_leaders = false;
 
             foreach ($categories as $group => $group_label):
@@ -60,7 +60,7 @@ $statement->close();
                 $any_leaders = true;
             ?>
                 <div class="mb-5">
-                    <?php sectionheading($group_label, 'Serving the church', '', 2); ?>
+                    <?php sectionHeading($group_label, 'Serving the church', '', 2); ?>
 
                     <div class="row g-4">
                         <?php foreach ($people as $leader): ?>
@@ -68,7 +68,7 @@ $statement->close();
                                 <article class="card h-100 border-0 shadow-sm rounded-4 text-center">
                                     <div class="card-body p-4">
                                         <?php if (!empty($leader['image'])): ?>
-                                            <img src="<?php echo uploadurl($leader['image']); ?>"
+                                            <img src="<?php echo uploadUrl($leader['image']); ?>"
                                                  class="rounded-circle mb-3" width="120" height="120"
                                                  alt="<?php echo e($leader['name']); ?>"
                                                  style="object-fit:cover">
@@ -92,7 +92,7 @@ $statement->close();
                                             </p>
                                         <?php endif; ?>
 
-                                        <?php $cake = birthdaybadge($leader['born']);
+                                        <?php $cake = birthdayBadge($leader['born']);
                                         if ($cake !== ''): ?>
                                             <p class="mb-2"><?php echo $cake; ?></p>
                                         <?php endif; ?>
@@ -114,7 +114,7 @@ $statement->close();
                 <div class="row justify-content-center">
                     <div class="col-lg-8">
                         <?php
-                        emptystate('fa-user-tie', 'The leadership page is being filled in',
+                        emptyState('fa-user-tie', 'The leadership page is being filled in',
                             'The names and photographs of our pastors, elders and department leaders '
                             . 'will be published here as soon as they are added.',
                             '<a class="btn btn-primary" href="' . url('contact') . '">Ask who to speak to</a>');

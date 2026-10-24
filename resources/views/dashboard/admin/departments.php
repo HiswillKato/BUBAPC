@@ -14,15 +14,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'departments';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $department_id = (int) ($_POST['id'] ?? 0);
-    $department = adminrow($conn, 'departments', $department_id);
+    $department = adminRow($conn, 'departments', $department_id);
 
     if (!$department) {
         flash('error', 'That department is no longer here. It may already have been deleted.');
-        redirect(adminurl('departments'));
+        redirect(adminUrl('departments'));
     }
 
     if ($action === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'department_deleted', 'The department "' . $department['name'] . '"');
+        logAction($conn, 'department_deleted', 'The department "' . $department['name'] . '"');
         flash('success', 'The department "' . $department['name'] . '" has been deleted.');
     } elseif ($action === 'toggle') {
         $new_active = (int) $department['active'] === 1 ? 0 : 1;
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', 'The order for "' . $department['name'] . '" has been saved.');
     }
 
-    redirect(adminurl('departments'));
+    redirect(adminUrl('departments'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -77,11 +77,11 @@ if ($bind_values) {
     $total_departments = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_departments = dbcount($conn, "SELECT COUNT(*) FROM departments" . $where);
+    $total_departments = dbCount($conn, "SELECT COUNT(*) FROM departments" . $where);
 }
 
 $per_page = 25;
-$current_page = pagenumber();
+$current_page = pageNumber();
 $pagination = paginate($total_departments, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -103,26 +103,26 @@ $statement->close();
 
 $page_title = 'Departments';
 $page_heading = 'Departments';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('departments/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('departments/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add department</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<?php adminfilterbar(adminurl('departments'), $search); ?>
+<?php adminFilterBar(adminUrl('departments'), $search); ?>
 
-<?php adminresultbar($pagination, ['q' => $search], 'departments'); ?>
+<?php adminResultBar($pagination, ['q' => $search], 'departments'); ?>
 
 <?php if (!$departments): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-sitemap',
         $search !== '' ? 'No departments match that' : 'No departments yet',
         $search !== ''
             ? 'Try a different word, or clear the filter to see everything.'
             : 'The parts of the church, and how somebody joins each one. A visitor reads this page to '
                 . 'find out where they would fit in.',
-        '<a class="btn btn-primary" href="' . adminurl('departments/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminUrl('departments/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add the first department</a>',
         'admin'
     );
@@ -145,7 +145,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <tr>
                             <td class="ps-3">
                                 <a class="fw-semibold d-block text-decoration-none"
-                                   href="<?php echo adminurl('departments/form.php?id=' . (int) $department['id']); ?>">
+                                   href="<?php echo adminUrl('departments/form.php?id=' . (int) $department['id']); ?>">
                                     <?php echo e($department['name']); ?>
                                 </a>
                                 <span class="small text-body-secondary">
@@ -153,7 +153,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                 </span>
                             </td>
                             <td class="small text-body-secondary"><?php echo e($department['linked_leader'] !== null ? $department['linked_leader'] : $department['typed']); ?></td>
-                            <td><?php echo adminorderfield('departments', $department['id'], $department['display_order']); ?></td>
+                            <td><?php echo adminOrderField('departments', $department['id'], $department['display_order']); ?></td>
                             <td>
                                 <span class="badge rounded-pill <?php echo (int) $department['active'] === 1 ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                     <?php echo (int) $department['active'] === 1 ? 'Shown' : 'Hidden'; ?>
@@ -161,7 +161,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             </td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo adminrowactions('departments', $department['id'], [
+                                echo adminRowActions('departments', $department['id'], [
                                     'active' => $department['active'],
                                     'label' => 'the department "' . $department['name'] . '"',
                                 ]);

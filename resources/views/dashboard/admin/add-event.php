@@ -14,11 +14,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'events';
 
 $event_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$event = $event_id ? adminrow($conn, 'events', $event_id) : [];
+$event = $event_id ? adminRow($conn, 'events', $event_id) : [];
 
 if ($event_id && !$event) {
     flash('error', 'That event is no longer here.');
-    redirect(adminurl('events'));
+    redirect(adminUrl('events'));
 }
 
 $is_new = $event_id === 0;
@@ -42,19 +42,19 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $values['title'] = posttext('title');
-    $values['theme'] = posttext('theme');
-    $values['description'] = posttext('description');
-    $values['venue'] = posttext('venue');
+    $values['title'] = postText('title');
+    $values['theme'] = postText('theme');
+    $values['description'] = postText('description');
+    $values['venue'] = postText('venue');
     $values['status'] = ($_POST['status'] ?? '') === 'published' ? 'published' : 'draft';
 
-    admincheckrequired($values['title'], 'The title', $errors);
-    $values['start_date'] = admincheckmoment($_POST['start_date'] ?? '', 'The start date', $errors);
-    $values['start_time'] = admincheckmoment($_POST['start_time'] ?? '', 'The start time', $errors, 'time', false);
-    $values['end_date'] = admincheckmoment($_POST['end_date'] ?? '', 'The end date', $errors, 'date', false);
-    $values['end_time'] = admincheckmoment($_POST['end_time'] ?? '', 'The end time', $errors, 'time', false);
+    adminCheckRequired($values['title'], 'The title', $errors);
+    $values['start_date'] = adminCheckMoment($_POST['start_date'] ?? '', 'The start date', $errors);
+    $values['start_time'] = adminCheckMoment($_POST['start_time'] ?? '', 'The start time', $errors, 'time', false);
+    $values['end_date'] = adminCheckMoment($_POST['end_date'] ?? '', 'The end date', $errors, 'date', false);
+    $values['end_time'] = adminCheckMoment($_POST['end_time'] ?? '', 'The end time', $errors, 'time', false);
 
     /* An event that ends before it begins is a typing mistake, not a plan. */
     if ($values['start_date'] !== '' && $values['end_date'] !== '' && $values['end_date'] < $values['start_date']) {
@@ -76,9 +76,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ? slug($conn, 'events', $values['title'])
             : $event['slug'];
 
-        $image = saveimage(
+        $image = saveImage(
             $_FILES['image'] ?? null,
-            postcheckbox('remove_image'),
+            postCheckbox('remove_image'),
             'events',
             $event['image'] ?? ''
         );
@@ -110,10 +110,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['status']
             );
             $statement->execute();
-            $event_id = (int) dblastid($conn);
+            $event_id = (int) dbLastId($conn);
             $statement->close();
 
-            logaction($conn, 'event_created', 'The event "' . $values['title'] . '"');
+            logAction($conn, 'event_created', 'The event "' . $values['title'] . '"');
             flash('success', 'The event "' . $values['title'] . '" has been added.');
         } else {
             $statement = $conn->prepare(
@@ -141,17 +141,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            logaction($conn, 'event_updated', 'The event "' . $values['title'] . '"');
+            logAction($conn, 'event_updated', 'The event "' . $values['title'] . '"');
             flash('success', 'The event "' . $values['title'] . '" has been saved.');
         }
 
-        redirect(adminurl('events'));
+        redirect(adminUrl('events'));
     }
 }
 
 $page_title = $is_new ? 'Add event' : 'Edit event';
 $page_heading = $is_new ? 'Add an event' : 'Edit event';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('events') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminUrl('events') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -160,44 +160,44 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php adminerrors($errors); ?>
+            <?php adminErrors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
-                <?php echo csrffield(); ?>
+                <?php echo csrfField(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admintextfield('title', 'Title', $values['title'], '', 'A Voice to Generations');
-                        admintextfield('theme', 'Theme or tag', $values['theme'],
+                        adminTextField('title', 'Title', $values['title'], '', 'A Voice to Generations');
+                        adminTextField('theme', 'Theme or tag', $values['theme'],
                             'For example: Convention, Retreat, Prayer. Shown as a small label beside the event.', 'Retreat');
-                        admintextarea('description', 'Description', $values['description'],
+                        adminTextarea('description', 'Description', $values['description'],
                             'Leave an empty line between paragraphs. It will be read as a page on the website.', 10);
                         ?>
 
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">When and where</h2>
                         <div class="row">
                             <div class="col-sm-6">
-                                <?php admindatefield('start_date', 'Start date', $values['start_date']); ?>
+                                <?php adminDateField('start_date', 'Start date', $values['start_date']); ?>
                             </div>
                             <div class="col-sm-6">
-                                <?php admintimefield('start_time', 'Start time', $values['start_time'], 'Leave empty for an all-day event.'); ?>
+                                <?php adminTimeField('start_time', 'Start time', $values['start_time'], 'Leave empty for an all-day event.'); ?>
                             </div>
                             <div class="col-sm-6">
-                                <?php admindatefield('end_date', 'End date', $values['end_date'], 'Only for something that runs for more than one day.'); ?>
+                                <?php adminDateField('end_date', 'End date', $values['end_date'], 'Only for something that runs for more than one day.'); ?>
                             </div>
                             <div class="col-sm-6">
-                                <?php admintimefield('end_time', 'End time', $values['end_time']); ?>
+                                <?php adminTimeField('end_time', 'End time', $values['end_time']); ?>
                             </div>
                             <div class="col-12">
-                                <?php admintextfield('venue', 'Venue', $values['venue'], 'Where it happens.', 'Busitema University Main Grounds'); ?>
+                                <?php adminTextField('venue', 'Venue', $values['venue'], 'Where it happens.', 'Busitema University Main Grounds'); ?>
                             </div>
                         </div>
 
                         <?php
-                        adminimagefield('image', 'Picture', $values['image']);
-                        adminstatusfield($values['status']);
-                        adminformbuttons(adminurl('events'), $is_new ? 'Add event' : 'Save changes');
+                        adminImageField('image', 'Picture', $values['image']);
+                        adminStatusField($values['status']);
+                        adminFormButtons(adminUrl('events'), $is_new ? 'Add event' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -210,7 +210,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <p class="small text-body-secondary mb-3">
                             It comes off the website at once and the picture is deleted. This cannot be undone.
                         </p>
-                        <?php echo admindeletebutton('events', $event_id, 'the event "' . $event['title'] . '"'); ?>
+                        <?php echo adminDeleteButton('events', $event_id, 'the event "' . $event['title'] . '"'); ?>
                     </div>
                 </div>
             <?php endif; ?>

@@ -18,28 +18,28 @@ $active_module = 'events';
    1. THE THREE BUTTONS ON EACH ROW
    ---------------------------------------------------------------------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $event_id = (int) ($_POST['id'] ?? 0);
-    $event = adminrow($conn, 'events', $event_id);
+    $event = adminRow($conn, 'events', $event_id);
 
     if (!$event) {
         flash('error', 'That event is no longer here. It may already have been deleted.');
-        redirect(adminurl('events'));
+        redirect(adminUrl('events'));
     }
 
     if ($action === 'delete') {
         /* The picture goes too, otherwise the uploads folder slowly fills up
            with files nothing points at any more. */
-        deleteuploadedimage($event['image']);
+        deleteUploadedImage($event['image']);
 
         $statement = $conn->prepare("DELETE FROM events WHERE id = ?");
         $statement->bind_param('i', $event_id);
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'event_deleted', 'The event "' . $event['title'] . '"');
+        logAction($conn, 'event_deleted', 'The event "' . $event['title'] . '"');
         flash('success', 'The event "' . $event['title'] . '" has been deleted.');
     } elseif ($action === 'toggle_status') {
         $new_status = $event['status'] === 'published' ? 'draft' : 'published';
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : 'The event "' . $event['title'] . '" is now a draft. Nobody can see it.');
     }
 
-    redirect(adminurl('events'));
+    redirect(adminUrl('events'));
 }
 
 /* ---------------------------------------------------------------------
@@ -96,11 +96,11 @@ if ($bind_values) {
     $total_events = (int) $result->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_events = dbcount($conn, $count_sql);
+    $total_events = dbCount($conn, $count_sql);
 }
 
 $per_page = 15;
-$current_page = pagenumber();
+$current_page = pageNumber();
 $pagination = paginate($total_events, $per_page, $current_page);
 
 $list_sql = "SELECT * FROM events" . $where_sql
@@ -122,26 +122,26 @@ $statement->close();
 
 $page_title = 'Events';
 $page_heading = 'Events';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('events/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('events/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add event</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<?php adminfilterbar(adminurl('events'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
+<?php adminFilterBar(adminUrl('events'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
 
-<?php adminresultbar($pagination, ['q' => $search, 'status' => $status], 'events'); ?>
+<?php adminResultBar($pagination, ['q' => $search, 'status' => $status], 'events'); ?>
 
 <?php if (!$events): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-calendar-plus',
         $search !== '' || $status !== '' ? 'No events match that' : 'No events yet',
         $search !== '' || $status !== ''
             ? 'Try a different word, or clear the filter to see everything.'
             : 'Retreats, conventions and special services go here. A visitor sees them on the '
                 . 'homepage and on the events page, and only the ones you publish.',
-        '<a class="btn btn-primary" href="' . adminurl('events/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminUrl('events/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add the first event</a>',
         'admin'
     );
@@ -164,11 +164,11 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <tr>
                             <td class="ps-3">
                                 <div class="d-flex align-items-center gap-2">
-                                    <img src="<?php echo uploadurl($event['image']); ?>" alt=""
+                                    <img src="<?php echo uploadUrl($event['image']); ?>" alt=""
                                          width="48" height="48" class="rounded-3 object-fit-cover flex-shrink-0">
                                     <div>
                                         <a class="fw-semibold d-block text-decoration-none"
-                                           href="<?php echo adminurl('events/form.php?id=' . (int) $event['id']); ?>">
+                                           href="<?php echo adminUrl('events/form.php?id=' . (int) $event['id']); ?>">
                                             <?php echo e($event['title']); ?>
                                         </a>
                                         <?php if ($event['theme'] !== ''): ?>
@@ -178,13 +178,13 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                 </div>
                             </td>
                             <td class="small text-nowrap">
-                                <?php echo eventdatelabel($event); ?>
+                                <?php echo eventDateLabel($event); ?>
                             </td>
                             <td class="small text-body-secondary"><?php echo e($event['venue']); ?></td>
-                            <td><?php echo statusbadge($event['status']); ?></td>
+                            <td><?php echo statusBadge($event['status']); ?></td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo adminrowactions('events', $event['id'], [
+                                echo adminRowActions('events', $event['id'], [
                                     'status' => $event['status'],
                                     'label' => 'the event "' . $event['title'] . '"',
                                 ]);

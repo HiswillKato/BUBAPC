@@ -18,8 +18,8 @@ define('BUBAPC_SKIP_MAINTENANCE', true);
 require_once __DIR__ . '/../../../app/init.php';
 
 /* Someone who is already signed in has no business on the login page. */
-if (isloggedin()) {
-    redirect(isstaff() ? adminurl() : memberurl());
+if (isLoggedIn()) {
+    redirect(isStaff() ? adminUrl() : memberUrl());
 }
 
 $page_title = 'Login';
@@ -27,13 +27,13 @@ $login_username = '';
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $login_username = posttext('username');
+    $login_username = postText('username');
     $password = (string) ($_POST['password'] ?? '');
-    $next = posttext('next');
+    $next = postText('next');
 
-    $locked_for = loginlockoutminutes($conn, $login_username);
+    $locked_for = loginLockoutMinutes($conn, $login_username);
     if ($locked_for > 0) {
         flash('error', 'Too many wrong passwords. Please try again in ' . $locked_for . ' minutes.');
         redirect('login');
@@ -56,16 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password_ok = $user && password_verify($password, $user['password']);
     $account_usable = $user && (int) $user['active'] === 1;
 
-    loginrecordattempt($conn, $login_username, (bool) ($password_ok && $account_usable));
+    loginRecordAttempt($conn, $login_username, (bool) ($password_ok && $account_usable));
 
     if ($password_ok && $account_usable) {
-        loginclearattempts($conn, $user['username']);
+        loginClearAttempts($conn, $user['username']);
 
         /* A fresh session id after signing in, so a session id that was
            guessed before the login cannot be used afterwards. The session
-           itself is written by signuserin() in app/auth.php, which
+           itself is written by signUserIn() in app/auth.php, which
            register.php uses too. */
-        signuserin($user);
+        signUserIn($user);
 
         /* Only a path on this website is followed, never a whole address
            from somebody else, which is what stops the "log in and get sent to
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* Staff go to the admin panel and church members to their own account
            page. */
-        redirect(isstaff() ? adminurl() : memberurl());
+        redirect(isStaff() ? adminUrl() : memberUrl());
     }
 
     if ($password_ok && !$account_usable) {

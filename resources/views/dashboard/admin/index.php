@@ -32,12 +32,12 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'dashboard';
 $page_title = 'Dashboard';
 $page_heading = 'Dashboard';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('devotionals/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('devotionals/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Write a devotional</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 
-$admin = currentuser();
+$admin = currentUser();
 
 /* How much of each thing is written, and how much of it visitors can see.
    The tables are not all built the same way: some have a published/draft
@@ -60,7 +60,7 @@ $count_tables = [
 $counts = [];
 foreach ($count_tables as $table => $column) {
     $live_value = $column[1];
-    $row = dbone($conn, "SELECT COUNT(*) AS total,
+    $row = dbOne($conn, "SELECT COUNT(*) AS total,
                                  SUM(`$column[0]` = $live_value) AS live
                           FROM `$table`");
     $counts[$table] = [
@@ -70,17 +70,17 @@ foreach ($count_tables as $table => $column) {
     ];
 }
 
-$unread_messages = (int) dbone($conn, "SELECT COUNT(*) AS total FROM messages WHERE seen = 0")['total'];
-$subscribers = (int) dbone($conn, "SELECT COUNT(*) AS total FROM subscribers WHERE status = 1")['total'];
+$unread_messages = (int) dbOne($conn, "SELECT COUNT(*) AS total FROM messages WHERE seen = 0")['total'];
+$subscribers = (int) dbOne($conn, "SELECT COUNT(*) AS total FROM subscribers WHERE status = 1")['total'];
 
 /* The two things worth a date rather than a number: what is coming, and what
    visitors are being shown today. Both are read whole, because both are
    printed with their title and their date, and the title of yesterday's
    devotional is not something to work out from a count. */
-$next_event = dbone($conn, "SELECT * FROM events
+$next_event = dbOne($conn, "SELECT * FROM events
                              WHERE status = 'published' AND start_date >= CURDATE()
                              ORDER BY start_date ASC, start_time ASC LIMIT 1");
-$today_devotional = dbone($conn, "SELECT * FROM devotionals
+$today_devotional = dbOne($conn, "SELECT * FROM devotionals
                                    WHERE status = 'published' AND devotional_date <= CURDATE()
                                    ORDER BY devotional_date DESC LIMIT 1");
 
@@ -108,14 +108,14 @@ $cards = [
 
     <p class="text-body-secondary mb-4">
         <?php echo e(greeting() . ', ' . $admin['full_name']); ?>
-        &middot; <?php echo formatdate(date('Y-m-d'), 'l, j F Y'); ?>
+        &middot; <?php echo formatDate(date('Y-m-d'), 'l, j F Y'); ?>
     </p>
 
     <div class="row g-3 mb-4">
         <?php foreach ($cards as $card): ?>
             <div class="col-6 col-md-4 col-xl-3">
                 <a class="card stat-card border-0 shadow-sm rounded-4 h-100 text-decoration-none text-body"
-                   href="<?php echo adminurl($card[4]); ?>">
+                   href="<?php echo adminUrl($card[4]); ?>">
                     <div class="card-body d-flex flex-column gap-1">
                         <span class="d-flex align-items-center gap-2">
                             <span class="stat-icon bg-<?php echo e($card[5]); ?> bg-opacity-10 text-<?php echo e($card[5]); ?>"
@@ -160,11 +160,11 @@ $cards = [
 
                     <?php if ($next_event): ?>
                         <a class="h5 d-block mb-1"
-                           href="<?php echo adminurl('events/form.php?id=' . (int) $next_event['id']); ?>">
+                           href="<?php echo adminUrl('events/form.php?id=' . (int) $next_event['id']); ?>">
                             <?php echo e($next_event['title']); ?>
                         </a>
                         <p class="small text-body-secondary mb-0">
-                            <?php echo eventdatelabel($next_event); ?>
+                            <?php echo eventDateLabel($next_event); ?>
                             <?php if ($next_event['venue'] !== ''): ?>
                                 &middot; <?php echo e($next_event['venue']); ?>
                             <?php endif; ?>
@@ -185,11 +185,11 @@ $cards = [
 
                     <?php if ($today_devotional): ?>
                         <a class="h5 d-block mb-1"
-                           href="<?php echo adminurl('devotionals/form.php?id=' . (int) $today_devotional['id']); ?>">
+                           href="<?php echo adminUrl('devotionals/form.php?id=' . (int) $today_devotional['id']); ?>">
                             <?php echo e($today_devotional['title']); ?>
                         </a>
                         <p class="small text-body-secondary mb-0">
-                            <?php echo formatdate($today_devotional['devotional_date'], 'l, j F Y'); ?>
+                            <?php echo formatDate($today_devotional['devotional_date'], 'l, j F Y'); ?>
                         </p>
                     <?php else: ?>
                         <p class="text-body-secondary mb-0">No devotional is on the website today.</p>

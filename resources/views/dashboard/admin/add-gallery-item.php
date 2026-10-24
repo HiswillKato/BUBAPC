@@ -14,11 +14,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'gallery';
 
 $photo_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$photo = $photo_id ? adminrow($conn, 'gallery', $photo_id) : [];
+$photo = $photo_id ? adminRow($conn, 'gallery', $photo_id) : [];
 
 if ($photo_id && !$photo) {
     flash('error', 'That photograph is no longer here.');
-    redirect(adminurl('gallery'));
+    redirect(adminUrl('gallery'));
 }
 
 $is_new = $photo_id === 0;
@@ -34,21 +34,21 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $values['title'] = posttext('title');
-    $values['caption'] = posttext('caption');
+    $values['title'] = postText('title');
+    $values['caption'] = postText('caption');
     $values['sort_order'] = (int) ($_POST['sort_order'] ?? 0);
-    $values['status'] = postcheckbox('status') ? 1 : 0;
+    $values['status'] = postCheckbox('status') ? 1 : 0;
 
     if ($is_new && (!isset($_FILES['image']) || $_FILES['image']['error'] === UPLOAD_ERR_NO_FILE)) {
         $errors[] = 'Please choose a photograph to upload.';
     }
 
     if (!$errors) {
-        $image = saveimage(
+        $image = saveImage(
             $_FILES['image'] ?? null,
-            postcheckbox('remove_image'),
+            postCheckbox('remove_image'),
             'gallery',
             $photo['image'] ?? ''
         );
@@ -72,10 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['status']
             );
             $statement->execute();
-            $photo_id = (int) dblastid($conn);
+            $photo_id = (int) dbLastId($conn);
             $statement->close();
 
-            logaction($conn, 'photo_created', 'A photograph was added');
+            logAction($conn, 'photo_created', 'A photograph was added');
             flash('success', 'The photograph has been added to the gallery.');
         } else {
             $statement = $conn->prepare(
@@ -93,17 +93,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            logaction($conn, 'photo_updated', 'A photograph was changed');
+            logAction($conn, 'photo_updated', 'A photograph was changed');
             flash('success', 'The photograph has been saved.');
         }
 
-        redirect(adminurl('gallery'));
+        redirect(adminUrl('gallery'));
     }
 }
 
 $page_title = $is_new ? 'Add photograph' : 'Edit photograph';
 $page_heading = $is_new ? 'Add a photograph' : 'Edit photograph';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('gallery') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminUrl('gallery') . '">'
     . '<i class="fa-solid fa-images me-1" aria-hidden="true"></i>Back to the gallery</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -112,34 +112,34 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php adminerrors($errors); ?>
+            <?php adminErrors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
-                <?php echo csrffield(); ?>
+                <?php echo csrfField(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admintextfield('title', 'Title', $values['title'],
+                        adminTextField('title', 'Title', $values['title'],
                             'Not always needed, but it is what somebody reads first.', 'Sunday main service');
-                        admintextfield('caption', 'Caption', $values['caption'],
+                        adminTextField('caption', 'Caption', $values['caption'],
                             'One line about who is in the picture or what was happening.', 'The room at ten o&rsquo;clock');
                         ?>
 
                         <h2 class="h6 text-uppercase text-body-secondary mb-3">The photograph</h2>
                         <?php
                         if ($is_new) {
-                            adminimagefield('image', 'Photograph', '',
+                            adminImageField('image', 'Photograph', '',
                                 'Needed. A wide picture looks best, because the gallery is a grid of small boxes.');
                         } else {
-                            adminimagefield('image', 'Replace this photograph', $values['image'],
+                            adminImageField('image', 'Replace this photograph', $values['image'],
                                 'A wide picture looks best, because the gallery is a grid of small boxes.');
                         }
-                        admintextfield('sort_order', 'Order on the page', (string) $values['sort_order'],
+                        adminTextField('sort_order', 'Order on the page', (string) $values['sort_order'],
                             'Lower numbers come first. You can also change this from the gallery.', '0');
-                        admincheckbox('status', 'Show this photograph on the website', (int) $values['status'] === 1,
+                        adminCheckbox('status', 'Show this photograph on the website', (int) $values['status'] === 1,
                             'Switch it off to keep a picture without taking it away.');
-                        adminformbuttons(adminurl('gallery'), $is_new ? 'Add to the gallery' : 'Save changes');
+                        adminFormButtons(adminUrl('gallery'), $is_new ? 'Add to the gallery' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -153,7 +153,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             The picture is deleted from the website as well as from the gallery. This cannot
                             be undone, so keep your own copy.
                         </p>
-                        <?php echo admindeletebutton('gallery', $photo_id, 'this photograph'); ?>
+                        <?php echo adminDeleteButton('gallery', $photo_id, 'this photograph'); ?>
                     </div>
                 </div>
             <?php endif; ?>

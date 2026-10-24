@@ -14,9 +14,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('');
 }
 
-verifycsrf();
+verifyCsrf();
 
-logoutuser();
+logoutUser();
 
 // A brand new session is started so the "you have signed out" note has
 // somewhere to live.

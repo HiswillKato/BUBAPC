@@ -8,12 +8,12 @@
  */
 
 require_once __DIR__ . '/../../../../app/init.php';
-if (currentuser()['role'] ?? '' !== 'admin') {
+if (currentUser()['role'] ?? '' !== 'admin') {
     flash('error', 'Only website administrators can open that page.');
-    redirect(adminurl('people'));
+    redirect(adminUrl('people'));
 }
-requirestaff();
+requireStaff();
 
 $person_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
-redirect(adminurl('people/form.php' . ($person_id > 0 ? '?id=' . $person_id : '')));
+redirect(adminUrl('people/form.php' . ($person_id > 0 ? '?id=' . $person_id : '')));

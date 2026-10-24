@@ -15,7 +15,7 @@ $canonical = 'gallery';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-pageheader(
+pageHeader(
     'Gallery',
     'What our services, retreats and ordinary weeks look like. Click any photograph '
     . 'to see it larger.',
@@ -23,8 +23,8 @@ pageheader(
 );
 
 $per_page = 24;
-$current_page = pagenumber();
-$pagination = paginate(dbcount($conn, "SELECT COUNT(*) FROM gallery WHERE status = 1"), $per_page, $current_page);
+$current_page = pageNumber();
+$pagination = paginate(dbCount($conn, "SELECT COUNT(*) FROM gallery WHERE status = 1"), $per_page, $current_page);
 
 $list_sql = "SELECT * FROM gallery WHERE status = 1
              ORDER BY sort_order ASC, id DESC LIMIT ? OFFSET ?";
@@ -44,13 +44,13 @@ $statement->close();
 
     <section class="py-5">
         <div class="container">
-            <?php renderresultcount($pagination, 'photos'); ?>
+            <?php renderResultCount($pagination, 'photos'); ?>
 
             <?php if (!$photos): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
-                        emptystate('fa-images', 'The gallery is empty at the moment',
+                        emptyState('fa-images', 'The gallery is empty at the moment',
                             'Photographs from our services, retreats and ordinary weeks will appear here '
                             . 'as soon as they are added.');
                         ?>
@@ -68,10 +68,10 @@ $statement->close();
                         <div class="col-6 col-md-4 col-lg-3">
                             <button class="btn p-0 border-0 bg-transparent w-100 text-start" type="button"
                                     data-bs-toggle="modal" data-bs-target="#gallery-photo"
-                                    data-gallery-image="<?php echo uploadurl($photo['image']); ?>"
+                                    data-gallery-image="<?php echo uploadUrl($photo['image']); ?>"
                                     data-gallery-caption="<?php echo e($photo_words); ?>">
                                 <span class="d-block ratio ratio-1x1 rounded-4 overflow-hidden zoomable">
-                                    <img src="<?php echo uploadurl($photo['image']); ?>"
+                                    <img src="<?php echo uploadUrl($photo['image']); ?>"
                                          alt="<?php echo e($photo['caption'] !== '' ? $photo['caption'] : $photo['title']); ?>"
                                          class="object-fit-cover">
                                 </span>
@@ -90,7 +90,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php renderpagination($pagination); ?>
+                <?php renderPagination($pagination); ?>
             <?php endif; ?>
         </div>
     </section>

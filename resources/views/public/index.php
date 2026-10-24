@@ -8,9 +8,9 @@
  * program and event sections politely say "coming soon" instead of breaking.
  *
  * As the admin panel is used, each section fills itself in:
- *   - weeklyprogrambyday() lists the services from the programs table
- *   - nextevents() shows the upcoming events as cards with a countdown
- *   - currentdevotional() brings today's message to the front door
+ *   - weeklyProgramByDay() lists the services from the programs table
+ *   - nextEvents() shows the upcoming events as cards with a countdown
+ *   - currentDevotional() brings today's message to the front door
  * The page never guesses or mixes its own content into those sections.
  *
  * Every class in the markup is a Bootstrap class, except the two custom
@@ -27,12 +27,12 @@ require_once __DIR__ . '/../partials/public/header.php';
 
 /* Everything the page shows is read once, at the top, and then used in one
    place each. Reading any of it twice would run the same query twice. */
-$today_verse      = verseoftheday();
-$programs_by_day  = weeklyprogrambyday($conn);
+$today_verse      = verseOfTheDay();
+$programs_by_day  = weeklyProgramByDay($conn);
 $has_program      = count($programs_by_day) > 0;
-$upcoming_events  = nextevents($conn, 3);
-$today_devotional = currentdevotional($conn);
-$notices          = recentannouncements($conn, 3);
+$upcoming_events  = nextEvents($conn, 3);
+$today_devotional = currentDevotional($conn);
+$notices          = recentAnnouncements($conn, 3);
 ?>
 
     <!-- ============ HERO ============ -->
@@ -87,7 +87,7 @@ $notices          = recentannouncements($conn, 3);
     <section class="py-5">
         <div class="container">
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-                <?php sectionheading('Our weekly program', 'This week at ' . SITE_NAME, 'Every meeting you can join us at, in one place.'); ?>
+                <?php sectionHeading('Our weekly program', 'This week at ' . SITE_NAME, 'Every meeting you can join us at, in one place.'); ?>
                 <a class="btn btn-outline-primary align-self-end" href="<?php echo url('programs'); ?>">
                     Full program <i class="fa-solid fa-arrow-right-long ms-1" aria-hidden="true"></i>
                 </a>
@@ -95,7 +95,7 @@ $notices          = recentannouncements($conn, 3);
 
             <?php if (!$has_program): ?>
                 <?php
-                emptystate('fa-clock', 'The weekly program is coming soon',
+                emptyState('fa-clock', 'The weekly program is coming soon',
                     'We are putting the finishing touches on our schedule. Please check back shortly.');
                 ?>
             <?php else: ?>
@@ -114,14 +114,14 @@ $notices          = recentannouncements($conn, 3);
                                                        hours keeps those hours as their own
                                                        lines below. */ ?>
                                                 <span class="badge rounded-pill text-bg-primary px-3 py-2">
-                                                    <?php echo formattimerange($program['start_time'], $program['end_time'] ?? ''); ?>
+                                                    <?php echo formatTimeRange($program['start_time'], $program['end_time'] ?? ''); ?>
                                                 </span>
                                                 <div>
                                                     <p class="fw-semibold mb-0"><?php echo e($program['title'] ?: 'Service'); ?></p>
-                                                    <?php foreach (programtimes($program) as $time_line): ?>
+                                                    <?php foreach (programTimes($program) as $time_line): ?>
                                                         <p class="small text-body-secondary mb-0"><?php echo $time_line; ?></p>
                                                     <?php endforeach; ?>
-                                                    <?php foreach (teamlines($program['venue']) as $place): ?>
+                                                    <?php foreach (teamLines($program['venue']) as $place): ?>
                                                         <p class="small mb-0">
                                                             <i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i><?php echo e($place); ?>
                                                         </p>
@@ -143,7 +143,7 @@ $notices          = recentannouncements($conn, 3);
     <section class="py-5 bg-body-tertiary">
         <div class="container">
             <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
-                <?php sectionheading('Upcoming events', 'Mark your calendar', 'Everything the church is gathering for.'); ?>
+                <?php sectionHeading('Upcoming events', 'Mark your calendar', 'Everything the church is gathering for.'); ?>
                 <a class="btn btn-outline-primary align-self-end" href="<?php echo url('events'); ?>">
                     All events <i class="fa-solid fa-arrow-right-long ms-1" aria-hidden="true"></i>
                 </a>
@@ -151,7 +151,7 @@ $notices          = recentannouncements($conn, 3);
 
             <?php if (!$upcoming_events): ?>
                 <?php
-                emptystate('fa-calendar-plus', 'No events scheduled yet',
+                emptyState('fa-calendar-plus', 'No events scheduled yet',
                     'Watch this space — the next gathering will be announced here as soon as it is planned.');
                 ?>
             <?php else: ?>
@@ -160,7 +160,7 @@ $notices          = recentannouncements($conn, 3);
                         <div class="col-md-6 col-lg-4">
                             <article class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
                                 <div class="ratio ratio-16x9 zoomable">
-                                    <img src="<?php echo uploadurl($event['image']); ?>" alt=""
+                                    <img src="<?php echo uploadUrl($event['image']); ?>" alt=""
                                          class="object-fit-cover">
                                 </div>
                                 <div class="card-body p-4">
@@ -177,7 +177,7 @@ $notices          = recentannouncements($conn, 3);
                                     </h3>
                                     <p class="small text-body-secondary mb-2">
                                         <i class="fa-solid fa-calendar-day me-1" aria-hidden="true"></i>
-                                        <?php echo eventdatelabel($event); ?>
+                                        <?php echo eventDateLabel($event); ?>
                                         <?php if (!empty($event['venue'])): ?>
                                             <br><i class="fa-solid fa-location-dot me-1" aria-hidden="true"></i>
                                             <?php echo e($event['venue']); ?>
@@ -190,7 +190,7 @@ $notices          = recentannouncements($conn, 3);
                                     /* The nearest event gets the ticking countdown; the others
                                        only need the date, because a row of countdown boxes is
                                        too much noise to read. */
-                                    $moment = eventmoment($event);
+                                    $moment = eventMoment($event);
                                     if ($index === 0 && $moment !== ''):
                                     ?>
                                         <div class="d-flex flex-wrap gap-2 pt-2" data-countdown="<?php echo e($moment); ?>"></div>
@@ -211,13 +211,13 @@ $notices          = recentannouncements($conn, 3);
                 <div class="col-lg-7">
                     <?php
                     if ($today_devotional):
-                        sectionheading(
+                        sectionHeading(
                             $today_devotional['title'],
-                            'Devotional for ' . formatdate($today_devotional['devotional_date'], 'j F Y'),
+                            'Devotional for ' . formatDate($today_devotional['devotional_date'], 'j F Y'),
                             ''
                         );
                     else:
-                        sectionheading('A quiet word every morning', 'Devotional', '');
+                        sectionHeading('A quiet word every morning', 'Devotional', '');
                     endif;
                     ?>
 
@@ -268,7 +268,7 @@ $notices          = recentannouncements($conn, 3);
                                                 <?php echo e($notice['title']); ?>
                                             </a>
                                             <span class="small text-body-secondary">
-                                                <?php echo formatdate($notice['publish_date']); ?>
+                                                <?php echo formatDate($notice['publish_date']); ?>
                                             </span>
                                         </li>
                                     <?php endforeach; ?>
@@ -290,7 +290,7 @@ $notices          = recentannouncements($conn, 3);
         <div class="container">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8">
-                    <?php sectionheading('We would love to worship with you', 'Plan your visit', ''); ?>
+                    <?php sectionHeading('We would love to worship with you', 'Plan your visit', ''); ?>
                     <p class="text-body-secondary mb-4">
                         <?php if (SITE_LOCATION !== ''): ?>
                             You will find us at <strong><?php echo e(SITE_LOCATION); ?></strong>.

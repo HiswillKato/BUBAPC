@@ -14,15 +14,15 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'sermons';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $sermon_id = (int) ($_POST['id'] ?? 0);
-    $sermon = adminrow($conn, 'sermons', $sermon_id);
+    $sermon = adminRow($conn, 'sermons', $sermon_id);
 
     if (!$sermon) {
         flash('error', 'That sermon is no longer here. It may already have been deleted.');
-        redirect(adminurl('sermons'));
+        redirect(adminUrl('sermons'));
     }
 
     if ($action === 'delete') {
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'sermon_deleted', 'The sermon "' . $sermon['title'] . '"');
+        logAction($conn, 'sermon_deleted', 'The sermon "' . $sermon['title'] . '"');
         flash('success', 'The sermon "' . $sermon['title'] . '" has been deleted.');
     } elseif ($action === 'toggle_status') {
         $new_status = $sermon['status'] === 'published' ? 'draft' : 'published';
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : '"' . $sermon['title'] . '" is now a draft. Nobody can see it.');
     }
 
-    redirect(adminurl('sermons'));
+    redirect(adminUrl('sermons'));
 }
 
 $search = isset($_GET['q']) ? trim((string) $_GET['q']) : '';
@@ -82,11 +82,11 @@ if ($bind_values) {
     $total_sermons = (int) $statement->get_result()->fetch_assoc()['COUNT(*)'];
     $statement->close();
 } else {
-    $total_sermons = dbcount($conn, "SELECT COUNT(*) FROM sermons" . $where_sql);
+    $total_sermons = dbCount($conn, "SELECT COUNT(*) FROM sermons" . $where_sql);
 }
 
 $per_page = 20;
-$current_page = pagenumber();
+$current_page = pageNumber();
 $pagination = paginate($total_sermons, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -105,26 +105,26 @@ $statement->close();
 
 $page_title = 'Sermons';
 $page_heading = 'Sermons';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('sermons/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('sermons/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add sermon</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<?php adminfilterbar(adminurl('sermons'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
+<?php adminFilterBar(adminUrl('sermons'), $search, $status, ['published' => 'Published', 'draft' => 'Draft']); ?>
 
-<?php adminresultbar($pagination, ['q' => $search, 'status' => $status], 'sermons'); ?>
+<?php adminResultBar($pagination, ['q' => $search, 'status' => $status], 'sermons'); ?>
 
 <?php if (!$sermons): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-music',
         $search !== '' || $status !== '' ? 'No sermons match that' : 'No sermons yet',
         $search !== '' || $status !== ''
             ? 'Try the preacher&rsquo;s name or part of the title.'
             : 'Add a sermon with its date, preacher and scripture. If there is a recording on YouTube, '
                 . 'paste the address and it will be embedded on the page.',
-        '<a class="btn btn-primary" href="' . adminurl('sermons/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminUrl('sermons/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add the first sermon</a>',
         'admin'
     );
@@ -145,10 +145,10 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                 <tbody>
                     <?php foreach ($sermons as $sermon): ?>
                         <tr>
-                            <td class="ps-3 text-nowrap small"><?php echo formatdate($sermon['sermon_date']); ?></td>
+                            <td class="ps-3 text-nowrap small"><?php echo formatDate($sermon['sermon_date']); ?></td>
                             <td>
                                 <a class="fw-semibold d-block text-decoration-none"
-                                   href="<?php echo adminurl('sermons/form.php?id=' . (int) $sermon['id']); ?>">
+                                   href="<?php echo adminUrl('sermons/form.php?id=' . (int) $sermon['id']); ?>">
                                     <?php echo e($sermon['title']); ?>
                                 </a>
                                 <span class="small text-body-secondary">
@@ -160,10 +160,10 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                 </span>
                             </td>
                             <td class="small text-body-secondary"><?php echo e($sermon['preacher']); ?></td>
-                            <td><?php echo statusbadge($sermon['status']); ?></td>
+                            <td><?php echo statusBadge($sermon['status']); ?></td>
                             <td class="text-end pe-3 text-nowrap">
                                 <?php
-                                echo adminrowactions('sermons', $sermon['id'], [
+                                echo adminRowActions('sermons', $sermon['id'], [
                                     'status' => $sermon['status'],
                                     'label' => 'the sermon "' . $sermon['title'] . '"',
                                 ]);

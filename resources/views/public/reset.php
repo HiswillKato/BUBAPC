@@ -3,7 +3,7 @@
  * BUBAPC - Choosing a new password
  *
  * Step two of the reset, reached from the link in the email. The link carries
- * a token; the database only ever holds the SHA-256 hash of it, and tokenrow()
+ * a token; the database only ever holds the SHA-256 hash of it, and tokenRow()
  * in app/auth.php refuses a token that is used or out of date, so a link
  * cannot be replayed.
  *
@@ -21,22 +21,22 @@ require_once __DIR__ . '/../../../app/init.php';
    are the same string; the hidden one is there because a form post cannot be
    trusted to still be talking about the token the page was opened with. */
 $token = isset($_GET['token']) ? trim((string) $_GET['token']) : '';
-$tokenrow = $token !== '' ? tokenrow($conn, $token) : null;
+$tokenRow = $token !== '' ? tokenRow($conn, $token) : null;
 
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $token = posttext('token');
+    $token = postText('token');
     $password = (string) ($_POST['password'] ?? '');
     $confirm = (string) ($_POST['confirm'] ?? '');
 
     /* Looked up again on the POST. Checking only on the GET would mean a
        token that was spent between the two requests still worked. */
-    $tokenrow = $token !== '' ? tokenrow($conn, $token) : null;
+    $tokenRow = $token !== '' ? tokenRow($conn, $token) : null;
 
-    if (!$tokenrow) {
+    if (!$tokenRow) {
         $errors['token'] = 'This link is no longer valid. Please ask for a new one.';
     }
 
@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['confirm'] = 'The two passwords are not the same.';
     }
 
-    $problem = passwordproblem($password);
+    $problem = passwordProblem($password);
     if ($problem !== '') {
         $errors['password'] = $problem;
     }
@@ -56,16 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            reference, so handing it the result of a function call produces a
            notice and stores nothing. */
         $statement = $conn->prepare('UPDATE people SET password = ? WHERE id = ?');
-        $user_id = (int) $tokenrow['user'];
+        $user_id = (int) $tokenRow['user'];
         $statement->bind_param('si', $hash, $user_id);
         $statement->execute();
         $statement->close();
 
         /* Spent now, whatever happens next, so the same link cannot be used
            to change the password again. */
-        tokenuse($conn, $tokenrow['id']);
+        tokenUse($conn, $tokenRow['id']);
 
-        logaction($conn, 'password_changed', 'A password was changed with a reset link');
+        logAction($conn, 'password_changed', 'A password was changed with a reset link');
 
         flash('success', 'Your password has been changed. Please sign in with it.');
         redirect('login');
@@ -85,7 +85,7 @@ require_once __DIR__ . '/../partials/public/header.php';
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4 p-md-5">
 
-                    <?php if (!$tokenrow): ?>
+                    <?php if (!$tokenRow): ?>
                         <i class="fa-solid fa-link-slash fa-3x text-body-secondary mb-3" aria-hidden="true"></i>
                         <h1 class="h4 mb-2">This link does not work</h1>
                         <p class="text-body-secondary mb-4">
@@ -105,7 +105,7 @@ require_once __DIR__ . '/../partials/public/header.php';
                         </p>
 
                         <form method="post" action="<?php echo url('reset'); ?>" novalidate>
-                            <?php echo csrffield(); ?>
+                            <?php echo csrfField(); ?>
                             <input type="hidden" name="token" value="<?php echo e($token); ?>">
 
                             <?php if (isset($errors['token'])): ?>

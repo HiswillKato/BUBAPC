@@ -42,16 +42,16 @@ if ($slug !== '') {
 
     require_once __DIR__ . '/../partials/public/header.php';
 
-    pageheader(
+    pageHeader(
         $devotional['title'],
-        'Devotional for ' . formatdate($devotional['devotional_date'], 'l, j F Y'),
+        'Devotional for ' . formatDate($devotional['devotional_date'], 'l, j F Y'),
         [['Home', url('')], ['Devotional', url('devotionals')], [$devotional['title'], '']]
     );
     ?>
 
     <section class="py-5">
         <div class="container">
-            <?php renderdevotional($devotional, url('devotionals/' . $devotional['slug'])); ?>
+            <?php renderDevotional($devotional, url('devotionals/' . $devotional['slug'])); ?>
 
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-5 pt-4 border-top">
                 <a class="btn btn-outline-primary" href="<?php echo url('devotionals'); ?>">
@@ -78,7 +78,7 @@ $canonical = 'devotionals';
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-pageheader(
+pageHeader(
     'Devotional archive',
     'Every message we have published, newest first. Search for a title, a scripture '
     . 'or a word you remember reading about.',
@@ -108,8 +108,8 @@ if ($search_term !== '') {
     $values = [$like, $like, $like];
 }
 
-$current_page = pagenumber();
-$pagination = paginate(dbcount($conn, $count_sql), $per_page, $current_page);
+$current_page = pageNumber();
+$pagination = paginate(dbCount($conn, $count_sql), $per_page, $current_page);
 
 $offset = $pagination['offset'];
 $values[] = $per_page;
@@ -148,17 +148,17 @@ $statement->close();
                 </div>
             </form>
 
-            <?php renderresultcount($pagination, 'devotionals'); ?>
+            <?php renderResultCount($pagination, 'devotionals'); ?>
 
             <?php if (!$devotionals): ?>
                 <div class="row justify-content-center mt-4">
                     <div class="col-lg-8">
                         <?php
                         if ($search_term !== '') {
-                            emptystate('fa-magnifying-glass', 'Nothing found for "' . $search_term . '"',
+                            emptyState('fa-magnifying-glass', 'Nothing found for "' . $search_term . '"',
                                 'Try a shorter word, or a scripture reference such as Psalm 34.');
                         } else {
-                            emptystate('fa-book-bible', 'The archive is empty for now',
+                            emptyState('fa-book-bible', 'The archive is empty for now',
                                 'Every devotional we publish will be kept here, so you can come back to it later.');
                         }
                         ?>
@@ -171,7 +171,7 @@ $statement->close();
                             <article class="card h-100 border-0 shadow-sm rounded-4 text-center">
                                 <div class="card-body p-4 d-flex flex-column">
                                     <p class="small text-uppercase fw-bold text-gold-dark mb-2">
-                                        <?php echo formatdate($devotional['devotional_date'], 'j F Y'); ?>
+                                        <?php echo formatDate($devotional['devotional_date'], 'j F Y'); ?>
                                     </p>
 
                                     <h2 class="h5 mb-2">
@@ -191,7 +191,7 @@ $statement->close();
                     <?php endforeach; ?>
                 </div>
 
-                <?php renderpagination($pagination, ['q' => $search_term]); ?>
+                <?php renderPagination($pagination, ['q' => $search_term]); ?>
             <?php endif; ?>
         </div>
     </section>

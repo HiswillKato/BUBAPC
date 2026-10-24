@@ -20,19 +20,19 @@ $active_module = 'programs';
    day_of_week column stores, so Sunday really is 0. */
 $days = [];
 for ($day_number = 0; $day_number < 7; $day_number++) {
-    $days[$day_number] = dayname($day_number);
+    $days[$day_number] = dayName($day_number);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $program_id = (int) ($_POST['id'] ?? 0);
-    $program = adminrow($conn, 'programs', $program_id);
+    $program = adminRow($conn, 'programs', $program_id);
 
     if (!$program) {
         flash('error', 'That meeting is no longer here. It may already have been deleted.');
-        redirect(adminurl('programs'));
+        redirect(adminUrl('programs'));
     }
 
     if ($action === 'delete') {
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'program_deleted', 'The meeting "' . $program['title'] . '"');
+        logAction($conn, 'program_deleted', 'The meeting "' . $program['title'] . '"');
         flash('success', 'The meeting "' . $program['title'] . '" has been removed from the program.');
     } elseif ($action === 'toggle') {
         $new_active = (int) $program['active'] === 1 ? 0 : 1;
@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             : '"' . $program['title'] . '" has been taken off the weekly program.');
     }
 
-    redirect(adminurl('programs'));
+    redirect(adminUrl('programs'));
 }
 
 $statement = $conn->prepare("SELECT * FROM programs ORDER BY day_of_week ASC, start_time ASC, sort_order ASC");
@@ -74,7 +74,7 @@ $statement->close();
 
 $page_title = 'Weekly program';
 $page_heading = 'Weekly program';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('programs/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('programs/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add a meeting</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -109,19 +109,19 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                     <li class="list-group-item bg-transparent px-0 d-flex align-items-start gap-2">
                                         <div class="flex-grow-1">
                                             <a class="fw-semibold d-block text-decoration-none"
-                                               href="<?php echo adminurl('programs/form.php?id=' . (int) $meeting['id']); ?>">
+                                               href="<?php echo adminUrl('programs/form.php?id=' . (int) $meeting['id']); ?>">
                                                 <?php echo e($meeting['title']); ?>
                                             </a>
-                                            <?php $time_lines = programtimes($meeting); ?>
+                                            <?php $time_lines = programTimes($meeting); ?>
                                             <span class="small text-body-secondary">
                                                 <?php if ($time_lines): ?>
                                                     <?php foreach ($time_lines as $time_line): ?>
                                                         <span class="d-block"><?php echo $time_line; ?></span>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
-                                                    <?php echo e(trim(formattimerange($meeting['start_time'], $meeting['end_time']))); ?>
+                                                    <?php echo e(trim(formatTimeRange($meeting['start_time'], $meeting['end_time']))); ?>
                                                 <?php endif; ?>
-                                                <?php foreach (teamlines($meeting['venue']) as $place): ?>
+                                                <?php foreach (teamLines($meeting['venue']) as $place): ?>
                                                     <span class="d-block">
                                                         <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                                                         <?php echo e($place); ?>
@@ -134,9 +134,9 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                                         </div>
                                         <div class="text-nowrap">
                                             <?php
-                                            echo adminactiongroup(
-                                                admintogglebutton('programs', $meeting['id'], $meeting['active'], 'Show', 'Hide')
-                                                . admindeletebutton('programs', $meeting['id'], 'the meeting "' . $meeting['title'] . '"')
+                                            echo adminActionGroup(
+                                                adminToggleButton('programs', $meeting['id'], $meeting['active'], 'Show', 'Hide')
+                                                . adminDeleteButton('programs', $meeting['id'], 'the meeting "' . $meeting['title'] . '"')
                                             );
                                             ?>
                                         </div>
@@ -146,7 +146,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <?php endif; ?>
 
                         <a class="btn btn-sm btn-outline-secondary mt-3"
-                           href="<?php echo adminurl('programs/form.php?day=' . $day_number); ?>">
+                           href="<?php echo adminUrl('programs/form.php?day=' . $day_number); ?>">
                             <i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add on <?php echo e($day_label); ?>
                         </a>
                     </div>

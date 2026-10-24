@@ -2,12 +2,12 @@
 /**
  * BUBAPC - The single outbound-email path
  *
- * Every email this website sends goes through sendmail(). That function is
+ * Every email this website sends goes through sendMail(). That function is
  * the whole reason PHPMailer is in vendor/: it builds a message, delivers it
  * through the SMTP details in app/config.php, and quietly reports whether the
  * delivery worked. Nothing else in the project may call PHPMailer (or worse,
  * mail()) directly - a page that wants to send email calls one of the helpers
- * below, and those are the only callers of sendmail().
+ * below, and those are the only callers of sendMail().
  *
  * The helpers are best-effort on purpose. The website must never decide
  * whether something happened based on whether an email was sent: a contact
@@ -33,13 +33,13 @@ use PHPMailer\PHPMailer\Exception;
  * crash a public page:
  *
  *   * The SMTP server is only attempted when MAIL_HOST is set and is not
- *     localhost, otherwise the mail is handed to sendmail, which on this
+ *     localhost, otherwise the mail is handed to sendMail, which on this
  *     machine is Postfix itself.
  *   * Every exception is swallowed and reported as a failed send.
  *   * MAIL_FROM is the only From ever used, so no visitor's address can be
  *     forged from a form field.
  */
-function sendmail($to, $subject, $html, $plain = '')
+function sendMail($to, $subject, $html, $plain = '')
 {
     $mail = new PHPMailer(true);
 
@@ -59,7 +59,7 @@ function sendmail($to, $subject, $html, $plain = '')
 
         if (MAIL_HOST !== '' && MAIL_HOST !== 'localhost') {
             /* Provide an SMTP server, as a live host would. Localhost is
-               deliberately left to sendmail, because Postfix on this machine
+               deliberately left to sendMail, because Postfix on this machine
                is faster and more honest at the loopback than a fake relay.
 
                STARTTLS is only asked for when there is a username. That is
@@ -105,7 +105,7 @@ function sendmail($to, $subject, $html, $plain = '')
  * following it. Everything that goes into $body_html must go through e() first,
  * which is what the helpers below do.
  */
-function maillayout($body_html)
+function mailLayout($body_html)
 {
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
         . '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -133,7 +133,7 @@ function maillayout($body_html)
  * Only a line that begins with http:// or https:// is linked, so a sentence
  * that merely mentions a website is never turned into one.
  */
-function mailparagraphs($text)
+function mailParagraphs($text)
 {
     $html = '';
 
@@ -166,14 +166,14 @@ function mailparagraphs($text)
  * table. The link carries the hash (checked by reset), never the
  * password and never a token a stranger could read back into text.
  */
-function mailpasswordreset($user, $token_hash)
+function mailPasswordReset($user, $token_hash)
 {
     $name = trim((string) ($user['full_name'] ?? ''));
     if ($name === '') {
         $name = $user['username'] ?? 'there';
     }
 
-    $reset_url = urlraw('reset?token=' . rawurlencode($token_hash));
+    $reset_url = urlRaw('reset?token=' . rawurlencode($token_hash));
 
     $plain = 'Hello ' . $name . ",\n\n"
         . 'Someone asked to reset the password for your ' . SITE_NAME . ' account. '
@@ -182,7 +182,7 @@ function mailpasswordreset($user, $token_hash)
         . $reset_url . "\n\n"
         . "If it was not you, you can ignore this email - your password has not been changed.";
 
-    $html = maillayout(
+    $html = mailLayout(
         '<p style="margin:0 0 14px">Hello ' . e($name) . ',</p>'
         . '<p style="margin:0 0 14px">Someone asked to reset the password for your '
         . e(SITE_NAME) . ' account. If that was you, open the link below. It works '
@@ -196,7 +196,7 @@ function mailpasswordreset($user, $token_hash)
         . 'this email. Your password has not been changed.</p>'
     );
 
-    return sendmail($user['email'], 'Reset your ' . SITE_NAME . ' password', $html, $plain);
+    return sendMail($user['email'], 'Reset your ' . SITE_NAME . ' password', $html, $plain);
 }
 
 /**
@@ -208,7 +208,7 @@ function mailpasswordreset($user, $token_hash)
  * not lost if the mail server mangles the headers. $phone is optional and is
  * only printed when the visitor gave one.
  */
-function mailcontactnotice($name, $sender, $phone, $subject, $message)
+function mailContactNotice($name, $sender, $phone, $subject, $message)
 {
     $subject = trim((string) $subject);
     if ($subject === '') {
@@ -227,7 +227,7 @@ function mailcontactnotice($name, $sender, $phone, $subject, $message)
        That is deliberate: a mail program that rewrites the reply-to, or a
        forward through somebody else's mailbox, then still leaves the person
        who wrote able to answer. */
-    $html = maillayout(
+    $html = mailLayout(
         '<p style="margin:0 0 14px;font-weight:bold">A new message has come in from the '
         . 'contact form.</p>'
         . '<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px">'
@@ -241,10 +241,10 @@ function mailcontactnotice($name, $sender, $phone, $subject, $message)
         . '<tr><td style="padding:2px 12px 2px 0;color:#626a8a">Subject</td><td>'
         . e($subject) . '</td></tr></table>'
         . '<hr style="border:none;border-top:1px solid #e6e8f0;margin:16px 0">'
-        . mailparagraphs($message)
+        . mailParagraphs($message)
     );
 
-    return sendmail(MAIL_ADMIN, 'Contact message: ' . $subject, $html, $plain);
+    return sendMail(MAIL_ADMIN, 'Contact message: ' . $subject, $html, $plain);
 }
 
 /**
@@ -256,11 +256,11 @@ function mailcontactnotice($name, $sender, $phone, $subject, $message)
  * on the website, where the reading bar, the sharing buttons and the whole
  * archive live.
  */
-function maildevotional($to, $devotional)
+function mailDevotional($to, $devotional)
 {
     $title = (string) ($devotional['title'] ?? '');
     $date = date('l, j F Y', strtotime((string) $devotional['devotional_date']));
-    $link = urlraw('devotionals/' . $devotional['slug']);
+    $link = urlRaw('devotionals/' . $devotional['slug']);
     $verse = trim((string) ($devotional['scripture_text'] ?? ''));
     $reference = trim((string) ($devotional['scripture_reference'] ?? ''));
     $message = trim((string) ($devotional['message'] ?? ''));
@@ -318,12 +318,12 @@ function maildevotional($to, $devotional)
         }
     }
 
-    $html = maillayout(
+    $html = mailLayout(
         '<p style="margin:0 0 6px;text-transform:uppercase;letter-spacing:.04em;font-size:12px;'
             . 'color:#8a6d00;font-weight:bold">' . e(SITE_NAME) . ' devotional for ' . e($date) . '</p>'
         . '<h1 style="margin:0 0 16px;font-size:22px">' . e($title) . '</h1>'
         . $scripture
-        . mailparagraphs($message)
+        . mailParagraphs($message)
         . $study_html
         . '<p style="margin:22px 0 0"><a href="' . e($link) . '" '
             . 'style="display:inline-block;background:#1b1f3b;color:#ffffff;text-decoration:none;'
@@ -333,5 +333,5 @@ function maildevotional($to, $devotional)
             . 'receive it, reply to this email and we will take your address off the list.</p>'
     );
 
-    return sendmail($to, 'Today\'s devotional: ' . $title, $html, $plain);
+    return sendMail($to, 'Today\'s devotional: ' . $title, $html, $plain);
 }

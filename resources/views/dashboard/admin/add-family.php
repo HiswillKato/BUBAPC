@@ -19,11 +19,11 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'families';
 
 $family_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$family = $family_id ? adminrow($conn, 'families', $family_id) : [];
+$family = $family_id ? adminRow($conn, 'families', $family_id) : [];
 
 if ($family_id && !$family) {
     flash('error', 'That family is no longer here.');
-    redirect(adminurl('families'));
+    redirect(adminUrl('families'));
 }
 
 $is_new = $family_id === 0;
@@ -41,20 +41,20 @@ $values = array_merge([
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $values['name'] = posttext('name');
-    $values['leader'] = posttext('leader');
-    $values['description'] = posttext('description');
+    $values['name'] = postText('name');
+    $values['leader'] = postText('leader');
+    $values['description'] = postText('description');
     $values['display_order'] = (int) ($_POST['display_order'] ?? 0);
-    $values['active'] = postcheckbox('active') ? 1 : 0;
+    $values['active'] = postCheckbox('active') ? 1 : 0;
 
-    admincheckrequired($values['name'], 'The name of the family', $errors);
-    admincheckrequired($values['description'], 'The description', $errors);
+    adminCheckRequired($values['name'], 'The name of the family', $errors);
+    adminCheckRequired($values['description'], 'The description', $errors);
 
     /* A leader chosen from the list has to be a real person, or a family
        would end up pointing at nothing. 0 means "type the name below". */
-    $values['leader_id'] = admincheckgroupchoice(
+    $values['leader_id'] = adminCheckGroupChoice(
         $conn, 'people', (int) ($_POST['leader_id'] ?? 0), 'The leader', $errors
     );
 
@@ -94,10 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['display_order']
             );
             $statement->execute();
-            $family_id = (int) dblastid($conn);
+            $family_id = (int) dbLastId($conn);
             $statement->close();
 
-            logaction($conn, 'family_created', 'The family "' . $values['name'] . '"');
+            logAction($conn, 'family_created', 'The family "' . $values['name'] . '"');
             flash('success', 'The family "' . $values['name'] . '" has been added.');
         } else {
             $statement = $conn->prepare(
@@ -121,17 +121,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            logaction($conn, 'family_updated', 'The family "' . $values['name'] . '"');
+            logAction($conn, 'family_updated', 'The family "' . $values['name'] . '"');
             flash('success', 'The family "' . $values['name'] . '" has been saved.');
         }
 
-        redirect(adminurl('families'));
+        redirect(adminUrl('families'));
     }
 }
 
 $page_title = $is_new ? 'Add family' : 'Edit family';
 $page_heading = $is_new ? 'Add a family' : 'Edit family';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('families') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminUrl('families') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -140,24 +140,24 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php adminerrors($errors); ?>
+            <?php adminErrors($errors); ?>
 
             <form method="post" novalidate>
-                <?php echo csrffield(); ?>
+                <?php echo csrfField(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admintextfield('name', 'Name of the family', $values['name'], '',
+                        adminTextField('name', 'Name of the family', $values['name'], '',
                             'The Grace Family');
-                        adminleaderfield((int) $values['leader_id'], $values['leader'], leaderchoices($conn));
-                        admintextarea('description', 'Who it is for, and when it meets', $values['description'],
+                        adminLeaderField((int) $values['leader_id'], $values['leader'], leaderChoices($conn));
+                        adminTextarea('description', 'Who it is for, and when it meets', $values['description'],
                             'Leave an empty line between paragraphs. Mention the year of study it is for, and '
                             . 'the day and time it meets, because that is what a student is looking for.', 8);
-                        admintextfield('display_order', 'Order on the page', (string) $values['display_order'],
+                        adminTextField('display_order', 'Order on the page', (string) $values['display_order'],
                             'Lower numbers come first. You can also change this from the list.', '0');
-                        admincheckbox('active', 'Show this family on the website', (int) $values['active'] === 1);
-                        adminformbuttons(adminurl('families'), $is_new ? 'Add family' : 'Save changes');
+                        adminCheckbox('active', 'Show this family on the website', (int) $values['active'] === 1);
+                        adminFormButtons(adminUrl('families'), $is_new ? 'Add family' : 'Save changes');
                         ?>
                     </div>
                 </div>
@@ -171,7 +171,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             It comes off the website at once. If you only want it off for a while, use the
                             switch on the form instead.
                         </p>
-                        <?php echo admindeletebutton('families', $family_id, 'the family "' . $family['name'] . '"'); ?>
+                        <?php echo adminDeleteButton('families', $family_id, 'the family "' . $family['name'] . '"'); ?>
                     </div>
                 </div>
             <?php endif; ?>

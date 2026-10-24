@@ -49,7 +49,7 @@ require_once dirname(__DIR__) . '/app/init.php';
    be told that the install worked.
 
    So it is decided here, before the actions run, and passed down. */
-$already_installed = installalreadydone();
+$already_installed = installAlreadyDone();
 
 /* Defaulted HERE, not only in the actions. They run solely when the website is
    not installed yet, but the screens read $step unconditionally
@@ -94,9 +94,9 @@ define('BUBAPC_CONFIG_FILE', BUBAPC_ROOT . '/config/config.php');
  * A database that cannot be reached counts as "not installed", because that
  * is the state where the wizard is genuinely useful.
  */
-function installalreadydone()
+function installAlreadyDone()
 {
-    $link = installtryconnect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    $link = installTryConnect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
     if (!($link instanceof mysqli)) {
         return false;
     }
@@ -124,7 +124,7 @@ function installalreadydone()
  * means everything is fine. The database is NOT checked here, because there
  * is nothing to connect to until step 2 has been filled in.
  */
-function installchecks()
+function installChecks()
 {
     $results = [];
 
@@ -166,9 +166,9 @@ function installchecks()
 /**
  * Is everything in the checks above fine?
  */
-function installcheckspassed()
+function installChecksPassed()
 {
-    foreach (installchecks() as $one) {
+    foreach (installChecks() as $one) {
         if ($one[0] === 'bad') {
             return false;
         }
@@ -186,7 +186,7 @@ function installcheckspassed()
  * Returns the mysqli connection on success, or a sentence explaining the
  * problem. The sentence is safe to show: it never contains the password.
  */
-function installtryconnect($host, $user, $password, $database)
+function installTryConnect($host, $user, $password, $database)
 {
     // mysqli throws on a failed connection since PHP 8.1, so the try/catch
     // is what stops a stack trace appearing on the screen.
@@ -197,11 +197,11 @@ function installtryconnect($host, $user, $password, $database)
             $link = @new mysqli($host, $user, $password);
         }
     } catch (mysqli_sql_exception $problem) {
-        return 'Could not connect: ' . installfriendlydberror($problem->getMessage());
+        return 'Could not connect: ' . installFriendlyDbError($problem->getMessage());
     }
 
     if ($link->connect_errno) {
-        return 'Could not connect: ' . installfriendlydberror($link->connect_error);
+        return 'Could not connect: ' . installFriendlyDbError($link->connect_error);
     }
 
     $link->set_charset('utf8mb4');
@@ -214,7 +214,7 @@ function installtryconnect($host, $user, $password, $database)
  * The raw message names the database user and sometimes the host, so it is
  * never printed as it is.
  */
-function installfriendlydberror($raw)
+function installFriendlyDbError($raw)
 {
     $raw = strtolower($raw);
 
@@ -237,9 +237,9 @@ function installfriendlydberror($raw)
  * Create the database if it is not there.
  * Returns true, or a sentence saying why not.
  */
-function installcreatedatabase($host, $user, $password, $database)
+function installCreateDatabase($host, $user, $password, $database)
 {
-    $link = installtryconnect($host, $user, $password, '');
+    $link = installTryConnect($host, $user, $password, '');
     if (!($link instanceof mysqli)) {
         return $link; // already a sentence
     }
@@ -272,7 +272,7 @@ function installcreatedatabase($host, $user, $password, $database)
  *
  * Returns the number of statements run, or a sentence saying what went wrong.
  */
-function installimportschema($link)
+function installImportSchema($link)
 {
     if (!is_readable(BUBAPC_SCHEMA_FILE)) {
         return 'database.sql could not be read.';
@@ -286,7 +286,7 @@ function installimportschema($link)
     // One statement per call. The file separates them with a semicolon at
     // the end of a line, which is enough here because it contains no stored
     // routines and no semicolons inside a string.
-    $statements = installsplitsql($sql_text);
+    $statements = installSplitSql($sql_text);
 
     $done = 0;
     foreach ($statements as $one) {
@@ -319,7 +319,7 @@ function installimportschema($link)
  * Comment lines are dropped, and semicolons inside single quotes are left
  * alone so a sentence like "Bring; water" is not cut in half.
  */
-function installsplitsql($sql_text)
+function installSplitSql($sql_text)
 {
     $lines = preg_split('/\r\n|\r|\n/', $sql_text);
     $statements = [];
@@ -368,7 +368,7 @@ function installsplitsql($sql_text)
  * Has the schema been imported? Used to decide whether step 4 can offer to
  * make the first administrator.
  */
-function installschemaready($link)
+function installSchemaReady($link)
 {
     $result = @$link->query("SHOW TABLES LIKE 'people'");
     return $result instanceof mysqli_result && $result->num_rows > 0;
@@ -381,7 +381,7 @@ function installschemaready($link)
  * the people table, the one table that holds both directory people and accounts.
  * The password is hashed with the same call the login page uses.
  */
-function installcreateadmin($link, $username, $full_name, $email, $password)
+function installCreateAdmin($link, $username, $full_name, $email, $password)
 {
     $statement = $link->prepare(
         "INSERT INTO people (name, slug, category, email, username, password, role, standing, active, status)
@@ -428,7 +428,7 @@ function installcreateadmin($link, $username, $full_name, $email, $password)
  *
  * Returns true, or a sentence saying why not.
  */
-function installwriteconfig($changes)
+function installWriteConfig($changes)
 {
     if (!is_writable(BUBAPC_CONFIG_FILE)) {
         return 'app/config.php cannot be written to. Make it writable and try again.';
@@ -454,13 +454,13 @@ function installwriteconfig($changes)
     }
 
     foreach ($changes as $constant => $value) {
-        $line = "define('" . $constant . "', '" . installquoteforphp($value) . "');";
+        $line = "define('" . $constant . "', '" . installQuoteForPhp($value) . "');";
 
         // Match the constant by name only, so the current value can be
         // anything at all, including a value with slashes in it.
         $pattern = "/define\(\s*'" . preg_quote($constant, '/') . "'\s*,[^)]*\);/";
 
-        $replaced = preg_replace($pattern, installpregescapereplacement($line), $contents, 1, $count);
+        $replaced = preg_replace($pattern, installPregEscapeReplacement($line), $contents, 1, $count);
         if ($replaced === null) {
             return 'app/config.php could not be updated.';
         }
@@ -484,7 +484,7 @@ function installwriteconfig($changes)
  * A backslash or a single quote in the website tagline would otherwise end
  * the string early and break the whole configuration file.
  */
-function installquoteforphp($value)
+function installQuoteForPhp($value)
 {
     return str_replace(['\\', "'"], ['\\\\', "\\'"], (string) $value);
 }
@@ -493,7 +493,7 @@ function installquoteforphp($value)
  * preg_replace treats $ and \ in the replacement as special, so the line we
  * build has to be escaped before it goes in.
  */
-function installpregescapereplacement($text)
+function installPregEscapeReplacement($text)
 {
     return str_replace(['\\', '$'], ['\\\\', '\\$'], $text);
 }
@@ -528,21 +528,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Every form in the wizard carries a token from the session that
     // app/auth.php started. A missing or wrong one is refused here, before
     // anything is touched.
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
 
     /* ----------------------------------------------------------------------
        STEP 1 -> 2: the database
        ---------------------------------------------------------------------- */
     if ($action === 'save_database') {
-        $host = posttext('db_host');
-        $name = posttext('db_name');
-        $user = posttext('db_user');
+        $host = postText('db_host');
+        $name = postText('db_name');
+        $user = postText('db_user');
         $pass = (string) ($_POST['db_pass'] ?? '');
-        $make_database = postcheckbox('create_database');
+        $make_database = postCheckbox('create_database');
 
-        if (isemptyvalue($host) || isemptyvalue($name) || isemptyvalue($user)) {
+        if (isEmptyValue($host) || isEmptyValue($name) || isEmptyValue($user)) {
             $error = 'Please fill in the host, the database name and the username.';
         } elseif (!preg_match('/^[A-Za-z0-9_]+$/', $name)) {
             $error = 'The database name may only use letters, numbers and underscores.';
@@ -551,21 +551,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $link = null;
 
             if ($make_database) {
-                $made = installcreatedatabase($host, $user, $pass, $name);
+                $made = installCreateDatabase($host, $user, $pass, $name);
                 if ($made !== true) {
                     $error = $made;
                 }
             }
 
             if ($error === '') {
-                $link = installtryconnect($host, $user, $pass, $name);
+                $link = installTryConnect($host, $user, $pass, $name);
                 if (!($link instanceof mysqli)) {
                     $error = $link;
                 }
             }
 
             if ($error === '') {
-                $imported = installimportschema($link);
+                $imported = installImportSchema($link);
                 if (!is_int($imported)) {
                     $error = $imported;
                 }
@@ -579,7 +579,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'host' => $host, 'name' => $name, 'user' => $user, 'pass' => $pass,
                 ];
 
-                $wrote = installwriteconfig([
+                $wrote = installWriteConfig([
                     'DB_HOST' => $host,
                     'DB_NAME' => $name,
                     'DB_USER' => $user,
@@ -606,19 +606,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        STEP 3: the website details, saved into app/config.php
        ---------------------------------------------------------------------- */
     if ($action === 'save_details') {
-        $name_in = posttext('site_name');
-        $full_name = posttext('site_full_name');
-        $tagline = posttext('site_tagline');
-        $email = posttext('site_email');
-        $phone = posttext('site_phone');
-        $location = posttext('site_location');
+        $name_in = postText('site_name');
+        $full_name = postText('site_full_name');
+        $tagline = postText('site_tagline');
+        $email = postText('site_email');
+        $phone = postText('site_phone');
+        $location = postText('site_location');
 
-        if (isemptyvalue($name_in) || isemptyvalue($full_name)) {
+        if (isEmptyValue($name_in) || isEmptyValue($full_name)) {
             $error = 'The website name and the full church name are both needed.';
-        } elseif ($email !== '' && !isvalidemail($email)) {
+        } elseif ($email !== '' && !isValidEmail($email)) {
             $error = 'That email address does not look right.';
         } else {
-            $wrote = installwriteconfig([
+            $wrote = installWriteConfig([
                 'SITE_NAME' => $name_in,
                 'SITE_FULL_NAME' => $full_name,
                 'SITE_TAGLINE' => $tagline,
@@ -640,15 +640,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        STEP 4: the first administrator
        ---------------------------------------------------------------------- */
     if ($action === 'save_admin') {
-        $username = posttext('username');
-        $full_name = posttext('full_name');
-        $email = posttext('email');
+        $username = postText('username');
+        $full_name = postText('full_name');
+        $email = postText('email');
         $password = (string) ($_POST['password'] ?? '');
         $password_again = (string) ($_POST['password_again'] ?? '');
 
-        if (isemptyvalue($username) || isemptyvalue($full_name) || isemptyvalue($email)) {
+        if (isEmptyValue($username) || isEmptyValue($full_name) || isEmptyValue($email)) {
             $error = 'Please fill in the username, the name and the email address.';
-        } elseif (!isvalidemail($email)) {
+        } elseif (!isValidEmail($email)) {
             $error = 'That email address does not look right.';
         } elseif (!preg_match('/^[A-Za-z0-9_.-]{3,64}$/', $username)) {
             $error = 'The username may only use letters, numbers, dot, dash and underscore, '
@@ -658,7 +658,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             // The same rule the people form uses, so the first password is
             // held to the same standard as every password after it.
-            $problem = passwordproblem($password);
+            $problem = passwordProblem($password);
             if ($problem !== '') {
                 $error = $problem;
             }
@@ -669,11 +669,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!is_array($db)) {
                 $error = 'The database details have been lost. Please go back to step 2 and enter them again.';
             } else {
-                $link = installtryconnect($db['host'], $db['user'], $db['pass'], $db['name']);
+                $link = installTryConnect($db['host'], $db['user'], $db['pass'], $db['name']);
                 if (!($link instanceof mysqli)) {
                     $error = $link;
                 } else {
-                    $made = installcreateadmin($link, $username, $full_name, $email, $password);
+                    $made = installCreateAdmin($link, $username, $full_name, $email, $password);
                     $link->close();
 
                     if ($made !== true) {
@@ -723,7 +723,7 @@ $install_steps = [
     5 => 'Finished',
 ];
 $current_step = (int) $step;
-$checks = installchecks();
+$checks = installChecks();
 ?><!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
@@ -844,7 +844,7 @@ $checks = installchecks();
                             </div>
                         <?php endforeach; ?>
 
-                        <?php if (installcheckspassed()): ?>
+                        <?php if (installChecksPassed()): ?>
                             <p class="text-body-secondary mt-3 mb-0">
                                 Nothing is wrong that the installer can fix. The next screen writes to
                                 your database, so take a copy of anything you care about first.
@@ -856,9 +856,9 @@ $checks = installchecks();
                             </div>
                         <?php endif; ?>
 
-                        <?php if (installcheckspassed()): ?>
+                        <?php if (installChecksPassed()): ?>
                             <form method="post" class="mt-3">
-                                <?php echo csrffield(); ?>
+                                <?php echo csrfField(); ?>
                                 <input type="hidden" name="action" value="save_database">
                                 <input type="hidden" name="db_host" value="<?php echo e(DB_HOST); ?>">
                                 <input type="hidden" name="db_name" value="<?php echo e(DB_NAME); ?>">
@@ -880,29 +880,29 @@ $checks = installchecks();
                         </p>
 
                         <form method="post" class="row g-3">
-                            <?php echo csrffield(); ?>
+                            <?php echo csrfField(); ?>
                             <input type="hidden" name="action" value="save_database">
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="db_host">Host</label>
                                 <input class="form-control" type="text" id="db_host" name="db_host"
-                                       value="<?php echo e(posttext('db_host') ?: DB_HOST); ?>" required>
+                                       value="<?php echo e(postText('db_host') ?: DB_HOST); ?>" required>
                                 <div class="form-text">Usually <code>localhost</code>.</div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="db_name">Database name</label>
                                 <input class="form-control" type="text" id="db_name" name="db_name"
-                                       value="<?php echo e(posttext('db_name') ?: DB_NAME); ?>" required>
+                                       value="<?php echo e(postText('db_name') ?: DB_NAME); ?>" required>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="db_user">Username</label>
                                 <input class="form-control" type="text" id="db_user" name="db_user"
-                                       value="<?php echo e(posttext('db_user') ?: DB_USER); ?>" required>
+                                       value="<?php echo e(postText('db_user') ?: DB_USER); ?>" required>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="db_pass">Password</label>
                                 <input class="form-control" type="password" id="db_pass" name="db_pass"
-                                       value="<?php echo e(posttext('db_pass') ?: DB_PASS); ?>" autocomplete="off">
+                                       value="<?php echo e(postText('db_pass') ?: DB_PASS); ?>" autocomplete="off">
                             </div>
                             <div class="col-12">
                                 <div class="form-check">
@@ -930,39 +930,39 @@ $checks = installchecks();
                         <p class="text-body-secondary">These are written into <code>app/config.php</code>.</p>
 
                         <form method="post" class="row g-3">
-                            <?php echo csrffield(); ?>
+                            <?php echo csrfField(); ?>
                             <input type="hidden" name="action" value="save_details">
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="site_name">Short name</label>
                                 <input class="form-control" type="text" id="site_name" name="site_name"
-                                       value="<?php echo e(posttext('site_name') ?: SITE_NAME); ?>" required>
+                                       value="<?php echo e(postText('site_name') ?: SITE_NAME); ?>" required>
                                 <div class="form-text">Used in the browser tab and the footer.</div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="site_full_name">Full church name</label>
                                 <input class="form-control" type="text" id="site_full_name" name="site_full_name"
-                                       value="<?php echo e(posttext('site_full_name') ?: SITE_FULL_NAME); ?>" required>
+                                       value="<?php echo e(postText('site_full_name') ?: SITE_FULL_NAME); ?>" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="site_tagline">Tagline</label>
                                 <input class="form-control" type="text" id="site_tagline" name="site_tagline"
-                                       value="<?php echo e(posttext('site_tagline') ?: SITE_TAGLINE); ?>">
+                                       value="<?php echo e(postText('site_tagline') ?: SITE_TAGLINE); ?>">
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label" for="site_email">Email</label>
                                 <input class="form-control" type="email" id="site_email" name="site_email"
-                                       value="<?php echo e(posttext('site_email') ?: SITE_EMAIL); ?>">
+                                       value="<?php echo e(postText('site_email') ?: SITE_EMAIL); ?>">
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label" for="site_phone">Phone</label>
                                 <input class="form-control" type="text" id="site_phone" name="site_phone"
-                                       value="<?php echo e(posttext('site_phone') ?: SITE_PHONE); ?>">
+                                       value="<?php echo e(postText('site_phone') ?: SITE_PHONE); ?>">
                             </div>
                             <div class="col-12 col-md-4">
                                 <label class="form-label" for="site_location">Location</label>
                                 <input class="form-control" type="text" id="site_location" name="site_location"
-                                       value="<?php echo e(posttext('site_location') ?: SITE_LOCATION); ?>">
+                                       value="<?php echo e(postText('site_location') ?: SITE_LOCATION); ?>">
                             </div>
                             <div class="col-12">
                                 <button class="btn btn-gold" type="submit">
@@ -981,24 +981,24 @@ $checks = installchecks();
                         </p>
 
                         <form method="post" class="row g-3">
-                            <?php echo csrffield(); ?>
+                            <?php echo csrfField(); ?>
                             <input type="hidden" name="action" value="save_admin">
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="username">Username</label>
                                 <input class="form-control" type="text" id="username" name="username"
-                                       value="<?php echo e(posttext('username')); ?>" required
+                                       value="<?php echo e(postText('username')); ?>" required
                                        autocomplete="username" autofocus>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="full_name">Full name</label>
                                 <input class="form-control" type="text" id="full_name" name="full_name"
-                                       value="<?php echo e(posttext('full_name')); ?>" required>
+                                       value="<?php echo e(postText('full_name')); ?>" required>
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="email">Email</label>
                                 <input class="form-control" type="email" id="email" name="email"
-                                       value="<?php echo e(posttext('email')); ?>" required>
+                                       value="<?php echo e(postText('email')); ?>" required>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label" for="password">Password</label>

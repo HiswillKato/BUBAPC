@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'people';
 
 $person_id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-$person = $person_id ? adminrow($conn, 'people', $person_id) : [];
+$person = $person_id ? adminRow($conn, 'people', $person_id) : [];
 
 $is_new = $person_id < 1;
 
@@ -44,7 +44,7 @@ $values['department_id'] = (int) ($person['department'] ?? 0);
    church leader opens this form to keep the directory up to date, and must not
    be able to hand out rights with it, so without this the login card would be
    a way to make yourself an administrator. */
-$can_manage_login = isadmin();
+$can_manage_login = isAdmin();
 
 /* The sign-in card's starting state. A row with a password already has an
    account; it opens on its own role and on the switch it was left at, so an
@@ -60,32 +60,32 @@ $values['login_role'] = ($values['category'] === 'church_admin')
 $errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $values['name'] = posttext('name');
-    $values['position'] = posttext('position');
-    $values['email'] = posttext('email');
-    $values['status'] = postcheckbox('status') ? 1 : 0;
+    $values['name'] = postText('name');
+    $values['position'] = postText('position');
+    $values['email'] = postText('email');
+    $values['status'] = postCheckbox('status') ? 1 : 0;
 
-    admincheckrequired($values['name'], 'The name', $errors);
+    adminCheckRequired($values['name'], 'The name', $errors);
 
     /* The group is looked up in the church's own list, so a value that did
        not come from the drop down is refused rather than saved. */
-    $chosen_category = posttext('category');
-    if (!array_key_exists($chosen_category, peoplecategories())) {
+    $chosen_category = postText('category');
+    if (!array_key_exists($chosen_category, peopleCategories())) {
         $errors[] = 'Please choose a group from the list.';
     } else {
         $values['category'] = $chosen_category;
     }
 
-    if ($values['email'] !== '' && !isvalidemail($values['email'])) {
+    if ($values['email'] !== '' && !isValidEmail($values['email'])) {
         $errors[] = 'The email address does not look like an email address.';
     }
 
     /* The sign-in switch, the role and the password. */
-    $login_on = postcheckbox('login');
+    $login_on = postCheckbox('login');
     $values['login'] = $login_on;
-    $login_role = posttext('login_role');
+    $login_role = postText('login_role');
     if (!in_array($login_role, ['church_admin', 'admin', 'editor', 'pastor', 'elder', 'minister', 'leader', 'member'], true)) {
         $login_role = 'member';
     }
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* The row keeps an ordinary role even for a church admin, because the
-       rights come from the group. The group is what isadmin() reads, so a
+       rights come from the group. The group is what isAdmin() reads, so a
        church admin keeps them only while they stay in the group. */
     $account_role = $login_role === 'church_admin' ? 'member' : $login_role;
     $login_password = (string) ($_POST['login_password'] ?? '');
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($can_manage_login && $login_on) {
         /* The address is what the person signs in with, so it has to be a real
            one before an account can be made from it. */
-        if (!isvalidemail($values['email'])) {
+        if (!isValidEmail($values['email'])) {
             $errors[] = 'Give this person a real email address first: it is what they will sign in with.';
         }
 
@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            sign-in may keep the password it has, so an empty box means "leave
            it". */
         if ($login_password !== '') {
-            $problem = passwordproblem($login_password);
+            $problem = passwordProblem($login_password);
             if ($problem !== '') {
                 $errors[] = $problem;
             }
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         /* The address must not already belong to a different sign in. This
            person's own row is ignored, so saving the form again is fine. */
-        if (isvalidemail($values['email'])) {
+        if (isValidEmail($values['email'])) {
             $statement = $conn->prepare(
                 "SELECT id FROM people WHERE password IS NOT NULL AND (username = ? OR email = ?) AND id <> ? LIMIT 1"
             );
@@ -161,9 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            the person's initials instead, so an empty answer here is a normal
            answer and not a half-finished form. A problem with the file never
            stops the rest of the person being saved. */
-        $image = saveimage(
+        $image = saveImage(
             $_FILES['image'] ?? null,
-            postcheckbox('remove_image'),
+            postCheckbox('remove_image'),
             'people',
             $person['image'] ?? ''
         );
@@ -241,10 +241,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $values['status']
             );
             $statement->execute();
-            $person_id = (int) dblastid($conn);
+            $person_id = (int) dbLastId($conn);
             $statement->close();
 
-            logaction($conn, 'person_created', $values['name']);
+            logAction($conn, 'person_created', $values['name']);
             flash('success', $values['name'] . ' has been added to the website.');
         } else {
             $statement = $conn->prepare(
@@ -281,17 +281,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $statement->execute();
             $statement->close();
 
-            logaction($conn, 'person_updated', $values['name']);
+            logAction($conn, 'person_updated', $values['name']);
             flash('success', $values['name'] . ' has been saved.');
         }
 
-        redirect(adminurl('people'));
+        redirect(adminUrl('people'));
     }
 }
 
 $page_title = $is_new ? 'Add a person' : 'Edit person';
 $page_heading = $is_new ? 'Add a person' : 'Edit person';
-$page_actions = '<a class="btn btn-outline-secondary" href="' . adminurl('people') . '">'
+$page_actions = '<a class="btn btn-outline-secondary" href="' . adminUrl('people') . '">'
     . '<i class="fa-solid fa-list me-1" aria-hidden="true"></i>Back to the list</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -300,31 +300,31 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="row justify-content-center">
         <div class="col-12 col-xl-10">
 
-            <?php adminerrors($errors); ?>
+            <?php adminErrors($errors); ?>
 
             <form method="post" enctype="multipart/form-data" novalidate>
-                <?php echo csrffield(); ?>
+                <?php echo csrfField(); ?>
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         <?php
-                        admintextfield('name', 'Full name', $values['name'], '',
+                        adminTextField('name', 'Full name', $values['name'], '',
                             'Pastor Ruth Nakato');
-                        adminselect('category', 'Group', peoplecategories(), $values['category'],
+                        adminSelect('category', 'Group', peopleCategories(), $values['category'],
                             'Decides which page of the website the person is listed on.');
-                        admintextfield('position', 'Title', $values['position'], '',
+                        adminTextField('position', 'Title', $values['position'], '',
                             'e.g. Bishop, Pastor');
-                        admintextfield('email', 'Email', $values['email'], '', 'name@example.com');
-                        adminimagefield('image', 'Photograph', $values['image'],
+                        adminTextField('email', 'Email', $values['email'], '', 'name@example.com');
+                        adminImageField('image', 'Photograph', $values['image'],
                             'Optional. Initials are shown when there is none.');
-                        admincheckbox('status', 'Show this person on the website', (int) $values['status'] === 1);
+                        adminCheckbox('status', 'Show this person on the website', (int) $values['status'] === 1);
                         ?>
 
                         <?php if ($can_manage_login): ?>
                             <?php
-                            admincheckbox('login', 'Let this person sign in', (int) $values['login'] === 1);
+                            adminCheckbox('login', 'Let this person sign in', (int) $values['login'] === 1);
 
-                            adminselect('login_role', 'Role of the person', [
+                            adminSelect('login_role', 'Role of the person', [
                                 'church_admin' => 'Church admin - full access',
                                 'pastor'       => 'Pastor - full access',
                                 'elder'        => 'Elder - full access',
@@ -367,7 +367,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             <?php endif; ?>
                         <?php endif; ?>
 
-                        <?php adminformbuttons(adminurl('people'), $is_new ? 'Add person' : 'Save changes'); ?>
+                        <?php adminFormButtons(adminUrl('people'), $is_new ? 'Add person' : 'Save changes'); ?>
                     </div>
                 </div>
             </form>
@@ -380,7 +380,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                             They come off the website at once and their picture is deleted. To take them
                             off the website but keep the record, untick the switch on the form instead.
                         </p>
-                        <?php echo admindeletebutton('people', $person_id, $person['name']); ?>
+                        <?php echo adminDeleteButton('people', $person_id, $person['name']); ?>
                     </div>
                 </div>
             <?php endif; ?>

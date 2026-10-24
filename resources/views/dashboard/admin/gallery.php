@@ -14,26 +14,26 @@ require_once __DIR__ . '/../../partials/admin/parts.php';
 $active_module = 'gallery';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $action = posttext('action');
+    $action = postText('action');
     $photo_id = (int) ($_POST['id'] ?? 0);
-    $photo = adminrow($conn, 'gallery', $photo_id);
+    $photo = adminRow($conn, 'gallery', $photo_id);
 
     if (!$photo) {
         flash('error', 'That photograph is no longer here. It may already have been deleted.');
-        redirect(adminurl('gallery'));
+        redirect(adminUrl('gallery'));
     }
 
     if ($action === 'delete') {
-        deleteuploadedimage($photo['image']);
+        deleteUploadedImage($photo['image']);
 
         $statement = $conn->prepare("DELETE FROM gallery WHERE id = ?");
         $statement->bind_param('i', $photo_id);
         $statement->execute();
         $statement->close();
 
-        logaction($conn, 'photo_deleted', 'A photograph' . ($photo['title'] !== '' ? ' titled "' . $photo['title'] . '"' : '') . ' was deleted');
+        logAction($conn, 'photo_deleted', 'A photograph' . ($photo['title'] !== '' ? ' titled "' . $photo['title'] . '"' : '') . ' was deleted');
         flash('success', 'The photograph' . ($photo['title'] !== '' ? ' "' . $photo['title'] . '"' : '') . ' has been deleted.');
     } elseif ($action === 'toggle') {
         $new_status = (int) $photo['status'] === 1 ? 0 : 1;
@@ -57,16 +57,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('success', 'The order has been saved.');
     }
 
-    redirect(adminurl('gallery'));
+    redirect(adminUrl('gallery'));
 }
 
 $show_hidden = isset($_GET['show']) && $_GET['show'] === 'hidden';
 
 $where = $show_hidden ? ' WHERE status = 0' : '';
-$total_photos = dbcount($conn, "SELECT COUNT(*) FROM gallery" . $where);
+$total_photos = dbCount($conn, "SELECT COUNT(*) FROM gallery" . $where);
 
 $per_page = 24;
-$current_page = pagenumber();
+$current_page = pageNumber();
 $pagination = paginate($total_photos, $per_page, $current_page);
 
 $statement = $conn->prepare(
@@ -85,7 +85,7 @@ $statement->close();
 
 $page_title = 'Gallery';
 $page_heading = 'Gallery';
-$page_actions = '<a class="btn btn-primary" href="' . adminurl('gallery/form.php') . '">'
+$page_actions = '<a class="btn btn-primary" href="' . adminUrl('gallery/form.php') . '">'
     . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add photograph</a>';
 
 require_once __DIR__ . '/../../partials/admin/header.php';
@@ -94,13 +94,13 @@ require_once __DIR__ . '/../../partials/admin/header.php';
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <ul class="nav nav-pills gap-2 mb-0">
             <li class="nav-item">
-                <a class="nav-link<?php echo $show_hidden ? '' : ' active'; ?>" href="<?php echo adminurl('gallery'); ?>">
+                <a class="nav-link<?php echo $show_hidden ? '' : ' active'; ?>" href="<?php echo adminUrl('gallery'); ?>">
                     All photographs
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link<?php echo $show_hidden ? ' active' : ''; ?>"
-                   href="<?php echo adminurl('gallery?show=hidden'); ?>">Hidden only</a>
+                   href="<?php echo adminUrl('gallery?show=hidden'); ?>">Hidden only</a>
             </li>
         </ul>
         <p class="text-body-secondary small mb-0">
@@ -111,14 +111,14 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
 <?php if (!$photos): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-images',
         $show_hidden ? 'Nothing is hidden' : 'No photographs yet',
         $show_hidden
             ? 'Every photograph is on the website.'
             : 'The gallery is the page visitors look at to see what the church actually looks like. '
                 . 'Photographs from a Sunday, a convention or a students&rsquo; meeting are all worth having.',
-        '<a class="btn btn-primary" href="' . adminurl('gallery/form.php') . '">'
+        '<a class="btn btn-primary" href="' . adminUrl('gallery/form.php') . '">'
         . '<i class="fa-solid fa-plus me-1" aria-hidden="true"></i>Add a photograph</a>',
         'admin'
     );
@@ -128,9 +128,9 @@ require_once __DIR__ . '/../../partials/admin/header.php';
         <?php foreach ($photos as $photo): ?>
             <div class="col-sm-6 col-md-4 col-xl-3">
                 <div class="card border-0 shadow-sm rounded-4 h-100">
-                    <a href="<?php echo adminurl('gallery/form.php?id=' . (int) $photo['id']); ?>"
+                    <a href="<?php echo adminUrl('gallery/form.php?id=' . (int) $photo['id']); ?>"
                        class="ratio ratio-4x3">
-                        <img src="<?php echo uploadurl($photo['image']); ?>" alt=""
+                        <img src="<?php echo uploadUrl($photo['image']); ?>" alt=""
                              class="rounded-top-4 object-fit-cover w-100">
                     </a>
                     <div class="card-body p-3">
@@ -144,16 +144,16 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                         <?php endif; ?>
 
                         <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                            <?php echo adminorderfield('gallery', $photo['id'], $photo['sort_order']); ?>
+                            <?php echo adminOrderField('gallery', $photo['id'], $photo['sort_order']); ?>
                             <span class="badge rounded-pill <?php echo (int) $photo['status'] === 1 ? 'text-bg-success' : 'text-bg-secondary'; ?>">
                                 <?php echo (int) $photo['status'] === 1 ? 'Shown' : 'Hidden'; ?>
                             </span>
                         </div>
 
                         <?php
-                            echo adminactiongroup(
-                                admintogglebutton('gallery', $photo['id'], $photo['status'], 'Show', 'Hide')
-                                . admindeletebutton('gallery', $photo['id'], 'this photograph'),
+                            echo adminActionGroup(
+                                adminToggleButton('gallery', $photo['id'], $photo['status'], 'Show', 'Hide')
+                                . adminDeleteButton('gallery', $photo['id'], 'this photograph'),
                                 'justify-content-start'
                             );
                             ?>
@@ -163,7 +163,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
         <?php endforeach; ?>
     </div>
 
-    <?php renderpagination($pagination, ['show' => $show_hidden ? 'hidden' : '']); ?>
+    <?php renderPagination($pagination, ['show' => $show_hidden ? 'hidden' : '']); ?>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/../../partials/admin/footer.php'; ?>

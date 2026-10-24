@@ -24,7 +24,7 @@ $canonical = 'contact';
    A GET request never changes anything, so all of this only runs when a
    form was actually posted.
    --------------------------------------------------------------------- */
-$formerrors = [];
+$formErrors = [];
 $name = '';
 $email = '';
 $phone = '';
@@ -32,36 +32,36 @@ $subject = '';
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    verifycsrf();
+    verifyCsrf();
 
-    $name    = posttext('name');
-    $email   = posttext('email');
-    $phone   = posttext('phone');
-    $subject = posttext('subject');
-    $message = posttext('message');
+    $name    = postText('name');
+    $email   = postText('email');
+    $phone   = postText('phone');
+    $subject = postText('subject');
+    $message = postText('message');
 
-    if (isemptyvalue($name)) {
-        $formerrors['name'] = 'Please tell us your name.';
+    if (isEmptyValue($name)) {
+        $formErrors['name'] = 'Please tell us your name.';
     }
-    if (!isvalidemail($email)) {
-        $formerrors['email'] = 'Please give an email address we can reply to.';
+    if (!isValidEmail($email)) {
+        $formErrors['email'] = 'Please give an email address we can reply to.';
     }
     if (mb_strlen($phone) > 40) {
-        $formerrors['phone'] = 'That phone number is too long.';
+        $formErrors['phone'] = 'That phone number is too long.';
     }
-    if (isemptyvalue($subject)) {
-        $formerrors['subject'] = 'Please give the message a subject.';
+    if (isEmptyValue($subject)) {
+        $formErrors['subject'] = 'Please give the message a subject.';
     }
     if (mb_strlen($message) < 10) {
-        $formerrors['message'] = 'Please write a little more, so we know how to help.';
+        $formErrors['message'] = 'Please write a little more, so we know how to help.';
     }
 
     // A simple honeypot. A real person never sees this field, so anything in
     // it means a robot filled the form in. Nothing is stored, and the sender
     // is thanked, so the robot does not try again.
-    $looks_like_a_robot = posttext('website') !== '';
+    $looks_like_a_robot = postText('website') !== '';
 
-    if (!$formerrors && !$looks_like_a_robot) {
+    if (!$formErrors && !$looks_like_a_robot) {
         $statement = $conn->prepare("INSERT INTO messages (name, email, phone, subject, message, seen)
                                      VALUES (?, ?, ?, ?, ?, 0)");
         $statement->bind_param('sssss', $name, $email, $phone, $subject, $message);
@@ -72,12 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            the messages table, so the pastor is told the moment somebody writes
            rather than only when the admin panel is opened. Best-effort: a mail
            server that is down must not stop the thank-you below. */
-        mailcontactnotice($name, $email, $phone, $subject, $message);
+        mailContactNotice($name, $email, $phone, $subject, $message);
 
         /* Written after the row is saved, and saying only that a message
            arrived rather than repeating what was said in it, so the activity
            log does not become a second copy of the messages table. */
-        logaction($conn, 'contact_received', 'A message arrived from ' . $name);
+        logAction($conn, 'contact_received', 'A message arrived from ' . $name);
 
         flash('success', 'Thank you. Your message has reached us and someone will reply soon.');
         redirect('contact');
@@ -91,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once __DIR__ . '/../partials/public/header.php';
 
-$programs_by_day = weeklyprogrambyday($conn);
+$programs_by_day = weeklyProgramByDay($conn);
 
-pageheader(
+pageHeader(
     'Contact us',
     'Whether you want to visit, ask a question, or tell us how we can pray for you, '
     . 'this is the fastest way to reach us.',
@@ -107,11 +107,11 @@ pageheader(
 
                 <!-- ============ THE FORM ============ -->
                 <div class="col-lg-7">
-                    <?php sectionheading('Send us a message', 'Write to us', 'We read every message that arrives here.'); ?>
+                    <?php sectionHeading('Send us a message', 'Write to us', 'We read every message that arrives here.'); ?>
 
-                    <?php showflashes(); ?>
+                    <?php showFlashes(); ?>
 
-                    <?php if ($formerrors): ?>
+                    <?php if ($formErrors): ?>
                         <div class="alert alert-danger" role="alert">
                             <i class="fa-solid fa-circle-exclamation me-1" aria-hidden="true"></i>
                             Please check the form and try again.
@@ -119,55 +119,55 @@ pageheader(
                     <?php endif; ?>
 
                     <form method="post" action="<?php echo url('contact'); ?>" novalidate>
-                        <?php echo csrffield(); ?>
+                        <?php echo csrfField(); ?>
 
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label" for="name">Your name</label>
-                                <input type="text" class="form-control<?php echo isset($formerrors['name']) ? ' is-invalid' : ''; ?>"
+                                <input type="text" class="form-control<?php echo isset($formErrors['name']) ? ' is-invalid' : ''; ?>"
                                        id="name" name="name" value="<?php echo e($name); ?>"
                                        maxlength="160" required autocomplete="name">
-                                <?php if (isset($formerrors['name'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($formerrors['name']); ?></div>
+                                <?php if (isset($formErrors['name'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formErrors['name']); ?></div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label" for="email">Your email</label>
-                                <input type="email" class="form-control<?php echo isset($formerrors['email']) ? ' is-invalid' : ''; ?>"
+                                <input type="email" class="form-control<?php echo isset($formErrors['email']) ? ' is-invalid' : ''; ?>"
                                        id="email" name="email" value="<?php echo e($email); ?>"
                                        maxlength="190" required autocomplete="email">
-                                <?php if (isset($formerrors['email'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($formerrors['email']); ?></div>
+                                <?php if (isset($formErrors['email'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formErrors['email']); ?></div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label" for="phone">Your phone <span class="text-body-secondary fw-normal">(optional)</span></label>
-                                <input type="tel" class="form-control<?php echo isset($formerrors['phone']) ? ' is-invalid' : ''; ?>"
+                                <input type="tel" class="form-control<?php echo isset($formErrors['phone']) ? ' is-invalid' : ''; ?>"
                                        id="phone" name="phone" value="<?php echo e($phone); ?>"
                                        maxlength="40" autocomplete="tel">
-                                <?php if (isset($formerrors['phone'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($formerrors['phone']); ?></div>
+                                <?php if (isset($formErrors['phone'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formErrors['phone']); ?></div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label" for="subject">Subject</label>
-                                <input type="text" class="form-control<?php echo isset($formerrors['subject']) ? ' is-invalid' : ''; ?>"
+                                <input type="text" class="form-control<?php echo isset($formErrors['subject']) ? ' is-invalid' : ''; ?>"
                                        id="subject" name="subject" value="<?php echo e($subject); ?>"
                                        maxlength="200" required>
-                                <?php if (isset($formerrors['subject'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($formerrors['subject']); ?></div>
+                                <?php if (isset($formErrors['subject'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formErrors['subject']); ?></div>
                                 <?php endif; ?>
                             </div>
 
                             <div class="col-12">
                                 <label class="form-label" for="message">Your message</label>
-                                <textarea class="form-control<?php echo isset($formerrors['message']) ? ' is-invalid' : ''; ?>"
+                                <textarea class="form-control<?php echo isset($formErrors['message']) ? ' is-invalid' : ''; ?>"
                                           id="message" name="message" rows="6" required><?php echo e($message); ?></textarea>
-                                <?php if (isset($formerrors['message'])): ?>
-                                    <div class="invalid-feedback"><?php echo e($formerrors['message']); ?></div>
+                                <?php if (isset($formErrors['message'])): ?>
+                                    <div class="invalid-feedback"><?php echo e($formErrors['message']); ?></div>
                                 <?php endif; ?>
                             </div>
 
@@ -188,7 +188,7 @@ pageheader(
 
                 <!-- ============ THE DETAILS ============ -->
                 <div class="col-lg-5">
-                    <?php sectionheading('Find us', 'Where we are', ''); ?>
+                    <?php sectionHeading('Find us', 'Where we are', ''); ?>
 
                     <div class="list-group rounded-4 shadow-sm">
                         <div class="list-group-item d-flex gap-3 p-3">
@@ -257,7 +257,7 @@ pageheader(
             <!-- ============ THE WEEK AT A GLANCE ============ -->
             <?php if ($programs_by_day): ?>
                 <div class="mt-5 pt-4">
-                    <?php sectionheading('The week at a glance', 'When we meet', '', 2); ?>
+                    <?php sectionHeading('The week at a glance', 'When we meet', '', 2); ?>
 
                     <div class="row g-3">
                         <?php foreach ($programs_by_day as $day_label => $day_programs): ?>
@@ -270,7 +270,7 @@ pageheader(
                                             /* "When we meet", so a meeting whose two teams meet at
                                                different hours shows those hours, one per line; the one
                                                window is only right when everybody meets together. */
-                                            $time_lines = programtimes($program);
+                                            $time_lines = programTimes($program);
                                             ?>
                                             <p class="small text-body-secondary mb-1">
                                                 <?php if ($time_lines): ?>
@@ -278,7 +278,7 @@ pageheader(
                                                         <span class="d-block"><?php echo $time_line; ?></span>
                                                     <?php endforeach; ?>
                                                 <?php else: ?>
-                                                    <?php echo formattimerange($program['start_time'], $program['end_time'] ?? ''); ?>
+                                                    <?php echo formatTimeRange($program['start_time'], $program['end_time'] ?? ''); ?>
                                                 <?php endif; ?>
                                                 <?php if ($program['title'] !== ''): ?>
                                                     <span class="d-block text-truncate"><?php echo e($program['title']); ?></span>

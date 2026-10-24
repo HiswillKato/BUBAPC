@@ -32,7 +32,7 @@ if ($month < 1 || $month > 12) {
 }
 
 $month_name = date('F', mktime(0, 0, 0, $month, 1));
-$birthdays = birthdaysinmonth($conn, $month);
+$birthdays = birthdaysInMonth($conn, $month);
 
 $page_title = 'Birthdays';
 $page_heading = 'Birthdays in ' . $month_name;
@@ -40,7 +40,7 @@ $page_heading = 'Birthdays in ' . $month_name;
 require_once __DIR__ . '/../../partials/admin/header.php';
 ?>
 
-<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminurl('birthdays'); ?>">
+<form class="row g-2 align-items-center mb-3" method="get" action="<?php echo adminUrl('birthdays'); ?>">
     <div class="col-12 col-md-4 col-lg-3">
         <label class="visually-hidden" for="filter-month">Month</label>
         <select class="form-select" id="filter-month" name="month" data-auto-submit>
@@ -67,7 +67,7 @@ require_once __DIR__ . '/../../partials/admin/header.php';
 
 <?php if (!$birthdays): ?>
     <?php
-    emptystate(
+    emptyState(
         'fa-cake-candles',
         'No birthdays in ' . $month_name,
         'Nobody has shared a birthday for ' . $month_name . ' yet. People add their own birthday '
@@ -89,22 +89,22 @@ require_once __DIR__ . '/../../partials/admin/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php $categories = peoplecategories(); ?>
+                    <?php $categories = peopleCategories(); ?>
                     <?php foreach ($birthdays as $person): ?>
                         <?php
                         $belongs_to = array_filter([
                             !empty($person['family_name']) ? $person['family_name'] : '',
                             !empty($person['department_name']) ? $person['department_name'] : '',
                         ]);
-                        $today = birthdaytoday($person['born']);
+                        $today = birthdayToday($person['born']);
                         ?>
                         <tr<?php echo $today ? ' class="table-warning"' : ''; ?>>
                             <td class="ps-3 text-nowrap fw-semibold">
-                                <?php echo formatdate($person['born'], 'D j'); ?>
+                                <?php echo formatDate($person['born'], 'D j'); ?>
                             </td>
                             <td>
                                 <a class="fw-semibold text-decoration-none"
-                                   href="<?php echo adminurl('people/form.php?id=' . (int) $person['id']); ?>">
+                                   href="<?php echo adminUrl('people/form.php?id=' . (int) $person['id']); ?>">
                                     <?php echo e($person['name']); ?>
                                 </a>
                                 <?php if ($today): ?>
